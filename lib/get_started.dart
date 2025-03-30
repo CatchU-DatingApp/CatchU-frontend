@@ -34,7 +34,7 @@ class WelcomeScreen extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Image.asset(
-                    'assets/images/CatchU-Dating-App-Logo.png', // Path gambar logo
+                    'assets/images/CatchU_Logo.png', // Path gambar logo
                     height: 150, // Sesuaikan ukuran
                   ),
                 ],
@@ -44,7 +44,7 @@ class WelcomeScreen extends StatelessWidget {
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 24.0),
                 child: Image.asset(
-                  'assets/images/couple-watching-sunset-concept-illustration-1.png', // Path gambar ilustrasi
+                  'assets/images/couple-watching-sunset-concept-illustration 1.png', // Path gambar ilustrasi
                   fit: BoxFit.contain,
                 ),
               ),
