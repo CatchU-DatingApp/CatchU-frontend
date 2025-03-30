@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-
+import 'get_started.dart';
 class SplashScreen extends StatefulWidget {
   const SplashScreen({Key? key}) : super(key: key);
 
@@ -47,7 +47,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
       if (status == AnimationStatus.completed) {
         
         Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) => const HomeScreen()), 
+          MaterialPageRoute(builder: (_) => const WelcomeScreen()), 
         );
       }
     });
@@ -83,15 +83,3 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
   }
 }
 
-// Placeholder doang
-class HomeScreen extends StatelessWidget {
-  const HomeScreen({Key? key}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('CatchU')),
-      body: const Center(child: Text('Welcome to CatchU!')),
-    );
-  }
-}
