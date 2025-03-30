@@ -20,7 +20,7 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   assets:
-    - assets/images/CatchU_Logo.png
+    - assets/images/
 
 flutter_native_splash:
   color: "#FDFAF6" 
