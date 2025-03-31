@@ -1,3 +1,4 @@
+import 'package:catchu/login.dart';
 import 'package:flutter/material.dart';
 
 class WelcomeScreen extends StatelessWidget {
@@ -84,6 +85,10 @@ class WelcomeScreen extends StatelessWidget {
                 ),
                 onPressed: () {
                   // Handle login action
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const LoginPage()),
+                  );
                 },
               ),
             ),
