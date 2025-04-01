@@ -1,5 +1,6 @@
-import 'package:catchu/login.dart';
 import 'package:flutter/material.dart';
+import 'login.dart';
+import 'sign_up1.dart';
 
 class WelcomeScreen extends StatelessWidget {
   const WelcomeScreen({Key? key}) : super(key: key);
@@ -106,6 +107,12 @@ class WelcomeScreen extends StatelessWidget {
                   GestureDetector(
                     onTap: () {
                       // Handle sign up action
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const SignUpPage1(),
+                        ),
+                      );
                     },
                     child: Text(
                       'Sign Up',

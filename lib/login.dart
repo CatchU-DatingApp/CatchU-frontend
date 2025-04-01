@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'sign_up1.dart';
+
 class LoginPage extends StatefulWidget {
   const LoginPage({Key? key}) : super(key: key);
 
@@ -88,7 +90,12 @@ class _LoginPageState extends State<LoginPage> {
                 child: Container(
                   decoration: BoxDecoration(
                     border: Border.all(
-                      color: _errorMessage != null ? Colors.red : Colors.grey,
+                      color:
+                          _errorMessage != null
+                              ? Colors.red
+                              : _phoneNumber.isNotEmpty
+                              ? Colors.pink[400]!
+                              : Colors.grey,
                     ),
                     borderRadius: BorderRadius.circular(25),
                   ),
@@ -263,7 +270,14 @@ class _LoginPageState extends State<LoginPage> {
                     style: TextStyle(color: Colors.black54),
                   ),
                   GestureDetector(
-                    onTap: () {},
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const SignUpPage1(),
+                        ),
+                      );
+                    },
                     child: Text(
                       'Sign Up',
                       style: TextStyle(
