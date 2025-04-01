@@ -43,7 +43,7 @@ class _SignUpPage1State extends State<SignUpPage1> {
           context,
           MaterialPageRoute(
             builder:
-                (context) => OtpVerificationPage(
+                (context) => OtpVerificationPageSignUp(
                   phoneNumber: '$_countryCode$_phoneNumber',
                 ),
           ),
@@ -68,7 +68,7 @@ class _SignUpPage1State extends State<SignUpPage1> {
           child: ClipRRect(
             borderRadius: BorderRadius.circular(50),
             child: LinearProgressIndicator(
-              value: 0.25,
+              value: 0.125, // 12.5% progress for step 1
               backgroundColor: const Color.fromARGB(255, 255, 233, 241),
               valueColor: AlwaysStoppedAnimation<Color>(Colors.pink[400]!),
             ),
@@ -80,14 +80,14 @@ class _SignUpPage1State extends State<SignUpPage1> {
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24.0),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               SizedBox(height: 24),
               // Title
               Text(
                 'My Number Is',
                 style: TextStyle(
-                  fontSize: 28,
+                  fontSize: 24,
                   fontWeight: FontWeight.bold,
                   color: Colors.black87,
                 ),
@@ -98,6 +98,7 @@ class _SignUpPage1State extends State<SignUpPage1> {
               Text(
                 "We'll need your phone number to send an OTP for verification.",
                 style: TextStyle(fontSize: 16, color: Colors.black54),
+                textAlign: TextAlign.center,
               ),
               SizedBox(height: 40),
 
@@ -231,17 +232,148 @@ class _SignUpPage1State extends State<SignUpPage1> {
   }
 }
 
-class OtpVerificationPage extends StatelessWidget {
+class OtpVerificationPageSignUp extends StatelessWidget {
   final String phoneNumber;
 
-  const OtpVerificationPage({Key? key, required this.phoneNumber})
+  const OtpVerificationPageSignUp({Key? key, required this.phoneNumber})
     : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Verify OTP')),
-      body: Center(child: Text('OTP sent to $phoneNumber')),
+      appBar: AppBar(
+        elevation: 0,
+        backgroundColor: Colors.transparent,
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back, color: Colors.black),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: Container(
+          margin: EdgeInsets.only(right: 48),
+          height: 8,
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(50),
+            child: LinearProgressIndicator(
+              value: 0.25, // 25% progress for step 2
+              backgroundColor: const Color.fromARGB(255, 255, 233, 241),
+              valueColor: AlwaysStoppedAnimation<Color>(Colors.pink[400]!),
+            ),
+          ),
+        ),
+      ),
+      body: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 24.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            SizedBox(height: 24),
+
+            // Title
+            Text(
+              'Verification Code',
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: Colors.black87,
+              ),
+            ),
+            SizedBox(height: 16),
+
+            // Phone Number
+            Text.rich(
+              TextSpan(
+                text: 'Please enter code we just send to\n',
+                style: TextStyle(fontSize: 16, color: Colors.black54),
+                children: [
+                  TextSpan(
+                    text: phoneNumber,
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87,
+                    ),
+                  ),
+                ],
+              ),
+              textAlign: TextAlign.center,
+            ),
+            SizedBox(height: 40),
+
+            // OTP Input Fields
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: List.generate(4, (index) {
+                return Container(
+                  width: 60,
+                  height: 60,
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.grey.withOpacity(0.5)),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  alignment: Alignment.center,
+                  child: TextField(
+                    textAlign: TextAlign.center,
+                    keyboardType: TextInputType.number,
+                    maxLength: 1,
+                    style: TextStyle(fontSize: 24),
+                    decoration: InputDecoration(
+                      counterText: '',
+                      border: InputBorder.none,
+                    ),
+                    onChanged: (value) {
+                      if (value.length == 1) {
+                        FocusScope.of(context).nextFocus();
+                      }
+                    },
+                  ),
+                );
+              }),
+            ),
+            SizedBox(height: 24),
+
+            // Resend Code
+            Center(
+              child: Text.rich(
+                TextSpan(
+                  text: "Didn't receive OTP? ",
+                  style: TextStyle(color: Colors.black54),
+                  children: [
+                    TextSpan(
+                      text: 'Resend Code',
+                      style: TextStyle(
+                        color: Colors.pink[400],
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            SizedBox(height: 40),
+
+            // Verify Button
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () {
+                  // Handle verification logic
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.pink[400],
+                  foregroundColor: Colors.white,
+                  minimumSize: Size(double.infinity, 50),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(25),
+                  ),
+                ),
+                child: Text(
+                  'Verify',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
