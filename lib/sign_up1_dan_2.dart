@@ -1,3 +1,6 @@
+import 'dart:async';
+
+import 'package:catchu/sign_up3.dart';
 import 'package:flutter/material.dart';
 
 class SignUpPage1 extends StatefulWidget {
@@ -232,11 +235,123 @@ class _SignUpPage1State extends State<SignUpPage1> {
   }
 }
 
-class OtpVerificationPageSignUp extends StatelessWidget {
+class OtpVerificationPageSignUp extends StatefulWidget {
   final String phoneNumber;
 
   const OtpVerificationPageSignUp({Key? key, required this.phoneNumber})
     : super(key: key);
+
+  @override
+  _OtpVerificationPageSignUpState createState() =>
+      _OtpVerificationPageSignUpState();
+}
+
+class _OtpVerificationPageSignUpState extends State<OtpVerificationPageSignUp> {
+  final List<TextEditingController> _otpControllers = List.generate(
+    4,
+    (index) => TextEditingController(),
+  );
+  final List<FocusNode> _focusNodes = List.generate(4, (index) => FocusNode());
+  bool _isLoading = false;
+  bool _isResending = false;
+  int _resendCountdown = 30;
+  Timer? _resendTimer;
+  String? _errorMessage;
+
+  @override
+  void initState() {
+    super.initState();
+    _startResendTimer();
+
+    // Pindahkan auto-focus ke didChangeDependencies
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      FocusScope.of(context).requestFocus(_focusNodes[0]);
+    });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Alternatif: bisa juga dipindahkan ke sini
+  }
+
+  @override
+  void dispose() {
+    _resendTimer?.cancel();
+    for (var controller in _otpControllers) {
+      controller.dispose();
+    }
+    for (var node in _focusNodes) {
+      node.dispose();
+    }
+    super.dispose();
+  }
+
+  void _startResendTimer() {
+    _resendTimer = Timer.periodic(Duration(seconds: 1), (timer) {
+      if (_resendCountdown == 0) {
+        timer.cancel();
+      } else {
+        setState(() => _resendCountdown--);
+      }
+    });
+  }
+
+  void _resendOtp() {
+    setState(() {
+      _isResending = true;
+      _resendCountdown = 30;
+    });
+
+    // Simulate API call
+    Future.delayed(Duration(seconds: 1), () {
+      setState(() => _isResending = false);
+      _startResendTimer();
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('OTP has been resent')));
+    });
+  }
+
+  void _verifyOtp() {
+    final otp = _otpControllers.map((c) => c.text).join();
+
+    if (otp.length < 4) {
+      setState(() => _errorMessage = 'Please enter complete OTP code');
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    // Simulate API verification
+    Future.delayed(Duration(seconds: 2), () {
+      setState(() => _isLoading = false);
+
+      // Mock verification - in real app, check with your backend
+      if (otp == '1234') {
+        // Replace with actual verification
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => SignUpPage3(phoneNumber: widget.phoneNumber),
+          ),
+        );
+      } else {
+        setState(() => _errorMessage = 'Invalid OTP code. Please try again');
+        _clearOtpFields();
+      }
+    });
+  }
+
+  void _clearOtpFields() {
+    for (var controller in _otpControllers) {
+      controller.clear();
+    }
+    FocusScope.of(context).requestFocus(_focusNodes[0]);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -254,8 +369,8 @@ class OtpVerificationPageSignUp extends StatelessWidget {
           child: ClipRRect(
             borderRadius: BorderRadius.circular(50),
             child: LinearProgressIndicator(
-              value: 0.25, // 25% progress for step 2
-              backgroundColor: const Color.fromARGB(255, 255, 233, 241),
+              value: 0.25,
+              backgroundColor: Color.fromARGB(255, 255, 233, 241),
               valueColor: AlwaysStoppedAnimation<Color>(Colors.pink[400]!),
             ),
           ),
@@ -267,7 +382,6 @@ class OtpVerificationPageSignUp extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             SizedBox(height: 24),
-
             // Title
             Text(
               'Verification Code',
@@ -278,15 +392,14 @@ class OtpVerificationPageSignUp extends StatelessWidget {
               ),
             ),
             SizedBox(height: 16),
-
-            // Phone Number
+            // Description
             Text.rich(
               TextSpan(
                 text: 'Please enter code we just send to\n',
                 style: TextStyle(fontSize: 16, color: Colors.black54),
                 children: [
                   TextSpan(
-                    text: phoneNumber,
+                    text: widget.phoneNumber,
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
                       color: Colors.black87,
@@ -297,8 +410,6 @@ class OtpVerificationPageSignUp extends StatelessWidget {
               textAlign: TextAlign.center,
             ),
             SizedBox(height: 40),
-
-            // OTP Input Fields
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: List.generate(4, (index) {
@@ -306,11 +417,17 @@ class OtpVerificationPageSignUp extends StatelessWidget {
                   width: 60,
                   height: 60,
                   decoration: BoxDecoration(
-                    border: Border.all(color: Colors.grey.withOpacity(0.5)),
+                    border: Border.all(
+                      color:
+                          _errorMessage != null
+                              ? Colors.red
+                              : Colors.grey.withOpacity(0.5),
+                    ),
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  alignment: Alignment.center,
                   child: TextField(
+                    controller: _otpControllers[index],
+                    focusNode: _focusNodes[index],
                     textAlign: TextAlign.center,
                     keyboardType: TextInputType.number,
                     maxLength: 1,
@@ -320,55 +437,88 @@ class OtpVerificationPageSignUp extends StatelessWidget {
                       border: InputBorder.none,
                     ),
                     onChanged: (value) {
-                      if (value.length == 1) {
-                        FocusScope.of(context).nextFocus();
+                      if (value.length == 1 && index < 3) {
+                        FocusScope.of(
+                          context,
+                        ).requestFocus(_focusNodes[index + 1]);
+                      } else if (value.isEmpty && index > 0) {
+                        FocusScope.of(
+                          context,
+                        ).requestFocus(_focusNodes[index - 1]);
                       }
+                      setState(() => _errorMessage = null);
                     },
                   ),
                 );
               }),
             ),
-            SizedBox(height: 24),
-
-            // Resend Code
-            Center(
-              child: Text.rich(
-                TextSpan(
-                  text: "Didn't receive OTP? ",
-                  style: TextStyle(color: Colors.black54),
-                  children: [
-                    TextSpan(
-                      text: 'Resend Code',
-                      style: TextStyle(
-                        color: Colors.pink[400],
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
+            if (_errorMessage != null)
+              Padding(
+                padding: EdgeInsets.only(top: 8),
+                child: Text(
+                  _errorMessage!,
+                  style: TextStyle(color: Colors.red, fontSize: 12),
                 ),
               ),
+            SizedBox(height: 24),
+            Center(
+              child:
+                  _resendCountdown > 0
+                      ? Text(
+                        'Resend code in $_resendCountdown seconds',
+                        style: TextStyle(color: Colors.grey),
+                      )
+                      : TextButton(
+                        onPressed: _isResending ? null : _resendOtp,
+                        child:
+                            _isResending
+                                ? SizedBox(
+                                  height: 16,
+                                  width: 16,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                                : Text(
+                                  'Resend Code',
+                                  style: TextStyle(
+                                    color: Colors.pink[400],
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                      ),
             ),
             SizedBox(height: 40),
-
-            // Verify Button
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: () {
-                  // Handle verification logic
-                },
+                onPressed: _isLoading ? null : _verifyOtp,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.pink[400],
                   foregroundColor: Colors.white,
+                  disabledBackgroundColor: Colors.pink[200],
                   minimumSize: Size(double.infinity, 50),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(25),
                   ),
                 ),
-                child: Text(
-                  'Verify',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                ),
+                child:
+                    _isLoading
+                        ? SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 2,
+                          ),
+                        )
+                        : Text(
+                          'Verify',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
               ),
             ),
           ],
