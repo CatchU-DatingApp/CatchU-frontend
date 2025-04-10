@@ -1,18 +1,34 @@
-import 'package:catchu/sign_up4.dart';
+import 'package:catchu/sign_up5.dart';
 import 'package:flutter/material.dart';
 
-class SignUpPage3 extends StatefulWidget {
+class SignUpPage4 extends StatefulWidget {
   final String phoneNumber;
 
-  const SignUpPage3({Key? key, required this.phoneNumber}) : super(key: key);
+  const SignUpPage4({Key? key, required this.phoneNumber}) : super(key: key);
 
   @override
-  _SignUpPage3State createState() => _SignUpPage3State();
+  _SignUpPage4State createState() => _SignUpPage4State();
 }
 
-class _SignUpPage3State extends State<SignUpPage3> {
+class _SignUpPage4State extends State<SignUpPage4> {
   final TextEditingController _nameController = TextEditingController();
   bool _isLoading = false;
+  String? _emailError; // Menyimpan pesan error untuk validasi
+
+  // Fungsi untuk memvalidasi email
+  String? _validateEmail(String value) {
+    if (value.isEmpty) {
+      return 'Email cannot be empty';
+    }
+
+    // Regex pattern untuk validasi email
+    final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+    if (!emailRegex.hasMatch(value)) {
+      return 'Please enter a valid email address';
+    }
+
+    return null;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -30,7 +46,7 @@ class _SignUpPage3State extends State<SignUpPage3> {
           child: ClipRRect(
             borderRadius: BorderRadius.circular(50),
             child: LinearProgressIndicator(
-              value: 0.375, // 37.5% progress for step 3
+              value: 0.5, // 50% progress for step 4
               backgroundColor: const Color.fromARGB(255, 255, 233, 241),
               valueColor: AlwaysStoppedAnimation<Color>(Colors.pink[400]!),
             ),
@@ -43,10 +59,8 @@ class _SignUpPage3State extends State<SignUpPage3> {
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             SizedBox(height: 24),
-
-            // Title
             Text(
-              "What's Your Name?",
+              "Email Address", // Mengoreksi "kontol Address" menjadi "Email Address"
               style: TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
@@ -54,20 +68,16 @@ class _SignUpPage3State extends State<SignUpPage3> {
               ),
             ),
             SizedBox(height: 8),
-
-            // Subtitle
             Text(
-              "Let's Get to Know Each Other",
+              "We'll need your email to stay in touch",
               style: TextStyle(fontSize: 16, color: Colors.black54),
               textAlign: TextAlign.center,
             ),
             SizedBox(height: 40),
-
-            // Name Input Field
             TextFormField(
               controller: _nameController,
               decoration: InputDecoration(
-                hintText: "Enter your full name",
+                hintText: "Enter your email address",
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(25),
                   borderSide: BorderSide(color: Colors.grey.withOpacity(0.5)),
@@ -76,34 +86,49 @@ class _SignUpPage3State extends State<SignUpPage3> {
                   borderRadius: BorderRadius.circular(25),
                   borderSide: BorderSide(color: Colors.pink[400]!),
                 ),
+                errorBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(25),
+                  borderSide: BorderSide(color: Colors.red),
+                ),
+                focusedErrorBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(25),
+                  borderSide: BorderSide(color: Colors.red),
+                ),
+                errorText: _emailError, // Menampilkan pesan error
                 contentPadding: EdgeInsets.symmetric(
                   horizontal: 16,
                   vertical: 16,
                 ),
               ),
+              keyboardType:
+                  TextInputType.emailAddress, // Menambahkan tipe keyboard email
               style: TextStyle(fontSize: 16),
-              onChanged: (value) => setState(() {}),
+              onChanged: (value) {
+                setState(() {
+                  _emailError = _validateEmail(value);
+                });
+              },
             ),
             SizedBox(height: 40),
-
-            // Continue Button
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
                 onPressed:
-                    _nameController.text.isEmpty || _isLoading
+                    (_nameController.text.isEmpty ||
+                            _isLoading ||
+                            _emailError != null)
                         ? null
                         : () {
                           setState(() => _isLoading = true);
-                          // Simulate API call
                           Future.delayed(Duration(seconds: 1), () {
+                            setState(() => _isLoading = false);
+                            // signup5
                             Navigator.push(
                               context,
                               MaterialPageRoute(
                                 builder:
-                                    (context) => SignUpPage4(
-                                      phoneNumber: widget.phoneNumber,
-                                    ), // Replace with your next page
+                                    (context) =>
+                                        SignUpPage5(), // Replace with your next page
                               ),
                             );
                           });
@@ -140,5 +165,11 @@ class _SignUpPage3State extends State<SignUpPage3> {
         ),
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    super.dispose();
   }
 }
