@@ -21,6 +21,7 @@ flutter:
   uses-material-design: true
   assets:
     - assets/images/
+    - assets/images/jawa.png
 
 flutter_native_splash:
   color: "#FDFAF6" 

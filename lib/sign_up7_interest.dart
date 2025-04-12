@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:catchu/sign_up8_picture.dart';
 
 class SignUpPage7 extends StatefulWidget {
   final String phoneNumber;
@@ -121,11 +122,17 @@ class _SignUpPage7State extends State<SignUpPage7> {
             ),
             Spacer(),
             ElevatedButton(
-              onPressed: selectedInterests.isEmpty
-                  ? null
-                  : () {
-                      print("Selected Interests: $selectedInterests");
-                    },
+            onPressed: selectedInterests.isEmpty
+                ? null
+                : () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => SignUpPage8(phoneNumber: widget.phoneNumber),
+                      ),
+                    );
+                  },
+
               style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.pink[400],
                   foregroundColor: Colors.white,
