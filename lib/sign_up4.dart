@@ -60,7 +60,7 @@ class _SignUpPage4State extends State<SignUpPage4> {
           children: [
             SizedBox(height: 24),
             Text(
-              "Email Address", // Mengoreksi "kontol Address" menjadi "Email Address"
+              "Email Address", // Mengoreksi enjadi "Email Address"
               style: TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
@@ -128,7 +128,7 @@ class _SignUpPage4State extends State<SignUpPage4> {
                               MaterialPageRoute(
                                 builder:
                                     (context) =>
-                                        SignUpPage5(), // Replace with your next page
+                                        SignUpPage5(phoneNumber: widget.phoneNumber), // Replace with your next page
                               ),
                             );
                           });
