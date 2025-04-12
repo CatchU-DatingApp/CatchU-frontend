@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:catchu/sign_up7_interest.dart';
 
 class SignUpPage6 extends StatefulWidget {
   final String phoneNumber;
@@ -81,7 +82,7 @@ class _SignUpPage6State extends State<SignUpPage6> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => Placeholder(), // next page
+                              builder: (context) => SignUpPage7(phoneNumber: widget.phoneNumber), // next page
                             ),
                           );
                         });
