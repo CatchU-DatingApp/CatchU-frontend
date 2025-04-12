@@ -1,18 +1,16 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:catchu/sign_up6_gender.dart';
 
-class SignUpPage5 extends StatefulWidget {
+class SignUpPage6 extends StatefulWidget {
   final String phoneNumber;
 
-  const SignUpPage5({Key? key, required this.phoneNumber}) : super(key: key);
+  const SignUpPage6({Key? key, required this.phoneNumber}) : super(key: key);
 
   @override
-  _SignUpPage5State createState() => _SignUpPage5State();
+  _SignUpPage6State createState() => _SignUpPage6State();
 }
 
-class _SignUpPage5State extends State<SignUpPage5> {
-  int selectedAge = 20;
+class _SignUpPage6State extends State<SignUpPage6> {
+  String? selectedGender;
   bool _isLoading = false;
 
   @override
@@ -31,23 +29,22 @@ class _SignUpPage5State extends State<SignUpPage5> {
           child: ClipRRect(
             borderRadius: BorderRadius.circular(50),
             child: LinearProgressIndicator(
-              value: 0.6, // 60% progress for step 5
+              value: 0.7, // 70% progress for step 6
               backgroundColor: const Color.fromARGB(255, 255, 233, 241),
               valueColor: AlwaysStoppedAnimation<Color>(Colors.pink[400]!),
             ),
           ),
         ),
       ),
+      backgroundColor: const Color.fromARGB(255, 253, 250, 246),
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 24.0),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             SizedBox(height: 24),
 
-            // Title
             Text(
-              "How Old Are You?",
+              "What’s Your Gender?",
               style: TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
@@ -55,58 +52,27 @@ class _SignUpPage5State extends State<SignUpPage5> {
               ),
             ),
             SizedBox(height: 8),
-
-            // Subtitle
             Text(
-              "Please provide your age in years",
+              "Tell us about your gender",
               style: TextStyle(fontSize: 16, color: Colors.black54),
               textAlign: TextAlign.center,
             ),
-            SizedBox(height: 0),
+            SizedBox(height: 40),
 
-            // Age Picker (Cupertino)
-            Expanded(
-              child: CupertinoPicker(
-                scrollController: FixedExtentScrollController(
-                  initialItem: selectedAge - 17,
-                ),
-                itemExtent: 60,
-                magnification: 1.2,
-                useMagnifier: true,
-                squeeze: 1.2,
-                onSelectedItemChanged: (index) {
-                  setState(() {
-                    selectedAge = 17 + index;
-                  });
-                },
-                children: List<Widget>.generate(
-                  44, // 17 - 60
-                  (index) {
-                    final age = 17 + index;
-                    return Center(
-                      child: Text(
-                        '$age',
-                        style: TextStyle(
-                          fontSize: 24,
-                          color: age == selectedAge
-                              ? Colors.pink[400]
-                              : Colors.black,
-                          fontWeight: age == selectedAge
-                              ? FontWeight.bold
-                              : FontWeight.normal,
-                        ),
-                      ),
-                    );
-                  },
-                ),
-              ),
+            // Gender Buttons
+            Column(
+              children: [
+                _buildGenderButton("Male", Icons.male, Colors.pink[400]!),
+                SizedBox(height: 20),
+                _buildGenderButton("Female", Icons.female, Colors.black54),
+              ],
             ),
+            Spacer(),
 
-            // Continue Button
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: _isLoading
+                onPressed: selectedGender == null || _isLoading
                     ? null
                     : () {
                         setState(() => _isLoading = true);
@@ -115,7 +81,7 @@ class _SignUpPage5State extends State<SignUpPage5> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => SignUpPage6(phoneNumber: widget.phoneNumber),
+                              builder: (context) => Placeholder(), // next page
                             ),
                           );
                         });
@@ -149,6 +115,46 @@ class _SignUpPage5State extends State<SignUpPage5> {
             ),
             SizedBox(height: 40),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildGenderButton(String gender, IconData icon, Color color) {
+    final isSelected = selectedGender == gender;
+
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          selectedGender = gender;
+        });
+      },
+      child: Container(
+        height: 190,
+        width: 190,
+        decoration: BoxDecoration(
+          color: isSelected ? Colors.pink[400] : Colors.pink[50],
+          shape: BoxShape.circle,
+        ),
+        child: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                icon,
+                size: 32,
+                color: isSelected ? Colors.white : Colors.black,
+              ),
+              SizedBox(height: 4),
+              Text(
+                gender,
+                style: TextStyle(
+                  color: isSelected ? Colors.white : Colors.black,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
