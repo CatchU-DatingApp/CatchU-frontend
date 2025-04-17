@@ -6,7 +6,7 @@ class SignUpRulesPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xFFFFFCF9),
+      backgroundColor: Color(0xFFFEF9F6),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 20),
