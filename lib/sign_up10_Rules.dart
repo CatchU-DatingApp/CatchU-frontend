@@ -12,7 +12,6 @@ class SignUpRulesPage extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 20),
           child: Column(
             children: [
-              // Logo
               SizedBox(height: 20),
               Center(
                 child: Image.asset(
@@ -20,9 +19,7 @@ class SignUpRulesPage extends StatelessWidget {
                   height: 80,
                 ),
               ),
-
               SizedBox(height: 30),
-
               Text(
                 'Welcome to CatchU',
                 style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
@@ -63,6 +60,7 @@ class SignUpRulesPage extends StatelessWidget {
               _buildRuleCard(
                 title: 'Be proactive.',
                 description: 'Go catch some love :)',
+                forceHeight: true, // biar ukurannya setara dengan yang lain
               ),
 
               Spacer(),
@@ -77,7 +75,7 @@ class SignUpRulesPage extends StatelessWidget {
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Color(0xFFFF2E63),
-                    foregroundColor: Colors.white, // warna teks putih
+                    foregroundColor: Colors.white,
                     minimumSize: Size(double.infinity, 50),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(25),
@@ -98,15 +96,13 @@ class SignUpRulesPage extends StatelessWidget {
     required String title,
     required String description,
     TextSpan? extra,
+    bool forceHeight = false,
   }) {
     return Container(
       width: double.infinity,
       padding: EdgeInsets.all(16),
       decoration: BoxDecoration(
-        border: Border.all(
-          color: Colors.pinkAccent,
-          width: 2,
-        ), // border lebih tebal
+        border: Border.all(color: Colors.pinkAccent, width: 2),
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
@@ -116,8 +112,7 @@ class SignUpRulesPage extends StatelessWidget {
             offset: Offset(0, 3),
           ),
         ],
-        color:
-            Colors.white, // pastikan background-nya putih biar shadow kelihatan
+        color: Colors.white,
       ),
       child: RichText(
         text: TextSpan(
@@ -129,6 +124,11 @@ class SignUpRulesPage extends StatelessWidget {
             ),
             TextSpan(text: description),
             if (extra != null) extra,
+            if (forceHeight)
+              TextSpan(
+                text: '\n\n\n',
+                style: TextStyle(color: Colors.transparent, fontSize: 14),
+              ),
           ],
         ),
       ),
