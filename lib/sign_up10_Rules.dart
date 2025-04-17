@@ -126,7 +126,7 @@ class SignUpRulesPage extends StatelessWidget {
             if (extra != null) extra,
             if (forceHeight)
               TextSpan(
-                text: '\n\n\n',
+                text: '\n',
                 style: TextStyle(color: Colors.transparent, fontSize: 14),
               ),
           ],
