@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:catchu/sign_up9_Location.dart';
 
 class SignUpPage8 extends StatefulWidget {
   @override
@@ -92,8 +93,14 @@ class _SignUpPage8State extends State<SignUpPage8> {
             Spacer(),
             ElevatedButton(
               onPressed: () {
-                // Aksi saat klik continue
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => EnableLocationPage(phoneNumber: widget.phoneNumber),
+                  ),
+                );
               },
+
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.pink[400],
                 foregroundColor: Colors.white,
