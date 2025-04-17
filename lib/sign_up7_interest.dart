@@ -55,7 +55,11 @@ class _SignUpPage7State extends State<SignUpPage7> {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 18, color: isSelected ? Colors.white : Colors.pink[400]),
+            Icon(
+              icon,
+              size: 18,
+              color: isSelected ? Colors.white : Colors.pink[400],
+            ),
             SizedBox(width: 6),
             Text(
               label,
@@ -73,10 +77,9 @@ class _SignUpPage7State extends State<SignUpPage7> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xFFFEF9F6),
       appBar: AppBar(
         elevation: 0,
-        backgroundColor: const Color.fromARGB(255, 253, 250, 246),
+        backgroundColor: Colors.transparent,
         leading: IconButton(
           icon: Icon(Icons.arrow_back, color: Colors.black),
           onPressed: () => Navigator.pop(context),
@@ -87,7 +90,7 @@ class _SignUpPage7State extends State<SignUpPage7> {
           child: ClipRRect(
             borderRadius: BorderRadius.circular(50),
             child: LinearProgressIndicator(
-              value: 0.8, // 80% progress sesuai step ke-8
+              value: 0.75, // 75% progress sesuai step ke-8
               backgroundColor: const Color.fromARGB(255, 255, 233, 241),
               valueColor: AlwaysStoppedAnimation<Color>(Colors.pink[400]!),
             ),
@@ -116,30 +119,40 @@ class _SignUpPage7State extends State<SignUpPage7> {
               alignment: WrapAlignment.center,
               spacing: 10,
               runSpacing: 10,
-              children: interests
-                  .map((interest) => _buildInterestButton(interest['label'], interest['icon']))
-                  .toList(),
+              children:
+                  interests
+                      .map(
+                        (interest) => _buildInterestButton(
+                          interest['label'],
+                          interest['icon'],
+                        ),
+                      )
+                      .toList(),
             ),
             Spacer(),
             ElevatedButton(
-            onPressed: selectedInterests.isEmpty
-                ? null
-                : () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => SignUpPage8(phoneNumber: widget.phoneNumber),
-                      ),
-                    );
-                  },
+              onPressed:
+                  selectedInterests.isEmpty
+                      ? null
+                      : () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder:
+                                (context) => SignUpPage8(
+                                  phoneNumber: widget.phoneNumber,
+                                ),
+                          ),
+                        );
+                      },
 
               style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.pink[400],
-                  foregroundColor: Colors.white,
-                  disabledBackgroundColor: Colors.pink[200],
-                  minimumSize: Size(double.infinity, 50),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(25),
+                backgroundColor: Colors.pink[400],
+                foregroundColor: Colors.white,
+                disabledBackgroundColor: Colors.pink[200],
+                minimumSize: Size(double.infinity, 50),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(25),
                 ),
               ),
               child: Text("Continue", style: TextStyle(fontSize: 16)),

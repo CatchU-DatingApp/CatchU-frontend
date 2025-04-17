@@ -1,4 +1,4 @@
-import 'package:catchu/sign_up5_Umur.dart';
+import 'package:catchu/sign_up5_umur.dart';
 import 'package:flutter/material.dart';
 
 class SignUpPage4 extends StatefulWidget {
@@ -46,7 +46,7 @@ class _SignUpPage4State extends State<SignUpPage4> {
           child: ClipRRect(
             borderRadius: BorderRadius.circular(50),
             child: LinearProgressIndicator(
-              value: 0.5, // 50% progress for step 4
+              value: 0.375, // 37,5% progress for step 4
               backgroundColor: const Color.fromARGB(255, 255, 233, 241),
               valueColor: AlwaysStoppedAnimation<Color>(Colors.pink[400]!),
             ),
@@ -127,8 +127,9 @@ class _SignUpPage4State extends State<SignUpPage4> {
                               context,
                               MaterialPageRoute(
                                 builder:
-                                    (context) =>
-                                        SignUpPage5(phoneNumber: widget.phoneNumber), // Replace with your next page
+                                    (context) => SignUpPage5(
+                                      phoneNumber: widget.phoneNumber,
+                                    ), // Replace with your next page
                               ),
                             );
                           });

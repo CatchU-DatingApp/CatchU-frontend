@@ -71,7 +71,7 @@ class _SignUpPage1State extends State<SignUpPage1> {
           child: ClipRRect(
             borderRadius: BorderRadius.circular(50),
             child: LinearProgressIndicator(
-              value: 0.125, // 12.5% progress for step 1
+              value: 0, // 0% progress for step 1
               backgroundColor: const Color.fromARGB(255, 255, 233, 241),
               valueColor: AlwaysStoppedAnimation<Color>(Colors.pink[400]!),
             ),
@@ -369,8 +369,8 @@ class _OtpVerificationPageSignUpState extends State<OtpVerificationPageSignUp> {
           child: ClipRRect(
             borderRadius: BorderRadius.circular(50),
             child: LinearProgressIndicator(
-              value: 0.25,
-              backgroundColor: Color.fromARGB(255, 255, 233, 241),
+              value: 0.125,
+              backgroundColor: const Color.fromARGB(255, 255, 233, 241),
               valueColor: AlwaysStoppedAnimation<Color>(Colors.pink[400]!),
             ),
           ),

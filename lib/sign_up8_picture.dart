@@ -9,17 +9,14 @@ class SignUpPage8 extends StatefulWidget {
 }
 
 class _SignUpPage8State extends State<SignUpPage8> {
-  List<ImageProvider> uploadedImages = [
-    AssetImage('assets/images/jawa.png'), 
-  ];
+  List<ImageProvider> uploadedImages = [AssetImage('assets/images/jawa.png')];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xFFFEF9F6),
       appBar: AppBar(
         elevation: 0,
-        backgroundColor: const Color.fromARGB(255, 253, 250, 246),
+        backgroundColor: Colors.transparent,
         leading: IconButton(
           icon: Icon(Icons.arrow_back, color: Colors.black),
           onPressed: () => Navigator.pop(context),
@@ -30,7 +27,7 @@ class _SignUpPage8State extends State<SignUpPage8> {
           child: ClipRRect(
             borderRadius: BorderRadius.circular(50),
             child: LinearProgressIndicator(
-              value: 0.9, // Progress step ke-9
+              value: 0.975, // Progress step ke-9
               backgroundColor: const Color.fromARGB(255, 255, 233, 241),
               valueColor: AlwaysStoppedAnimation<Color>(Colors.pink[400]!),
             ),

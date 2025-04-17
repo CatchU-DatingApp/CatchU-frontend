@@ -12,7 +12,7 @@ class SignUpPage5 extends StatefulWidget {
 }
 
 class _SignUpPage5State extends State<SignUpPage5> {
-  int selectedAge = 20;
+  int selectedAge = 17;
   bool _isLoading = false;
 
   @override
@@ -20,7 +20,7 @@ class _SignUpPage5State extends State<SignUpPage5> {
     return Scaffold(
       appBar: AppBar(
         elevation: 0,
-        backgroundColor: const Color.fromARGB(255, 253, 250, 246),
+        backgroundColor: Colors.transparent,
         leading: IconButton(
           icon: Icon(Icons.arrow_back, color: Colors.black),
           onPressed: () => Navigator.pop(context),
@@ -31,7 +31,7 @@ class _SignUpPage5State extends State<SignUpPage5> {
           child: ClipRRect(
             borderRadius: BorderRadius.circular(50),
             child: LinearProgressIndicator(
-              value: 0.6, // 60% progress for step 5
+              value: 0.5, // 50% progress for step 5
               backgroundColor: const Color.fromARGB(255, 255, 233, 241),
               valueColor: AlwaysStoppedAnimation<Color>(Colors.pink[400]!),
             ),
@@ -88,12 +88,14 @@ class _SignUpPage5State extends State<SignUpPage5> {
                         '$age',
                         style: TextStyle(
                           fontSize: 24,
-                          color: age == selectedAge
-                              ? Colors.pink[400]
-                              : Colors.black,
-                          fontWeight: age == selectedAge
-                              ? FontWeight.bold
-                              : FontWeight.normal,
+                          color:
+                              age == selectedAge
+                                  ? Colors.pink[400]
+                                  : Colors.black,
+                          fontWeight:
+                              age == selectedAge
+                                  ? FontWeight.bold
+                                  : FontWeight.normal,
                         ),
                       ),
                     );
@@ -106,20 +108,25 @@ class _SignUpPage5State extends State<SignUpPage5> {
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: _isLoading
-                    ? null
-                    : () {
-                        setState(() => _isLoading = true);
-                        Future.delayed(Duration(seconds: 1), () {
-                          // TODO: Ganti dengan halaman berikutnya
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => SignUpPage6(phoneNumber: widget.phoneNumber),
-                            ),
-                          );
-                        });
-                      },
+                onPressed:
+                    _isLoading
+                        ? null
+                        : () {
+                          setState(() => _isLoading = true);
+                          Future.delayed(Duration(seconds: 1), () {
+                            setState(() => _isLoading = false);
+                            // TODO: Ganti dengan halaman berikutnya
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder:
+                                    (context) => SignUpPage6(
+                                      phoneNumber: widget.phoneNumber,
+                                    ),
+                              ),
+                            );
+                          });
+                        },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.pink[400],
                   foregroundColor: Colors.white,
@@ -129,22 +136,23 @@ class _SignUpPage5State extends State<SignUpPage5> {
                     borderRadius: BorderRadius.circular(25),
                   ),
                 ),
-                child: _isLoading
-                    ? SizedBox(
-                        height: 20,
-                        width: 20,
-                        child: CircularProgressIndicator(
-                          color: Colors.white,
-                          strokeWidth: 2,
+                child:
+                    _isLoading
+                        ? SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 2,
+                          ),
+                        )
+                        : Text(
+                          'Continue',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
-                      )
-                    : Text(
-                        'Continue',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
               ),
             ),
             SizedBox(height: 40),

@@ -19,7 +19,7 @@ class _SignUpPage6State extends State<SignUpPage6> {
     return Scaffold(
       appBar: AppBar(
         elevation: 0,
-        backgroundColor: const Color.fromARGB(255, 253, 250, 246),
+        backgroundColor: Colors.transparent,
         leading: IconButton(
           icon: Icon(Icons.arrow_back, color: Colors.black),
           onPressed: () => Navigator.pop(context),
@@ -30,7 +30,7 @@ class _SignUpPage6State extends State<SignUpPage6> {
           child: ClipRRect(
             borderRadius: BorderRadius.circular(50),
             child: LinearProgressIndicator(
-              value: 0.7, // 70% progress for step 6
+              value: 0.625, // 62,5% progress for step 6
               backgroundColor: const Color.fromARGB(255, 255, 233, 241),
               valueColor: AlwaysStoppedAnimation<Color>(Colors.pink[400]!),
             ),
@@ -73,20 +73,24 @@ class _SignUpPage6State extends State<SignUpPage6> {
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: selectedGender == null || _isLoading
-                    ? null
-                    : () {
-                        setState(() => _isLoading = true);
-                        Future.delayed(Duration(seconds: 1), () {
-                          // TODO: Ganti dengan halaman berikutnya
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => SignUpPage7(phoneNumber: widget.phoneNumber), // next page
-                            ),
-                          );
-                        });
-                      },
+                onPressed:
+                    selectedGender == null || _isLoading
+                        ? null
+                        : () {
+                          setState(() => _isLoading = true);
+                          Future.delayed(Duration(seconds: 1), () {
+                            // TODO: Ganti dengan halaman berikutnya
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder:
+                                    (context) => SignUpPage7(
+                                      phoneNumber: widget.phoneNumber,
+                                    ), // next page
+                              ),
+                            );
+                          });
+                        },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.pink[400],
                   foregroundColor: Colors.white,
@@ -96,22 +100,23 @@ class _SignUpPage6State extends State<SignUpPage6> {
                     borderRadius: BorderRadius.circular(25),
                   ),
                 ),
-                child: _isLoading
-                    ? SizedBox(
-                        height: 20,
-                        width: 20,
-                        child: CircularProgressIndicator(
-                          color: Colors.white,
-                          strokeWidth: 2,
+                child:
+                    _isLoading
+                        ? SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 2,
+                          ),
+                        )
+                        : Text(
+                          'Continue',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
-                      )
-                    : Text(
-                        'Continue',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
               ),
             ),
             SizedBox(height: 40),
