@@ -1,3 +1,4 @@
+import 'package:catchu/sign_up10_Rules.dart';
 import 'package:flutter/material.dart';
 
 class EnableLocationPage extends StatelessWidget {
@@ -33,7 +34,7 @@ class EnableLocationPage extends StatelessWidget {
                 onPressed: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (_) => NextPage()),
+                    MaterialPageRoute(builder: (_) => SignUpRulesPage()),
                   );
                 },
                 style: ElevatedButton.styleFrom(
