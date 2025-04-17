@@ -14,6 +14,7 @@ class _SignUpPage8State extends State<SignUpPage8> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color.fromARGB(255, 253, 250, 246),
       appBar: AppBar(
         elevation: 0,
         backgroundColor: Colors.transparent,
@@ -93,7 +94,9 @@ class _SignUpPage8State extends State<SignUpPage8> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (_) => EnableLocationPage(phoneNumber: widget.phoneNumber),
+                    builder:
+                        (_) =>
+                            EnableLocationPage(phoneNumber: widget.phoneNumber),
                   ),
                 );
               },

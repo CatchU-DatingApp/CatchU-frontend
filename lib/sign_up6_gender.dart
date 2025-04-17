@@ -17,6 +17,7 @@ class _SignUpPage6State extends State<SignUpPage6> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color.fromARGB(255, 253, 250, 246),
       appBar: AppBar(
         elevation: 0,
         backgroundColor: Colors.transparent,
@@ -37,7 +38,6 @@ class _SignUpPage6State extends State<SignUpPage6> {
           ),
         ),
       ),
-      backgroundColor: const Color.fromARGB(255, 253, 250, 246),
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 24.0),
         child: Column(
@@ -80,6 +80,7 @@ class _SignUpPage6State extends State<SignUpPage6> {
                           setState(() => _isLoading = true);
                           Future.delayed(Duration(seconds: 1), () {
                             // TODO: Ganti dengan halaman berikutnya
+                            setState(() => _isLoading = false);
                             Navigator.push(
                               context,
                               MaterialPageRoute(

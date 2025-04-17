@@ -59,6 +59,7 @@ class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color.fromARGB(255, 253, 250, 246),
       body: SafeArea(
         child: Form(
           key: _formKey,
@@ -417,6 +418,7 @@ class _OtpVerificationPageLoginState extends State<OtpVerificationPageLogin> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color.fromARGB(255, 253, 250, 246),
       appBar: AppBar(
         elevation: 0,
         backgroundColor: Colors.transparent,

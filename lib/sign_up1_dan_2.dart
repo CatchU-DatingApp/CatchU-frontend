@@ -58,6 +58,7 @@ class _SignUpPage1State extends State<SignUpPage1> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color.fromARGB(255, 253, 250, 246),
       appBar: AppBar(
         elevation: 0,
         backgroundColor: Colors.transparent,
@@ -356,6 +357,7 @@ class _OtpVerificationPageSignUpState extends State<OtpVerificationPageSignUp> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color.fromARGB(255, 253, 250, 246),
       appBar: AppBar(
         elevation: 0,
         backgroundColor: Colors.transparent,

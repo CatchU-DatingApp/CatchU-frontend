@@ -10,12 +10,17 @@ class EnableLocationPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xFFFFFCF9),
+      backgroundColor: const Color.fromARGB(255, 253, 250, 246),
       body: SafeArea(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Center(child: Image.asset('assets/images/LocationImage.png', height: 200)),
+            Center(
+              child: Image.asset(
+                'assets/images/LocationImage.png',
+                height: 200,
+              ),
+            ),
             SizedBox(height: 30),
             Text(
               'Enable Your Location',
@@ -43,7 +48,7 @@ class EnableLocationPage extends StatelessWidget {
                   disabledBackgroundColor: Colors.pink[200],
                   minimumSize: Size(double.infinity, 50),
                   shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(25),
+                    borderRadius: BorderRadius.circular(25),
                   ),
                 ),
                 child: Text(
