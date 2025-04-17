@@ -76,9 +76,12 @@ class SignUpRulesPage extends StatelessWidget {
                     // Navigate to next page
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.pinkAccent,
+                    backgroundColor: Color(0xFFFF2E63),
+                    foregroundColor: Colors.white,
+                    disabledBackgroundColor: Colors.pink[200],
+                    minimumSize: Size(double.infinity, 50),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(30),
+                    borderRadius: BorderRadius.circular(25),
                     ),
                   ),
                   child: Text('I AGREE', style: TextStyle(fontSize: 16)),
