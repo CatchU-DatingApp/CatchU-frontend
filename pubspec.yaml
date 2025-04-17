@@ -1,11 +1,10 @@
 name: catchu
 description: "A new Flutter project."
-publish_to: 'none'
+publish_to: "none"
 version: 0.1.0
 
 environment:
   sdk: ^3.7.0
-
 
 dependencies:
   flutter:
@@ -16,16 +15,18 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^5.0.0
-  
+
 flutter:
   uses-material-design: true
   assets:
     - assets/images/
     - assets/images/jawa.png
+    - assets/images/LocationImage.png
+    - assets/images/LogoCatchURules.png
 
 flutter_native_splash:
-  color: "#FDFAF6" 
-  image: assets/images/CatchU_Logo.png 
+  color: "#FDFAF6"
+  image: assets/images/CatchU_Logo.png
   android: true
   ios: true
   fullscreen: true
