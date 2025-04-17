@@ -77,12 +77,12 @@ class SignUpRulesPage extends StatelessWidget {
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Color(0xFFFF2E63),
-                    foregroundColor: Colors.white,
-                    disabledBackgroundColor: Colors.pink[200],
+                    foregroundColor: Colors.white, // warna teks putih
                     minimumSize: Size(double.infinity, 50),
                     shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(25),
+                      borderRadius: BorderRadius.circular(25),
                     ),
+                    elevation: 2,
                   ),
                   child: Text('I AGREE', style: TextStyle(fontSize: 16)),
                 ),
@@ -103,8 +103,21 @@ class SignUpRulesPage extends StatelessWidget {
       width: double.infinity,
       padding: EdgeInsets.all(16),
       decoration: BoxDecoration(
-        border: Border.all(color: Colors.pinkAccent),
+        border: Border.all(
+          color: Colors.pinkAccent,
+          width: 2,
+        ), // border lebih tebal
         borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.pinkAccent.withOpacity(0.2),
+            spreadRadius: 1,
+            blurRadius: 5,
+            offset: Offset(0, 3),
+          ),
+        ],
+        color:
+            Colors.white, // pastikan background-nya putih biar shadow kelihatan
       ),
       child: RichText(
         text: TextSpan(
