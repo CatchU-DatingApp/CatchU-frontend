@@ -1,8 +1,7 @@
 import 'dart:async';
-
 import 'package:flutter/material.dart';
-
 import 'sign_up1_dan_2.dart';
+import 'homepage1.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({Key? key}) : super(key: key);
@@ -400,6 +399,10 @@ class _OtpVerificationPageLoginState extends State<OtpVerificationPageLogin> {
 
       // Mock verification - in real app, check with your backend
       if (otp == '1234') {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => DiscoverPage()),
+        );
         // Replace with actual verification and actual homepage
       } else {
         setState(() => _errorMessage = 'Invalid OTP code. Please try again');
