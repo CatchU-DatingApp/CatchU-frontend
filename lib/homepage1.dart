@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'profile.dart';
 
 void main() {
   runApp(MyApp());
@@ -20,9 +21,19 @@ class _DiscoverPageState extends State<DiscoverPage> {
   int _currentIndex = 0;
 
   void _onTabTapped(int index) {
+    if (index == 2) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => ProfilePage()),
+      );
+      return;
+    }
+
     setState(() {
       _currentIndex = index;
     });
+
+    // Bisa nanti ditambahin navigasi Chat juga
 
     // Logika bisa diubah jadi navigasi antar halaman jika diinginkan
     switch (index) {
