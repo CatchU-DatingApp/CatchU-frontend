@@ -56,11 +56,11 @@ class _ChatPageState extends State<ChatPage> {
                 child: ListView(
                   scrollDirection: Axis.horizontal,
                   children: [
-                    _buildMatchAvatar('assets/images/1.png', 'Anita'),
-                    _buildMatchAvatar('assets/images/2.png', 'Reshma'),
-                    _buildMatchAvatar('assets/images/3.png', 'Roma'),
-                    _buildMatchAvatar('assets/images/4.png', 'Yami'),
-                    _buildMatchAvatar('assets/images/5.png', 'Priti'),
+                    _buildMatchAvatar('assets/images/1.jpg', 'Go Yoon Jung'),
+                    _buildMatchAvatar('assets/images/2.jpg', 'Jeon Jong Seo'),
+                    _buildMatchAvatar('assets/images/3.jpg', 'Baek Songmin'),
+                    _buildMatchAvatar('assets/images/jawa.png', 'Orang Kendal'),
+                    _buildMatchAvatar('assets/images/5.jpg', 'Orang Arab'),
                   ],
                 ),
               ),
@@ -78,31 +78,31 @@ class _ChatPageState extends State<ChatPage> {
                 child: ListView(
                   children: [
                     _buildMessageTile(
-                      'Anika',
+                      'Go Yoon Jung',
                       'Oh i don\'t like fish 🙈',
-                      'assets/images/1.png',
+                      'assets/images/1.jpg',
                       unread: 2,
                     ),
                     _buildMessageTile(
-                      'Shreya',
+                      'Jeon Jong Seo',
                       'Can we go somewhere?',
-                      'assets/images/2.png',
+                      'assets/images/2.jpg',
                       unread: 1,
                     ),
                     _buildMessageTile(
-                      'Lilly',
+                      'Baek Songmin',
                       'You: If I were a stop light, I’d turn',
-                      'assets/images/3.png',
+                      'assets/images/3.jpg',
                     ),
                     _buildMessageTile(
-                      'Mona',
+                      'Orang Kendal',
                       'See you soon 😉',
-                      'assets/images/4.png',
+                      'assets/images/jawa.png',
                     ),
                     _buildMessageTile(
-                      'Sonia',
+                      'Orang Arab',
                       'Are you serious?!',
-                      'assets/images/5.png',
+                      'assets/images/5.jpg',
                       unread: 1,
                     ),
                     _buildMessageTile(

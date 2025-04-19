@@ -79,7 +79,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 shrinkWrap: true,
                 physics: NeverScrollableScrollPhysics(),
                 children: [
-                  _buildPhotoSlot(imagePath: 'assets/images/profile_pic.png'),
+                  _buildPhotoSlot(imagePath: 'assets/images/jawa.png'),
                   _buildPhotoSlot(),
                   _buildPhotoSlot(),
                   _buildPhotoSlot(),
