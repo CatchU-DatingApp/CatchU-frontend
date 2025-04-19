@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'chat.dart';
+import 'homepage1.dart';
 
 class ProfilePage extends StatefulWidget {
   @override
@@ -30,13 +31,21 @@ class _ProfilePageState extends State<ProfilePage> {
 
   void _onTabTapped(int index) {
     if (index == 0) {
-      Navigator.pop(context);
-    } else if (index == 1) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => DiscoverPage()),
+      );
+      return;
+    }
+
+    if (index == 1) {
       Navigator.push(
         context,
         MaterialPageRoute(builder: (context) => ChatPage()),
       );
+      return;
     }
+
     setState(() {
       _currentIndex = index;
     });
@@ -115,7 +124,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     ),
                   ),
                   child: Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 18, vertical: 18),
+                    padding: EdgeInsets.symmetric(horizontal: 15, vertical: 15),
                     child: Text(
                       '${(profileCompletion * 100).toInt()}% complete',
                       style: TextStyle(
