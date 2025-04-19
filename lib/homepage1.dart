@@ -11,7 +11,33 @@ class MyApp extends StatelessWidget {
   }
 }
 
-class DiscoverPage extends StatelessWidget {
+class DiscoverPage extends StatefulWidget {
+  @override
+  _DiscoverPageState createState() => _DiscoverPageState();
+}
+
+class _DiscoverPageState extends State<DiscoverPage> {
+  int _currentIndex = 0;
+
+  void _onTabTapped(int index) {
+    setState(() {
+      _currentIndex = index;
+    });
+
+    // Logika bisa diubah jadi navigasi antar halaman jika diinginkan
+    switch (index) {
+      case 0:
+        print("Home tapped");
+        break;
+      case 1:
+        print("Chat tapped");
+        break;
+      case 2:
+        print("Profile tapped");
+        break;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -157,12 +183,19 @@ class DiscoverPage extends StatelessWidget {
       // Bottom Nav
       bottomNavigationBar: BottomNavigationBar(
         items: [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: ''),
-          BottomNavigationBarItem(icon: Icon(Icons.bar_chart), label: ''),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: ''),
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.chat_bubble_outline),
+            label: 'Chat',
+          ),
+          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
         ],
-        currentIndex: 0,
-        onTap: (index) {},
+        currentIndex: _currentIndex,
+        onTap: _onTabTapped,
+        selectedItemColor: Colors.pinkAccent,
+        unselectedItemColor: Colors.grey,
+        showSelectedLabels: false,
+        showUnselectedLabels: false,
       ),
     );
   }
