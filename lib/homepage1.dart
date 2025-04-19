@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'profile.dart';
+import 'chat.dart';
 
 void main() {
   runApp(MyApp());
@@ -29,13 +30,18 @@ class _DiscoverPageState extends State<DiscoverPage> {
       return;
     }
 
+    if (index == 1) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => ChatPage()),
+      );
+      return;
+    }
+
     setState(() {
       _currentIndex = index;
     });
 
-    // Bisa nanti ditambahin navigasi Chat juga
-
-    // Logika bisa diubah jadi navigasi antar halaman jika diinginkan
     switch (index) {
       case 0:
         print("Home tapped");

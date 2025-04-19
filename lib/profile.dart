@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'chat.dart';
 
 class ProfilePage extends StatefulWidget {
   @override
@@ -11,8 +12,17 @@ class _ProfilePageState extends State<ProfilePage> {
   void _onTabTapped(int index) {
     if (index == 0) {
       Navigator.pop(context); // Balik ke DiscoverPage
+      return;
     }
-    // Kalau chat atau profile, bisa tambah logika sesuai kebutuhan
+
+    if (index == 1) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => ChatPage()),
+      );
+      return;
+    }
+
     setState(() {
       _currentIndex = index;
     });
