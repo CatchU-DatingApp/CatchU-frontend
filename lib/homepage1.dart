@@ -76,7 +76,7 @@ class DiscoverPage extends StatelessWidget {
                           topRight: Radius.circular(20),
                         ),
                         child: Image.asset(
-                          'assets/jawa.png',
+                          'assets/images/jawa.png',
                           height: 340,
                           width: double.infinity,
                           fit: BoxFit.cover,
