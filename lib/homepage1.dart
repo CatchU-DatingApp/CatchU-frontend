@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'profile.dart';
 import 'chat.dart';
-import 'dart:math';
 
 // Model untuk data profil
 class ProfileData {
@@ -76,9 +75,9 @@ class _DiscoverPageState extends State<DiscoverPage> with SingleTickerProviderSt
     super.initState();
     _swipeController = AnimationController(
       vsync: this,
-      duration: Duration(milliseconds: 300),
+      duration: Duration(milliseconds: 400), // Increased duration for smoother animation
     );
-    
+
     _slideAnimation = Tween<Offset>(
       begin: Offset.zero,
       end: Offset(0, 0),
@@ -86,7 +85,7 @@ class _DiscoverPageState extends State<DiscoverPage> with SingleTickerProviderSt
       parent: _swipeController,
       curve: Curves.easeOut,
     ));
-    
+
     _rotationAnimation = Tween<double>(
       begin: 0.0,
       end: 0.0,
@@ -94,7 +93,7 @@ class _DiscoverPageState extends State<DiscoverPage> with SingleTickerProviderSt
       parent: _swipeController,
       curve: Curves.easeOut,
     ));
-    
+
     _swipeController.addStatusListener((status) {
       if (status == AnimationStatus.completed) {
         setState(() {
@@ -136,20 +135,21 @@ class _DiscoverPageState extends State<DiscoverPage> with SingleTickerProviderSt
 
   void _swipeLeft() {
     if (_isAnimating) return; // Prevent multiple swipes while animating
-    
+
     setState(() {
       _isAnimating = true;
     });
-    
+
     // Update animation parameters for left swipe
     _slideAnimation = Tween<Offset>(
       begin: Offset.zero,
-      end: Offset(-3.0, 0.2), // Move left and slightly down
+      end: Offset(-1.0, 0.0), // Move left
     ).animate(CurvedAnimation(
       parent: _swipeController,
       curve: Curves.easeOut,
+       // Move left
     ));
-    
+
     _rotationAnimation = Tween<double>(
       begin: 0.0,
       end: -0.3, // Rotate counter-clockwise
@@ -157,27 +157,27 @@ class _DiscoverPageState extends State<DiscoverPage> with SingleTickerProviderSt
       parent: _swipeController,
       curve: Curves.easeOut,
     ));
-    
+
     // Start the animation
     _swipeController.forward();
   }
 
   void _swipeRight() {
     if (_isAnimating) return; // Prevent multiple swipes while animating
-    
+
     setState(() {
       _isAnimating = true;
     });
-    
+
     // Update animation parameters for right swipe
     _slideAnimation = Tween<Offset>(
       begin: Offset.zero,
-      end: Offset(3.0, 0.2), // Move right and slightly down
+      end: Offset(1.0, 0.0), // Move right
     ).animate(CurvedAnimation(
       parent: _swipeController,
       curve: Curves.easeOut,
     ));
-    
+
     _rotationAnimation = Tween<double>(
       begin: 0.0,
       end: 0.3, // Rotate clockwise
@@ -185,7 +185,7 @@ class _DiscoverPageState extends State<DiscoverPage> with SingleTickerProviderSt
       parent: _swipeController,
       curve: Curves.easeOut,
     ));
-    
+
     // Start the animation
     _swipeController.forward();
   }
@@ -231,25 +231,19 @@ class _DiscoverPageState extends State<DiscoverPage> with SingleTickerProviderSt
                       scale: 0.8, // Even smaller
                       child: Transform.translate(
                         offset: Offset(0, -30), // Even higher
-                        child: Opacity(
-                          opacity: 0.4,
-                          child: _buildProfileCard(nextNextProfile),
-                        ),
+                        child: _buildProfileCard(nextNextProfile),
                       ),
                     ),
-                    
+
                     // Second card (middle of stack)
                     Transform.scale(
                       scale: 0.9, // Slightly smaller
                       child: Transform.translate(
                         offset: Offset(0, -15), // Slightly higher
-                        child: Opacity(
-                          opacity: 0.7,
-                          child: _buildProfileCard(nextProfile),
-                        ),
+                        child: _buildProfileCard(nextProfile),
                       ),
                     ),
-                    
+
                     // Current card with animation (top of stack)
                     AnimatedBuilder(
                       animation: _swipeController,
@@ -311,66 +305,8 @@ class _DiscoverPageState extends State<DiscoverPage> with SingleTickerProviderSt
               ),
             ),
           ),
-          
-          // Optional: Like/Dislike indicators during swipe
-          _isAnimating ? AnimatedBuilder(
-            animation: _swipeController,
-            builder: (context, child) {
-              // Show like indicator when swiping right
-              if (_slideAnimation.value.dx > 0.5) {
-                return Positioned(
-                  top: 250,
-                  right: 40,
-                  child: Transform.rotate(
-                    angle: -0.2,
-                    child: Container(
-                      padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                      decoration: BoxDecoration(
-                        border: Border.all(color: Colors.green, width: 3),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Text(
-                        'LIKE',
-                        style: TextStyle(
-                          color: Colors.green,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 32,
-                        ),
-                      ),
-                    ),
-                  ),
-                );
-              }
-              
-              // Show dislike indicator when swiping left
-              if (_slideAnimation.value.dx < -0.5) {
-                return Positioned(
-                  top: 250,
-                  left: 40,
-                  child: Transform.rotate(
-                    angle: 0.2,
-                    child: Container(
-                      padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                      decoration: BoxDecoration(
-                        border: Border.all(color: Colors.red, width: 3),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Text(
-                        'NOPE',
-                        style: TextStyle(
-                          color: Colors.red,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 32,
-                        ),
-                      ),
-                    ),
-                  ),
-                );
-              }
-              
-              return SizedBox.shrink();
-            },
-          ) : SizedBox.shrink(),
+
+
         ],
       ),
 
