@@ -149,13 +149,14 @@ class _SignUpPage6State extends State<SignUpPage6> {
             children: [
               Icon(
                 icon,
-                size: 32,
+                size: 48,
                 color: isSelected ? Colors.white : Colors.black,
               ),
               SizedBox(height: 4),
               Text(
                 gender,
                 style: TextStyle(
+                  fontSize: 20,
                   color: isSelected ? Colors.white : Colors.black,
                   fontWeight: FontWeight.bold,
                 ),
