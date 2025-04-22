@@ -38,7 +38,7 @@ class _DiscoverPageState extends State<DiscoverPage> with SingleTickerProviderSt
   final List<ProfileData> _profiles = [
     ProfileData(
       name: 'Alice',
-      image: 'assets/profile1.jpg',
+      image: 'assets/images/1.jpg',
       distance: '2 km',
       bio: 'Loves hiking and photography.',
       faculty: 'Informatics',
@@ -46,7 +46,7 @@ class _DiscoverPageState extends State<DiscoverPage> with SingleTickerProviderSt
     ),
     ProfileData(
       name: 'Bob',
-      image: 'assets/profile2.jpg',
+      image: 'assets/images/2.jpg',
       distance: '5 km',
       bio: 'Enjoys painting and jazz music.',
       faculty: 'Art',
@@ -54,10 +54,10 @@ class _DiscoverPageState extends State<DiscoverPage> with SingleTickerProviderSt
     ),
     ProfileData(
       name: 'Clara',
-      image: 'assets/profile3.jpg',
+      image: 'assets/images/3.jpg',
       distance: '1.2 km',
       bio: 'Tech enthusiast and dog lover.',
-      faculty: 'Engineering',
+      faculty: 'Fakultas Seks Bebas',
       interests: ['Tech', 'Dogs', 'Gaming'],
     ),
   ];
