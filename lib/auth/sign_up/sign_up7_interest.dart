@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:catchu/sign_up8_picture.dart';
+import 'package:catchu/auth/sign_up/sign_up8_picture.dart';
 
 class SignUpPage7 extends StatefulWidget {
   final String phoneNumber;

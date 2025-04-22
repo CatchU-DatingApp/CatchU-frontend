@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:catchu/sign_up9_Location.dart';
+import 'package:catchu/auth/sign_up/sign_up9_Location.dart';
 
 class SignUpPage8 extends StatefulWidget {
   @override

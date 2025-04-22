@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:catchu/sign_up7_interest.dart';
+import 'package:catchu/auth/sign_up/sign_up7_interest.dart';
 
 class SignUpPage6 extends StatefulWidget {
   final String phoneNumber;
@@ -197,7 +197,6 @@ class _SignUpPage6State extends State<SignUpPage6> {
 
 // Untuk menghilangkan efek scroll glow
 class NoGlowScrollBehavior extends ScrollBehavior {
-  @override
   Widget buildViewportChrome(
     BuildContext context,
     Widget child,

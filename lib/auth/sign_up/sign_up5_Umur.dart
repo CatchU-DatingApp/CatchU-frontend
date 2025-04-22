@@ -1,6 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:catchu/sign_up6_gender.dart';
+import 'package:catchu/auth/sign_up/sign_up6_gender.dart';
 
 class SignUpPage5 extends StatefulWidget {
   final String phoneNumber;

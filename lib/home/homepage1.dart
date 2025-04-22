@@ -25,7 +25,8 @@ class DiscoverPage extends StatefulWidget {
   _DiscoverPageState createState() => _DiscoverPageState();
 }
 
-class _DiscoverPageState extends State<DiscoverPage> with SingleTickerProviderStateMixin {
+class _DiscoverPageState extends State<DiscoverPage>
+    with SingleTickerProviderStateMixin {
   int _currentIndex = 0;
   late AnimationController _swipeController;
   late Animation<Offset> _slideAnimation;
@@ -70,15 +71,15 @@ class _DiscoverPageState extends State<DiscoverPage> with SingleTickerProviderSt
       duration: Duration(milliseconds: 400),
     );
 
-    _slideAnimation = Tween<Offset>(begin: Offset.zero, end: Offset(0, 0)).animate(CurvedAnimation(
-      parent: _swipeController,
-      curve: Curves.easeOut,
-    ));
+    _slideAnimation = Tween<Offset>(
+      begin: Offset.zero,
+      end: Offset(0, 0),
+    ).animate(CurvedAnimation(parent: _swipeController, curve: Curves.easeOut));
 
-    _rotationAnimation = Tween<double>(begin: 0.0, end: 0.0).animate(CurvedAnimation(
-      parent: _swipeController,
-      curve: Curves.easeOut,
-    ));
+    _rotationAnimation = Tween<double>(
+      begin: 0.0,
+      end: 0.0,
+    ).animate(CurvedAnimation(parent: _swipeController, curve: Curves.easeOut));
 
     _swipeController.addStatusListener((status) {
       if (status == AnimationStatus.completed) {
@@ -101,11 +102,17 @@ class _DiscoverPageState extends State<DiscoverPage> with SingleTickerProviderSt
 
   void _onTabTapped(int index) {
     if (index == 2) {
-      Navigator.push(context, MaterialPageRoute(builder: (context) => ProfilePage()));
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => ProfilePage()),
+      );
       return;
     }
     if (index == 1) {
-      Navigator.push(context, MaterialPageRoute(builder: (context) => ChatPage()));
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => ChatPage()),
+      );
       return;
     }
     setState(() => _currentIndex = index);
@@ -115,12 +122,14 @@ class _DiscoverPageState extends State<DiscoverPage> with SingleTickerProviderSt
     if (_isAnimating) return;
     _scrollController.jumpTo(0); // Reset scroll before swipe
     setState(() => _isAnimating = true);
-    _slideAnimation = Tween<Offset>(begin: Offset.zero, end: Offset(-1.0, 0.0)).animate(
-      CurvedAnimation(parent: _swipeController, curve: Curves.easeOut),
-    );
-    _rotationAnimation = Tween<double>(begin: 0.0, end: -0.3).animate(
-      CurvedAnimation(parent: _swipeController, curve: Curves.easeOut),
-    );
+    _slideAnimation = Tween<Offset>(
+      begin: Offset.zero,
+      end: Offset(-1.0, 0.0),
+    ).animate(CurvedAnimation(parent: _swipeController, curve: Curves.easeOut));
+    _rotationAnimation = Tween<double>(
+      begin: 0.0,
+      end: -0.3,
+    ).animate(CurvedAnimation(parent: _swipeController, curve: Curves.easeOut));
     _swipeController.forward();
   }
 
@@ -128,20 +137,24 @@ class _DiscoverPageState extends State<DiscoverPage> with SingleTickerProviderSt
     if (_isAnimating) return;
     _scrollController.jumpTo(0); // Reset scroll before swipe
     setState(() => _isAnimating = true);
-    _slideAnimation = Tween<Offset>(begin: Offset.zero, end: Offset(1.0, 0.0)).animate(
-      CurvedAnimation(parent: _swipeController, curve: Curves.easeOut),
-    );
-    _rotationAnimation = Tween<double>(begin: 0.0, end: 0.3).animate(
-      CurvedAnimation(parent: _swipeController, curve: Curves.easeOut),
-    );
+    _slideAnimation = Tween<Offset>(
+      begin: Offset.zero,
+      end: Offset(1.0, 0.0),
+    ).animate(CurvedAnimation(parent: _swipeController, curve: Curves.easeOut));
+    _rotationAnimation = Tween<double>(
+      begin: 0.0,
+      end: 0.3,
+    ).animate(CurvedAnimation(parent: _swipeController, curve: Curves.easeOut));
     _swipeController.forward();
   }
 
   @override
   Widget build(BuildContext context) {
     final currentProfile = _profiles[_currentProfileIndex];
-    final nextProfile = _profiles[(_currentProfileIndex + 1) % _profiles.length];
-    final nextNextProfile = _profiles[(_currentProfileIndex + 2) % _profiles.length];
+    final nextProfile =
+        _profiles[(_currentProfileIndex + 1) % _profiles.length];
+    final nextNextProfile =
+        _profiles[(_currentProfileIndex + 2) % _profiles.length];
 
     final screenHeight = MediaQuery.of(context).size.height;
     final cardTopOffset = 110.0;
@@ -167,7 +180,11 @@ class _DiscoverPageState extends State<DiscoverPage> with SingleTickerProviderSt
             left: 16,
             child: Text(
               'Discover',
-              style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.white),
+              style: TextStyle(
+                fontSize: 28,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
             ),
           ),
           Padding(
@@ -195,7 +212,9 @@ class _DiscoverPageState extends State<DiscoverPage> with SingleTickerProviderSt
                     animation: _swipeController,
                     builder: (context, child) {
                       return Transform.translate(
-                        offset: _slideAnimation.value * MediaQuery.of(context).size.width,
+                        offset:
+                            _slideAnimation.value *
+                            MediaQuery.of(context).size.width,
                         child: Transform.rotate(
                           angle: _rotationAnimation.value,
                           child: child,
@@ -238,7 +257,10 @@ class _DiscoverPageState extends State<DiscoverPage> with SingleTickerProviderSt
       bottomNavigationBar: BottomNavigationBar(
         items: [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-          BottomNavigationBarItem(icon: Icon(Icons.chat_bubble_outline), label: 'Chat'),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.chat_bubble_outline),
+            label: 'Chat',
+          ),
           BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
         ],
         currentIndex: _currentIndex,
@@ -270,8 +292,15 @@ class _DiscoverPageState extends State<DiscoverPage> with SingleTickerProviderSt
               AspectRatio(
                 aspectRatio: 0.63,
                 child: ClipRRect(
-                  borderRadius: BorderRadius.only(topLeft: Radius.circular(20), topRight: Radius.circular(20)),
-                  child: Image.asset(profile.image, width: double.infinity, fit: BoxFit.cover),
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(20),
+                    topRight: Radius.circular(20),
+                  ),
+                  child: Image.asset(
+                    profile.image,
+                    width: double.infinity,
+                    fit: BoxFit.cover,
+                  ),
                 ),
               ),
               Padding(
@@ -279,13 +308,22 @@ class _DiscoverPageState extends State<DiscoverPage> with SingleTickerProviderSt
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(profile.name, style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+                    Text(
+                      profile.name,
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                     SizedBox(height: 4),
                     Row(
                       children: [
                         Icon(Icons.location_on, size: 16, color: Colors.grey),
                         SizedBox(width: 4),
-                        Text(profile.distance, style: TextStyle(color: Colors.grey, fontSize: 14)),
+                        Text(
+                          profile.distance,
+                          style: TextStyle(color: Colors.grey, fontSize: 14),
+                        ),
                       ],
                     ),
                     SizedBox(height: 8),
@@ -294,24 +332,52 @@ class _DiscoverPageState extends State<DiscoverPage> with SingleTickerProviderSt
                         Icon(Icons.school, size: 16, color: Colors.pinkAccent),
                         SizedBox(width: 4),
                         Expanded(
-                          child: Text(profile.faculty,
-                              style: TextStyle(color: Colors.black87, fontWeight: FontWeight.w500, fontSize: 14)),
+                          child: Text(
+                            profile.faculty,
+                            style: TextStyle(
+                              color: Colors.black87,
+                              fontWeight: FontWeight.w500,
+                              fontSize: 14,
+                            ),
+                          ),
                         ),
                       ],
                     ),
                     Divider(height: 24),
-                    Text('About Me',
-                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.pinkAccent)),
+                    Text(
+                      'About Me',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.pinkAccent,
+                      ),
+                    ),
                     SizedBox(height: 8),
-                    Text(profile.bio, style: TextStyle(fontSize: 15, height: 1.4, color: Colors.black87)),
+                    Text(
+                      profile.bio,
+                      style: TextStyle(
+                        fontSize: 15,
+                        height: 1.4,
+                        color: Colors.black87,
+                      ),
+                    ),
                     SizedBox(height: 16),
-                    Text('Interests',
-                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.pinkAccent)),
+                    Text(
+                      'Interests',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.pinkAccent,
+                      ),
+                    ),
                     SizedBox(height: 12),
                     Wrap(
                       spacing: 8,
                       runSpacing: 8,
-                      children: profile.interests.map((interest) => _interestTag(interest)).toList(),
+                      children:
+                          profile.interests
+                              .map((interest) => _interestTag(interest))
+                              .toList(),
                     ),
                   ],
                 ),
@@ -331,7 +397,14 @@ class _DiscoverPageState extends State<DiscoverPage> with SingleTickerProviderSt
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: Colors.pinkAccent.withOpacity(0.5), width: 1),
       ),
-      child: Text(text, style: TextStyle(color: Colors.pinkAccent, fontSize: 13, fontWeight: FontWeight.w500)),
+      child: Text(
+        text,
+        style: TextStyle(
+          color: Colors.pinkAccent,
+          fontSize: 13,
+          fontWeight: FontWeight.w500,
+        ),
+      ),
     );
   }
 
@@ -349,7 +422,9 @@ class _DiscoverPageState extends State<DiscoverPage> with SingleTickerProviderSt
         decoration: BoxDecoration(
           color: Colors.white,
           shape: BoxShape.circle,
-          boxShadow: [BoxShadow(color: shadowColor, blurRadius: 12, offset: Offset(0, 6))],
+          boxShadow: [
+            BoxShadow(color: shadowColor, blurRadius: 12, offset: Offset(0, 6)),
+          ],
         ),
         child: Center(child: Icon(icon, color: iconColor, size: 32)),
       ),

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'homepage1.dart';
+import '../../home/homepage1.dart';
 
 class SignUpRulesPage extends StatelessWidget {
   const SignUpRulesPage({super.key});

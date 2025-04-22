@@ -1,4 +1,4 @@
-import 'package:catchu/sign_up10_Rules.dart';
+import 'package:catchu/auth/sign_up/sign_up10_Rules.dart';
 import 'package:flutter/material.dart';
 
 class EnableLocationPage extends StatelessWidget {

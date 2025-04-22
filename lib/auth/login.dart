@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'sign_up1_dan_2.dart';
-import 'homepage1.dart';
+import 'sign_up/sign_up1_dan_2.dart';
+import '../home/homepage1.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({Key? key}) : super(key: key);

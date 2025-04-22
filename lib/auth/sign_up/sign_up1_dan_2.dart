@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:catchu/sign_up3.dart';
+import 'package:catchu/auth/sign_up/sign_up3.dart';
 import 'package:flutter/material.dart';
 
 class SignUpPage1 extends StatefulWidget {
