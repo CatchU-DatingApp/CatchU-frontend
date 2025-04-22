@@ -31,7 +31,7 @@ class _SignUpPage3State extends State<SignUpPage3> {
           child: ClipRRect(
             borderRadius: BorderRadius.circular(50),
             child: LinearProgressIndicator(
-              value: 0.375, // progress for step 3
+              value: 0.25, // 25% progress for step 3
               backgroundColor: const Color.fromARGB(255, 255, 233, 241),
               valueColor: AlwaysStoppedAnimation<Color>(Colors.pink[400]!),
             ),

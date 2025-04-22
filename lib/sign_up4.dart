@@ -47,7 +47,7 @@ class _SignUpPage4State extends State<SignUpPage4> {
           child: ClipRRect(
             borderRadius: BorderRadius.circular(50),
             child: LinearProgressIndicator(
-              value: 0.5, // progress for step 4
+              value: 0.375, // 37,5% progress for step 4
               backgroundColor: const Color.fromARGB(255, 255, 233, 241),
               valueColor: AlwaysStoppedAnimation<Color>(Colors.pink[400]!),
             ),
