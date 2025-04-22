@@ -6,10 +6,16 @@ version: 0.1.0
 environment:
   sdk: ^3.7.0
 
+# FIREBASE PACKAGES
 dependencies:
   flutter:
     sdk: flutter
   flutter_native_splash: ^2.4.5
+
+  firebase_core: ^2.29.0 # Core Firebase functionality
+  cloud_firestore: ^4.17.1 # Firestore database
+  firebase_auth: ^4.19.0 # Firebase Authentication
+  firebase_storage: ^11.7.7 # Firebase Storage for file uploads
 
 dev_dependencies:
   flutter_test:
