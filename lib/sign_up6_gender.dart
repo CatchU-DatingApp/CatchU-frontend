@@ -31,117 +31,96 @@ class _SignUpPage6State extends State<SignUpPage6> {
           child: ClipRRect(
             borderRadius: BorderRadius.circular(50),
             child: LinearProgressIndicator(
-              value: 0.625,
+              value: 0.625, // 62,5% progress for step 6
               backgroundColor: const Color.fromARGB(255, 255, 233, 241),
               valueColor: AlwaysStoppedAnimation<Color>(Colors.pink[400]!),
             ),
           ),
         ),
       ),
-      body: SafeArea(
+      body: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 24.0),
         child: Column(
           children: [
-            Expanded(
-              child: ScrollConfiguration(
-                behavior: NoGlowScrollBehavior(),
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      SizedBox(height: 24),
-                      Text(
-                        "What’s Your Gender?",
-                        style: TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black87,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                      SizedBox(height: 8),
-                      Text(
-                        "Tell us about your gender",
-                        style: TextStyle(fontSize: 16, color: Colors.black54),
-                        textAlign: TextAlign.center,
-                      ),
-                      SizedBox(height: 40),
-                      Center(
-                        child: Column(
-                          children: [
-                            _buildGenderButton(
-                              "Male",
-                              Icons.male,
-                              Colors.pink[400]!,
-                            ),
-                            SizedBox(height: 20),
-                            _buildGenderButton(
-                              "Female",
-                              Icons.female,
-                              Colors.black54,
-                            ),
-                          ],
-                        ),
-                      ),
-                      SizedBox(height: 40),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24.0),
-              child: SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed:
-                      selectedGender == null || _isLoading
-                          ? null
-                          : () {
-                            setState(() => _isLoading = true);
-                            Future.delayed(Duration(seconds: 1), () {
-                              setState(() => _isLoading = false);
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder:
-                                      (context) => SignUpPage7(
-                                        phoneNumber: widget.phoneNumber,
-                                      ),
-                                ),
-                              );
-                            });
-                          },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.pink[400],
-                    foregroundColor: Colors.white,
-                    disabledBackgroundColor: Colors.pink[200],
-                    minimumSize: Size(double.infinity, 50),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(25),
-                    ),
-                  ),
-                  child:
-                      _isLoading
-                          ? SizedBox(
-                            height: 20,
-                            width: 20,
-                            child: CircularProgressIndicator(
-                              color: Colors.white,
-                              strokeWidth: 2,
-                            ),
-                          )
-                          : Text(
-                            'Continue',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                ),
-              ),
-            ),
             SizedBox(height: 24),
+
+            Text(
+              "What’s Your Gender?",
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: Colors.black87,
+              ),
+            ),
+            SizedBox(height: 8),
+            Text(
+              "Tell us about your gender",
+              style: TextStyle(fontSize: 16, color: Colors.black54),
+              textAlign: TextAlign.center,
+            ),
+            SizedBox(height: 40),
+
+            // Gender Buttons
+            Column(
+              children: [
+                _buildGenderButton("Male", Icons.male, Colors.pink[400]!),
+                SizedBox(height: 20),
+                _buildGenderButton("Female", Icons.female, Colors.black54),
+              ],
+            ),
+            Spacer(),
+
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed:
+                    selectedGender == null || _isLoading
+                        ? null
+                        : () {
+                          setState(() => _isLoading = true);
+                          Future.delayed(Duration(seconds: 1), () {
+                            // TODO: Ganti dengan halaman berikutnya
+                            setState(() => _isLoading = false);
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder:
+                                    (context) => SignUpPage7(
+                                      phoneNumber: widget.phoneNumber,
+                                    ), // next page
+                              ),
+                            );
+                          });
+                        },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.pink[400],
+                  foregroundColor: Colors.white,
+                  disabledBackgroundColor: Colors.pink[200],
+                  minimumSize: Size(double.infinity, 50),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(25),
+                  ),
+                ),
+                child:
+                    _isLoading
+                        ? SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 2,
+                          ),
+                        )
+                        : Text(
+                          'Continue',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+              ),
+            ),
+            SizedBox(height: 40),
           ],
         ),
       ),
@@ -151,11 +130,6 @@ class _SignUpPage6State extends State<SignUpPage6> {
   Widget _buildGenderButton(String gender, IconData icon, Color color) {
     final isSelected = selectedGender == gender;
 
-    double screenWidth = MediaQuery.of(context).size.width;
-    double buttonSize = screenWidth * 0.4;
-    double iconSize = screenWidth * 0.1;
-    double fontSize = screenWidth * 0.05;
-
     return GestureDetector(
       onTap: () {
         setState(() {
@@ -163,8 +137,8 @@ class _SignUpPage6State extends State<SignUpPage6> {
         });
       },
       child: Container(
-        height: buttonSize.clamp(140.0, 220.0),
-        width: buttonSize.clamp(140.0, 220.0),
+        height: 190,
+        width: 190,
         decoration: BoxDecoration(
           color: isSelected ? Colors.pink[400] : Colors.pink[50],
           shape: BoxShape.circle,
@@ -175,14 +149,14 @@ class _SignUpPage6State extends State<SignUpPage6> {
             children: [
               Icon(
                 icon,
-                size: iconSize.clamp(32.0, 64.0),
+                size: 48,
                 color: isSelected ? Colors.white : Colors.black,
               ),
-              SizedBox(height: 12),
+              SizedBox(height: 4),
               Text(
                 gender,
                 style: TextStyle(
-                  fontSize: fontSize.clamp(14.0, 24.0),
+                  fontSize: 20,
                   color: isSelected ? Colors.white : Colors.black,
                   fontWeight: FontWeight.bold,
                 ),
@@ -192,17 +166,5 @@ class _SignUpPage6State extends State<SignUpPage6> {
         ),
       ),
     );
-  }
-}
-
-// Untuk menghilangkan efek scroll glow
-class NoGlowScrollBehavior extends ScrollBehavior {
-  @override
-  Widget buildViewportChrome(
-    BuildContext context,
-    Widget child,
-    AxisDirection axisDirection,
-  ) {
-    return child;
   }
 }

@@ -10,9 +10,7 @@ class ProfilePage extends StatefulWidget {
 class _ProfilePageState extends State<ProfilePage> {
   int _currentIndex = 2;
   double profileCompletion = 0.58;
-  TextEditingController bioController = TextEditingController(
-    text: 'baik sekali',
-  );
+  TextEditingController bioController = TextEditingController(text: 'baik sekali');
 
   List<String> selectedInterests = [];
 
@@ -30,222 +28,6 @@ class _ProfilePageState extends State<ProfilePage> {
     {"label": "Sports", "icon": Icons.sports_soccer},
     {"label": "Fashion", "icon": Icons.checkroom},
   ];
-
-  String? selectedFaculty;
-  final List<String> faculties = [
-    'Fakultas Industri Kreatif',
-    'Fakultas Komunikasi dan Bisnis',
-    'Fakultas Ekonomi dan Bisnis',
-    'Fakultas Informatika',
-    'Fakultas Teknik Elektro',
-    'Fakultas Rekayasa Industri',
-    'Fakultas Ilmu Terapan',
-  ];
-
-  void _showInterestSelector() {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.white,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) {
-        List<String> tempSelected = List.from(selectedInterests);
-
-        return StatefulBuilder(
-          builder: (context, setModalState) {
-            return Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    "Select Interests (Max 3)",
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                  SizedBox(height: 16),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children:
-                        interests.map((interest) {
-                          final label = interest['label'];
-                          final icon = interest['icon'];
-                          final isSelected = tempSelected.contains(label);
-
-                          return GestureDetector(
-                            onTap: () {
-                              setModalState(() {
-                                if (isSelected) {
-                                  tempSelected.remove(label);
-                                } else {
-                                  if (tempSelected.length < 3) {
-                                    tempSelected.add(label);
-                                  }
-                                }
-                              });
-                            },
-                            child: Container(
-                              padding: EdgeInsets.symmetric(
-                                horizontal: 14,
-                                vertical: 8,
-                              ),
-                              decoration: BoxDecoration(
-                                color:
-                                    isSelected
-                                        ? Colors.pink[400]
-                                        : Colors.white,
-                                borderRadius: BorderRadius.circular(30),
-                                border: Border.all(color: Colors.pink.shade100),
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(
-                                    icon,
-                                    size: 18,
-                                    color:
-                                        isSelected
-                                            ? Colors.white
-                                            : Colors.pink[400],
-                                  ),
-                                  SizedBox(width: 6),
-                                  Text(
-                                    label,
-                                    style: TextStyle(
-                                      color:
-                                          isSelected
-                                              ? Colors.white
-                                              : Colors.black87,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          );
-                        }).toList(),
-                  ),
-                  SizedBox(height: 20),
-                  ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.pinkAccent,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      minimumSize: Size(double.infinity, 48),
-                    ),
-                    onPressed: () {
-                      setState(() {
-                        selectedInterests = List.from(tempSelected);
-                      });
-                      Navigator.pop(context);
-                    },
-                    child: Text("Save", style: TextStyle(color: Colors.white)),
-                  ),
-                  SizedBox(height: 16),
-                ],
-              ),
-            );
-          },
-        );
-      },
-    );
-  }
-
-  void _showFacultySelector() {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.white,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) {
-        String? tempSelectedFaculty = selectedFaculty;
-
-        return StatefulBuilder(
-          builder: (context, setModalState) {
-            return Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    "Select Faculty",
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                  SizedBox(height: 16),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children:
-                        faculties.map((faculty) {
-                          final isSelected = tempSelectedFaculty == faculty;
-                          return GestureDetector(
-                            onTap: () {
-                              setModalState(() {
-                                if (tempSelectedFaculty == faculty) {
-                                  tempSelectedFaculty = null;
-                                } else {
-                                  tempSelectedFaculty = faculty;
-                                }
-                              });
-                            },
-                            child: Container(
-                              padding: EdgeInsets.symmetric(
-                                horizontal: 14,
-                                vertical: 8,
-                              ),
-                              decoration: BoxDecoration(
-                                color:
-                                    isSelected
-                                        ? Colors.pink[400]
-                                        : Colors.white,
-                                borderRadius: BorderRadius.circular(30),
-                                border: Border.all(color: Colors.pink.shade100),
-                              ),
-                              child: Text(
-                                faculty,
-                                style: TextStyle(
-                                  color:
-                                      isSelected
-                                          ? Colors.white
-                                          : Colors.black87,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ),
-                          );
-                        }).toList(),
-                  ),
-                  SizedBox(height: 20),
-                  ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.pinkAccent,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      minimumSize: Size(double.infinity, 48),
-                    ),
-                    onPressed: () {
-                      setState(() {
-                        selectedFaculty = tempSelectedFaculty;
-                      });
-                      Navigator.pop(context);
-                    },
-                    child: Text("Save", style: TextStyle(color: Colors.white)),
-                  ),
-                  SizedBox(height: 16),
-                ],
-              ),
-            );
-          },
-        );
-      },
-    );
-  }
 
   void _onTabTapped(int index) {
     if (index == 0) {
@@ -271,34 +53,31 @@ class _ProfilePageState extends State<ProfilePage> {
 
   Widget _buildPhotoSlot({String? imagePath}) {
     return Container(
-      decoration:
-          imagePath != null
-              ? ShapeDecoration(
-                image: DecorationImage(
-                  image: AssetImage(imagePath),
-                  fit: BoxFit.cover,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
-              )
-              : ShapeDecoration(
-                color: Colors.white,
-                shape: RoundedRectangleBorder(
-                  side: BorderSide(width: 1, color: const Color(0xFFFF375F)),
-                  borderRadius: BorderRadius.circular(16),
-                ),
+      decoration: imagePath != null
+          ? ShapeDecoration(
+              image: DecorationImage(
+                image: AssetImage(imagePath),
+                fit: BoxFit.cover,
               ),
-      child:
-          imagePath == null
-              ? Center(
-                child: Icon(
-                  Icons.add,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+            )
+          : ShapeDecoration(
+              color: Colors.white,
+              shape: RoundedRectangleBorder(
+                side: BorderSide(
+                  width: 1,
                   color: const Color(0xFFFF375F),
-                  size: 32,
                 ),
-              )
-              : null,
+                borderRadius: BorderRadius.circular(16),
+              ),
+            ),
+      child: imagePath == null
+          ? Center(
+              child: Icon(Icons.add, color: const Color(0xFFFF375F), size: 32),
+            )
+          : null,
     );
   }
 
@@ -385,9 +164,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     SizedBox(
                       width: photoSize,
                       height: photoSize,
-                      child: _buildPhotoSlot(
-                        imagePath: 'assets/images/jawa.png',
-                      ),
+                      child: _buildPhotoSlot(imagePath: 'assets/images/jawa.png'),
                     ),
                     SizedBox(
                       width: photoSize,
@@ -490,131 +267,56 @@ class _ProfilePageState extends State<ProfilePage> {
                   ),
                 ),
                 SizedBox(height: 12),
-                GestureDetector(
-                  onTap: _showInterestSelector,
-                  child: Container(
-                    width: contentWidth,
-                    padding: EdgeInsets.all(12),
-                    decoration: ShapeDecoration(
-                      color: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        side: BorderSide(
-                          width: 2,
-                          color: const Color(0xFFFF375F),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: interests.map((interest) {
+                    final label = interest['label'];
+                    final icon = interest['icon'];
+                    final isSelected = selectedInterests.contains(label);
+
+                    return GestureDetector(
+                      onTap: () {
+                        setState(() {
+                          if (selectedInterests.contains(label)) {
+                            selectedInterests.remove(label);
+                          } else {
+                            if (selectedInterests.length < 3) {
+                              selectedInterests.add(label);
+                            }
+                          }
+                        });
+                      },
+                      child: Container(
+                        padding: EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: isSelected ? Colors.pink[400] : Colors.white,
+                          borderRadius: BorderRadius.circular(30),
+                          border: Border.all(color: Colors.pink.shade100),
                         ),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                    ),
-                    child:
-                        selectedInterests.isEmpty
-                            ? Text(
-                              'Tap to choose up to 3 interests',
-                              style: TextStyle(color: Colors.grey[600]),
-                            )
-                            : Wrap(
-                              spacing: 8,
-                              runSpacing: 8,
-                              children:
-                                  selectedInterests.map((interest) {
-                                    final icon =
-                                        interests.firstWhere(
-                                              (e) => e['label'] == interest,
-                                            )['icon']
-                                            as IconData;
-                                    return Container(
-                                      padding: EdgeInsets.symmetric(
-                                        horizontal: 12,
-                                        vertical: 6,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: Colors.pink[300],
-                                        borderRadius: BorderRadius.circular(20),
-                                      ),
-                                      child: Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          Icon(
-                                            icon,
-                                            size: 16,
-                                            color: Colors.pink,
-                                          ),
-                                          SizedBox(width: 6),
-                                          Text(
-                                            interest,
-                                            style: TextStyle(
-                                              color: Colors.white,
-                                              fontWeight: FontWeight.w600,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    );
-                                  }).toList(),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              icon,
+                              size: 18,
+                              color: isSelected ? Colors.white : Colors.pink[400],
                             ),
-                  ),
-                ),
-                SizedBox(height: screenHeight * 0.03),
-                Text(
-                  'Faculty',
-                  style: TextStyle(
-                    color: Colors.black,
-                    fontSize: 20,
-                    fontFamily: 'Inter',
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                SizedBox(height: 4),
-                Text(
-                  'Time to flex your faculty with pride.',
-                  style: TextStyle(
-                    color: const Color(0xFF333333),
-                    fontSize: 14,
-                    fontFamily: 'Inter',
-                    fontWeight: FontWeight.w400,
-                    height: 1.43,
-                  ),
-                ),
-                SizedBox(height: 12),
-                GestureDetector(
-                  onTap: _showFacultySelector,
-                  child: Container(
-                    width: contentWidth,
-                    padding: EdgeInsets.all(12),
-                    decoration: ShapeDecoration(
-                      color: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        side: BorderSide(
-                          width: 2,
-                          color: const Color(0xFFFF375F),
-                        ),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                    ),
-                    child:
-                        selectedFaculty == null
-                            ? Text(
-                              'Tap to choose your faculty',
-                              style: TextStyle(color: Colors.grey[600]),
-                            )
-                            : Container(
-                              padding: EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 6,
-                              ),
-                              decoration: BoxDecoration(
-                                color: Colors.pink[300],
-                                borderRadius: BorderRadius.circular(20),
-                              ),
-                              child: Text(
-                                selectedFaculty!,
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w600,
-                                ),
+                            SizedBox(width: 6),
+                            Text(
+                              label,
+                              style: TextStyle(
+                                color: isSelected ? Colors.white : Colors.black87,
+                                fontWeight: FontWeight.w600,
                               ),
                             ),
-                  ),
+                          ],
+                        ),
+                      ),
+                    );
+                  }).toList(),
                 ),
+                SizedBox(height: 80),
               ],
             ),
           ),
@@ -623,10 +325,7 @@ class _ProfilePageState extends State<ProfilePage> {
       bottomNavigationBar: BottomNavigationBar(
         items: [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.chat_bubble_outline),
-            label: 'Chat',
-          ),
+          BottomNavigationBarItem(icon: Icon(Icons.chat_bubble_outline), label: 'Chat'),
           BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
         ],
         currentIndex: _currentIndex,
