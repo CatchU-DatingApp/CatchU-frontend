@@ -57,7 +57,7 @@ class _DiscoverPageState extends State<DiscoverPage> with SingleTickerProviderSt
       image: 'assets/images/3.jpg',
       distance: '1.2 km',
       bio: 'Tech enthusiast and dog lover.',
-      faculty: 'Fakultas Seks Bebas',
+      faculty: 'Fakultas Seni',
       interests: ['Tech', 'Dogs', 'Gaming'],
     ),
   ];
