@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "367797428924",
+    "project_id": "catchu-datingapp",
+    "storage_bucket": "catchu-datingapp.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:367797428924:android:34cf4c6b0ce902b15b66b9",
+        "android_client_info": {
+          "package_name": "com.example.catchu"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAOCl8ChRYqFDLHuOz6LItgzViCcyj9w7Y"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

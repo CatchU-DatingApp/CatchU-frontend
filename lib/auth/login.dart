@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'package:catchu/auth/auth_controller.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'sign_up/sign_up1_dan_2.dart';
 import '../home/homepage1.dart';
@@ -12,6 +14,7 @@ class LoginPage extends StatefulWidget {
 
 class _LoginPageState extends State<LoginPage> {
   final _formKey = GlobalKey<FormState>();
+  final AuthController _authController = AuthController();
   String _countryCode = '+62';
   String _phoneNumber = '';
   bool _isLoading = false;
@@ -38,7 +41,52 @@ class _LoginPageState extends State<LoginPage> {
         _isLoading = true;
       });
 
-      Future.delayed(const Duration(seconds: 2), () {
+      // First, check if the phone number is registered
+      _authController
+          .checkPhoneNumberRegistered('$_countryCode$_phoneNumber')
+          .then((isRegistered) {
+            if (isRegistered) {
+              // Phone number is registered, proceed with OTP
+              _sendOtp();
+            } else {
+              // Phone number is not registered, show error
+              setState(() {
+                _isLoading = false;
+                _errorMessage =
+                    'Nomor telepon belum terdaftar. Please sign up first.';
+              });
+            }
+          })
+          .catchError((error) {
+            setState(() {
+              _isLoading = false;
+              _errorMessage = 'Error checking phone number. Please try again.';
+            });
+          });
+    }
+  }
+
+  void _sendOtp() {
+    _authController.sendOtp(
+      phoneNumber: '$_countryCode$_phoneNumber',
+      verificationCompleted: (PhoneAuthCredential credential) {
+        // Auto-verification, biasanya di Android
+        _authController.verifyOtp(verificationId: '', smsCode: '').then((
+          userCredential,
+        ) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => DiscoverPage()),
+          );
+        });
+      },
+      verificationFailed: (FirebaseAuthException e) {
+        setState(() {
+          _isLoading = false;
+          _errorMessage = e.message ?? 'Verification failed';
+        });
+      },
+      codeSent: (String verificationId, int? resendToken) {
         setState(() {
           _isLoading = false;
         });
@@ -48,11 +96,13 @@ class _LoginPageState extends State<LoginPage> {
             builder:
                 (context) => OtpVerificationPageLogin(
                   phoneNumber: '$_countryCode$_phoneNumber',
+                  verificationId: verificationId,
+                  authController: _authController,
                 ),
           ),
         );
-      });
-    }
+      },
+    );
   }
 
   @override
@@ -174,11 +224,13 @@ class _LoginPageState extends State<LoginPage> {
                           color: Colors.red,
                         ),
                         const SizedBox(width: 4),
-                        Text(
-                          _errorMessage!,
-                          style: const TextStyle(
-                            color: Colors.red,
-                            fontSize: 12,
+                        Expanded(
+                          child: Text(
+                            _errorMessage!,
+                            style: const TextStyle(
+                              color: Colors.red,
+                              fontSize: 12,
+                            ),
                           ),
                         ),
                       ],
@@ -304,9 +356,15 @@ class _LoginPageState extends State<LoginPage> {
 
 class OtpVerificationPageLogin extends StatefulWidget {
   final String phoneNumber;
+  final String verificationId;
+  final AuthController authController;
 
-  const OtpVerificationPageLogin({Key? key, required this.phoneNumber})
-    : super(key: key);
+  const OtpVerificationPageLogin({
+    Key? key,
+    required this.phoneNumber,
+    required this.verificationId,
+    required this.authController,
+  }) : super(key: key);
 
   @override
   _OtpVerificationPageLoginState createState() =>
@@ -315,10 +373,10 @@ class OtpVerificationPageLogin extends StatefulWidget {
 
 class _OtpVerificationPageLoginState extends State<OtpVerificationPageLogin> {
   final List<TextEditingController> _otpControllers = List.generate(
-    4,
+    6,
     (index) => TextEditingController(),
   );
-  final List<FocusNode> _focusNodes = List.generate(4, (index) => FocusNode());
+  final List<FocusNode> _focusNodes = List.generate(6, (index) => FocusNode());
   bool _isLoading = false;
   bool _isResending = false;
   int _resendCountdown = 30;
@@ -370,20 +428,59 @@ class _OtpVerificationPageLoginState extends State<OtpVerificationPageLogin> {
       _resendCountdown = 30;
     });
 
-    // Simulate API call
-    Future.delayed(Duration(seconds: 1), () {
-      setState(() => _isResending = false);
-      _startResendTimer();
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('OTP has been resent')));
-    });
+    // First check if phone number is still registered
+    widget.authController
+        .checkPhoneNumberRegistered(widget.phoneNumber)
+        .then((isRegistered) {
+          if (isRegistered) {
+            // Phone number is registered, resend OTP
+            widget.authController.sendOtp(
+              phoneNumber: widget.phoneNumber,
+              verificationCompleted: (PhoneAuthCredential credential) {
+                // Auto-verification
+              },
+              verificationFailed: (FirebaseAuthException e) {
+                setState(() {
+                  _isResending = false;
+                  _errorMessage = e.message ?? 'Verification failed';
+                });
+              },
+              codeSent: (String verificationId, int? resendToken) {
+                setState(() {
+                  _isResending = false;
+                });
+                _startResendTimer();
+                ScaffoldMessenger.of(
+                  context,
+                ).showSnackBar(SnackBar(content: Text('OTP has been resent')));
+              },
+            );
+          } else {
+            // Phone number is not registered anymore
+            setState(() {
+              _isResending = false;
+              _errorMessage =
+                  'Nomor telepon belum terdaftar. Please sign up first.';
+            });
+
+            // Navigate back to login after a delay
+            Future.delayed(Duration(seconds: 2), () {
+              Navigator.pop(context);
+            });
+          }
+        })
+        .catchError((error) {
+          setState(() {
+            _isResending = false;
+            _errorMessage = 'Error checking phone number. Please try again.';
+          });
+        });
   }
 
   void _verifyOtp() {
     final otp = _otpControllers.map((c) => c.text).join();
 
-    if (otp.length < 4) {
+    if (otp.length < 6) {
       setState(() => _errorMessage = 'Please enter complete OTP code');
       return;
     }
@@ -393,22 +490,22 @@ class _OtpVerificationPageLoginState extends State<OtpVerificationPageLogin> {
       _errorMessage = null;
     });
 
-    // Simulate API verification
-    Future.delayed(Duration(seconds: 2), () {
-      setState(() => _isLoading = false);
-
-      // Mock verification - in real app, check with your backend
-      if (otp == '1234') {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => DiscoverPage()),
-        );
-        // Replace with actual verification and actual homepage
-      } else {
-        setState(() => _errorMessage = 'Invalid OTP code. Please try again');
-        _clearOtpFields();
-      }
-    });
+    widget.authController
+        .verifyOtp(verificationId: widget.verificationId, smsCode: otp)
+        .then((userCredential) {
+          setState(() => _isLoading = false);
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => DiscoverPage()),
+          );
+        })
+        .catchError((error) {
+          setState(() {
+            _isLoading = false;
+            _errorMessage = 'Invalid OTP code. Please try again';
+          });
+          _clearOtpFields();
+        });
   }
 
   void _clearOtpFields() {
@@ -476,9 +573,9 @@ class _OtpVerificationPageLoginState extends State<OtpVerificationPageLogin> {
             SizedBox(height: 40),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: List.generate(4, (index) {
+              children: List.generate(6, (index) {
                 return Container(
-                  width: 60,
+                  width: 50,
                   height: 60,
                   decoration: BoxDecoration(
                     border: Border.all(
@@ -501,7 +598,7 @@ class _OtpVerificationPageLoginState extends State<OtpVerificationPageLogin> {
                       border: InputBorder.none,
                     ),
                     onChanged: (value) {
-                      if (value.length == 1 && index < 3) {
+                      if (value.length == 1 && index < 5) {
                         FocusScope.of(
                           context,
                         ).requestFocus(_focusNodes[index + 1]);
