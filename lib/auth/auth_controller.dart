@@ -11,8 +11,8 @@ class AuthController {
     try {
       final querySnapshot =
           await _firebaseService.firestore
-              .collection('users')
-              .where('phoneNumber', isEqualTo: phoneNumber)
+              .collection('Users')
+              .where('nomor_telepon', isEqualTo: phoneNumber)
               .get();
 
       return querySnapshot.docs.isNotEmpty;
@@ -95,7 +95,7 @@ class AuthController {
   }) async {
     try {
       // Simpan data tambahan ke Firestore
-      await _firebaseService.firestore.collection('users').doc(uid).set({
+      await _firebaseService.firestore.collection('Users').doc(uid).set({
         'name': name,
         'phoneNumber': phoneNumber,
         'age': age,
