@@ -16,6 +16,7 @@ dependencies:
   cloud_firestore: ^4.17.1 # Firestore database
   firebase_auth: ^4.19.0 # Firebase Authentication
   firebase_storage: ^11.7.7 # Firebase Storage for file uploads
+  url_launcher: ^6.2.5
 
 dev_dependencies:
   flutter_test:
