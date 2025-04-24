@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'profile.dart';
 import 'homepage1.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class ChatPage extends StatefulWidget {
   @override
@@ -16,26 +17,36 @@ class _ChatPageState extends State<ChatPage> {
       'name': 'Go Yoon Jung',
       'message': 'Oh i don\'t like fish 🙈',
       'image': 'assets/images/1.jpg',
+      'instagram': 'goyoonjung',
+      'facebook': 'goyoonjung.official',
     },
     {
       'name': 'Jeon Jong Seo',
       'message': 'Can we go somewhere?',
       'image': 'assets/images/2.jpg',
+      'instagram': 'jeonjongseo',
+      'facebook': 'jeonjongseo.fb',
     },
     {
       'name': 'Baek Songmin',
       'message': 'You: If I were a stop light, I’d turn',
       'image': 'assets/images/3.jpg',
+      'instagram': 'baeksongmin',
+      'facebook': 'baeksongmin.page',
     },
     {
       'name': 'Orang Kendal',
       'message': 'See you soon 😉',
       'image': 'assets/images/jawa.png',
+      'instagram': 'orangkendal',
+      'facebook': 'orangkendal.fb',
     },
     {
       'name': 'Orang Arab',
       'message': 'Are you serious?!',
       'image': 'assets/images/5.jpg',
+      'instagram': 'orangarab',
+      'facebook': 'orangarab.page',
     },
   ];
 
@@ -147,15 +158,63 @@ class _ChatPageState extends State<ChatPage> {
                                             fontSize: 16,
                                           ),
                                         ),
-                                        SizedBox(height: 6),
-                                        Text(
-                                          'Instagram: @${msg['name']!.toLowerCase().replaceAll(' ', '_')}',
-                                          style: TextStyle(
-                                            color: Colors.pinkAccent,
-                                            fontStyle: FontStyle.italic,
-                                          ),
+                                        SizedBox(height: 8),
+                                        Row(
+                                          children: [
+                                            Icon(
+                                              Icons.camera_alt_outlined,
+                                              size: 18,
+                                              color: Colors.pinkAccent,
+                                            ),
+                                            SizedBox(width: 6),
+                                            GestureDetector(
+                                              onTap: () {
+                                                launchUrl(
+                                                  Uri.parse(
+                                                    'https://instagram.com/${msg['instagram']}',
+                                                  ),
+                                                );
+                                              },
+                                              child: Text(
+                                                '@${msg['instagram']}',
+                                                style: TextStyle(
+                                                  color: Colors.pinkAccent,
+                                                  decoration:
+                                                      TextDecoration.underline,
+                                                ),
+                                              ),
+                                            ),
+                                          ],
                                         ),
-                                        SizedBox(height: 6),
+                                        SizedBox(height: 8),
+                                        Row(
+                                          children: [
+                                            Icon(
+                                              Icons.facebook_rounded,
+                                              size: 18,
+                                              color: Colors.blueAccent,
+                                            ),
+                                            SizedBox(width: 6),
+                                            GestureDetector(
+                                              onTap: () {
+                                                launchUrl(
+                                                  Uri.parse(
+                                                    'https://facebook.com/${msg['facebook']}',
+                                                  ),
+                                                );
+                                              },
+                                              child: Text(
+                                                '${msg['facebook']}',
+                                                style: TextStyle(
+                                                  color: Colors.blueAccent,
+                                                  decoration:
+                                                      TextDecoration.underline,
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                        SizedBox(height: 8),
                                         Text(
                                           'Bio: This person is awesome and waiting to chat with you 😉',
                                           style: TextStyle(fontSize: 13),
