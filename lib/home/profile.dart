@@ -14,6 +14,12 @@ class _ProfilePageState extends State<ProfilePage> {
     text: 'baik sekali',
   );
 
+  // Social media URL controllers
+  TextEditingController facebookController = TextEditingController();
+  TextEditingController instagramController = TextEditingController();
+  TextEditingController xController = TextEditingController();
+  TextEditingController lineController = TextEditingController();
+
   List<String> selectedInterests = [];
 
   final List<Map<String, dynamic>> interests = [
@@ -299,6 +305,45 @@ class _ProfilePageState extends State<ProfilePage> {
                 ),
               )
               : null,
+    );
+  }
+
+  Widget _buildSocialMediaInput({
+    required String platform,
+    required TextEditingController controller,
+    required IconData icon,
+  }) {
+    return Container(
+      height: 56,
+      margin: EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: const Color(0xFFFF375F), width: 1),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 56,
+            height: 56,
+            alignment: Alignment.center,
+            child: Icon(icon, color: const Color(0xFFFF375F), size: 24),
+          ),
+          Expanded(
+            child: TextField(
+              controller: controller,
+              decoration: InputDecoration(
+                hintText: 'Input $platform URL',
+                hintStyle: TextStyle(color: Colors.grey[400]),
+                border: InputBorder.none,
+                enabledBorder: InputBorder.none,
+                focusedBorder: InputBorder.none,
+                contentPadding: EdgeInsets.symmetric(vertical: 15),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -615,6 +660,69 @@ class _ProfilePageState extends State<ProfilePage> {
                             ),
                   ),
                 ),
+
+                // Social Media URLs Section
+                SizedBox(height: screenHeight * 0.03),
+                Text(
+                  'Social URLs',
+                  style: TextStyle(
+                    color: Colors.black,
+                    fontSize: 20,
+                    fontFamily: 'Inter',
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                SizedBox(height: 4),
+                Text(
+                  'Show us where you’re hanging out online!.',
+                  style: TextStyle(
+                    color: const Color(0xFF333333),
+                    fontSize: 14,
+                    fontFamily: 'Inter',
+                    fontWeight: FontWeight.w400,
+                    height: 1.43,
+                  ),
+                ),
+                SizedBox(height: 12),
+                Container(
+                  width: contentWidth,
+                  padding: EdgeInsets.all(12),
+                  decoration: ShapeDecoration(
+                    color: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      side: BorderSide(
+                        width: 2,
+                        color: const Color(0xFFFF375F),
+                      ),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                  child: Column(
+                    children: [
+                      _buildSocialMediaInput(
+                        platform: 'Facebook',
+                        controller: facebookController,
+                        icon: Icons.facebook,
+                      ),
+                      _buildSocialMediaInput(
+                        platform: 'Instagram',
+                        controller: instagramController,
+                        icon: Icons.camera_alt,
+                      ),
+                      _buildSocialMediaInput(
+                        platform: 'X',
+                        controller: xController,
+                        icon: Icons.alternate_email,
+                      ),
+                      _buildSocialMediaInput(
+                        platform: 'Line',
+                        controller: lineController,
+                        icon: Icons.chat,
+                      ),
+                    ],
+                  ),
+                ),
+                SizedBox(height: screenHeight * 0.05),
               ],
             ),
           ),
