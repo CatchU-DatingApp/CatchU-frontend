@@ -4,7 +4,7 @@ import 'chat.dart';
 
 class ProfileData {
   final String name;
-  final String image;
+  final List<String> images; // Changed from single image to list of images
   final String distance;
   final String bio;
   final String faculty;
@@ -12,7 +12,7 @@ class ProfileData {
 
   ProfileData({
     required this.name,
-    required this.image,
+    required this.images, // Now a list
     required this.distance,
     this.bio = 'No bio available',
     this.faculty = 'Unspecified',
@@ -34,12 +34,20 @@ class _DiscoverPageState extends State<DiscoverPage>
   int _currentProfileIndex = 0;
   bool _isAnimating = false;
 
+  // Track current image index for each profile
+  Map<int, int> _currentImageIndices = {};
+
   final ScrollController _scrollController = ScrollController();
 
   final List<ProfileData> _profiles = [
     ProfileData(
       name: 'Alice',
-      image: 'assets/images/1.jpg',
+      images: [
+        'assets/images/1_1.jpg',
+        'assets/images/1_2.jpg',
+        'assets/images/1_3.jpg',
+        'assets/images/1_4.jpg',
+      ],
       distance: '2 km',
       bio: 'Loves hiking and photography.',
       faculty: 'Informatics',
@@ -47,7 +55,11 @@ class _DiscoverPageState extends State<DiscoverPage>
     ),
     ProfileData(
       name: 'Bob',
-      image: 'assets/images/2.jpg',
+      images: [
+        'assets/images/2_1.jpg',
+        'assets/images/2_2.jpg',
+        'assets/images/2_3.jpg',
+      ],
       distance: '5 km',
       bio: 'Enjoys painting and jazz music.',
       faculty: 'Art',
@@ -55,7 +67,14 @@ class _DiscoverPageState extends State<DiscoverPage>
     ),
     ProfileData(
       name: 'Clara',
-      image: 'assets/images/3.jpg',
+      images: [
+        'assets/images/3_1.jpg',
+        'assets/images/3_2.jpg',
+        'assets/images/3_3.jpg',
+        'assets/images/3_4.jpg',
+        'assets/images/3_5.jpg',
+        'assets/images/3_6.jpg',
+      ],
       distance: '1.2 km',
       bio: 'Tech enthusiast and dog lover.',
       faculty: 'Fakultas Seni',
@@ -91,6 +110,11 @@ class _DiscoverPageState extends State<DiscoverPage>
         });
       }
     });
+
+    // Initialize image indices for all profiles
+    for (int i = 0; i < _profiles.length; i++) {
+      _currentImageIndices[i] = 0;
+    }
   }
 
   @override
@@ -148,13 +172,36 @@ class _DiscoverPageState extends State<DiscoverPage>
     _swipeController.forward();
   }
 
+  // Navigate to next image for the current profile
+  void _nextImage() {
+    final currentProfile = _profiles[_currentProfileIndex];
+    final currentImageIndex = _currentImageIndices[_currentProfileIndex] ?? 0;
+
+    if (currentImageIndex < currentProfile.images.length - 1) {
+      setState(() {
+        _currentImageIndices[_currentProfileIndex] = currentImageIndex + 1;
+      });
+    }
+  }
+
+  // Navigate to previous image for the current profile
+  void _previousImage() {
+    final currentImageIndex = _currentImageIndices[_currentProfileIndex] ?? 0;
+
+    if (currentImageIndex > 0) {
+      setState(() {
+        _currentImageIndices[_currentProfileIndex] = currentImageIndex - 1;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final currentProfile = _profiles[_currentProfileIndex];
     final nextProfile =
-        _profiles[(_currentProfileIndex + 1) % _profiles.length];
+    _profiles[(_currentProfileIndex + 1) % _profiles.length];
     final nextNextProfile =
-        _profiles[(_currentProfileIndex + 2) % _profiles.length];
+    _profiles[(_currentProfileIndex + 2) % _profiles.length];
 
     final screenHeight = MediaQuery.of(context).size.height;
     final cardTopOffset = 110.0;
@@ -198,30 +245,28 @@ class _DiscoverPageState extends State<DiscoverPage>
                     scale: 0.8,
                     child: Transform.translate(
                       offset: Offset(0, -30),
-                      child: _buildProfileCard(nextNextProfile, cardHeight),
+                      child: _buildProfileCard(nextNextProfile, cardHeight, (_currentProfileIndex + 2) % _profiles.length),
                     ),
                   ),
                   Transform.scale(
                     scale: 0.9,
                     child: Transform.translate(
                       offset: Offset(0, -15),
-                      child: _buildProfileCard(nextProfile, cardHeight),
+                      child: _buildProfileCard(nextProfile, cardHeight, (_currentProfileIndex + 1) % _profiles.length),
                     ),
                   ),
                   AnimatedBuilder(
                     animation: _swipeController,
                     builder: (context, child) {
                       return Transform.translate(
-                        offset:
-                            _slideAnimation.value *
-                            MediaQuery.of(context).size.width,
+                        offset: _slideAnimation.value * MediaQuery.of(context).size.width,
                         child: Transform.rotate(
                           angle: _rotationAnimation.value,
                           child: child,
                         ),
                       );
                     },
-                    child: _buildProfileCard(currentProfile, cardHeight),
+                    child: _buildProfileCard(currentProfile, cardHeight, _currentProfileIndex),
                   ),
                 ],
               ),
@@ -273,7 +318,14 @@ class _DiscoverPageState extends State<DiscoverPage>
     );
   }
 
-  Widget _buildProfileCard(ProfileData profile, double cardHeight) {
+  Widget _buildProfileCard(ProfileData profile, double cardHeight, int profileIndex) {
+    // Get current image index for this profile
+    final currentImageIndex = _currentImageIndices[profileIndex] ?? 0;
+    final currentImage = profile.images[currentImageIndex];
+
+    // Calculate image indicators based on total images
+    final totalImages = profile.images.length;
+
     return Card(
       elevation: 8,
       margin: EdgeInsets.symmetric(horizontal: 16),
@@ -283,25 +335,86 @@ class _DiscoverPageState extends State<DiscoverPage>
         width: 520,
         height: cardHeight,
         child: SingleChildScrollView(
-          controller: _scrollController,
+          controller: profileIndex == _currentProfileIndex ? _scrollController : null,
           physics: BouncingScrollPhysics(),
           padding: EdgeInsets.only(bottom: 20),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              AspectRatio(
-                aspectRatio: 0.63,
-                child: ClipRRect(
-                  borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(20),
-                    topRight: Radius.circular(20),
+              Stack(
+                children: [
+                  AspectRatio(
+                    aspectRatio: 0.63,
+                    child: Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        // Current image
+                        ClipRRect(
+                          borderRadius: BorderRadius.only(
+                            topLeft: Radius.circular(20),
+                            topRight: Radius.circular(20),
+                          ),
+                          child: Image.asset(
+                            currentImage,
+                            width: double.infinity,
+                            fit: BoxFit.cover,
+                          ),
+                        ),
+
+                        // Left and right navigation areas
+                        if (profileIndex == _currentProfileIndex) Row(
+                          children: [
+                            // Left navigation (previous image)
+                            Expanded(
+                              flex: 1,
+                              child: GestureDetector(
+                                onTap: currentImageIndex > 0 ? _previousImage : null,
+                                child: Container(
+                                  color: Colors.transparent,
+                                ),
+                              ),
+                            ),
+
+                            // Right navigation (next image)
+                            Expanded(
+                              flex: 1,
+                              child: GestureDetector(
+                                onTap: currentImageIndex < totalImages - 1 ? _nextImage : null,
+                                child: Container(
+                                  color: Colors.transparent,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+
+                        // Image indicators
+                        Positioned(
+                          top: 16,
+                          left: 0,
+                          right: 0,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: List.generate(
+                              totalImages,
+                                  (index) => Container(
+                                margin: EdgeInsets.symmetric(horizontal: 3),
+                                width: 8,
+                                height: 8,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: index == currentImageIndex
+                                      ? Colors.white
+                                      : Colors.white.withOpacity(0.5),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                  child: Image.asset(
-                    profile.image,
-                    width: double.infinity,
-                    fit: BoxFit.cover,
-                  ),
-                ),
+                ],
               ),
               Padding(
                 padding: const EdgeInsets.all(16.0),
@@ -375,9 +488,9 @@ class _DiscoverPageState extends State<DiscoverPage>
                       spacing: 8,
                       runSpacing: 8,
                       children:
-                          profile.interests
-                              .map((interest) => _interestTag(interest))
-                              .toList(),
+                      profile.interests
+                          .map((interest) => _interestTag(interest))
+                          .toList(),
                     ),
                   ],
                 ),
