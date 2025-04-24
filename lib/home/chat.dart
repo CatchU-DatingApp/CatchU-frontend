@@ -9,6 +9,35 @@ class ChatPage extends StatefulWidget {
 
 class _ChatPageState extends State<ChatPage> {
   int _currentIndex = 1;
+  Map<String, String>? selectedProfile;
+
+  final List<Map<String, String>> messages = [
+    {
+      'name': 'Go Yoon Jung',
+      'message': 'Oh i don\'t like fish 🙈',
+      'image': 'assets/images/1.jpg',
+    },
+    {
+      'name': 'Jeon Jong Seo',
+      'message': 'Can we go somewhere?',
+      'image': 'assets/images/2.jpg',
+    },
+    {
+      'name': 'Baek Songmin',
+      'message': 'You: If I were a stop light, I’d turn',
+      'image': 'assets/images/3.jpg',
+    },
+    {
+      'name': 'Orang Kendal',
+      'message': 'See you soon 😉',
+      'image': 'assets/images/jawa.png',
+    },
+    {
+      'name': 'Orang Arab',
+      'message': 'Are you serious?!',
+      'image': 'assets/images/5.jpg',
+    },
+  ];
 
   void _onTabTapped(int index) {
     if (index == 0) {
@@ -32,6 +61,12 @@ class _ChatPageState extends State<ChatPage> {
     });
   }
 
+  void _onProfileSelected(Map<String, String> profile) {
+    setState(() {
+      selectedProfile = profile;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -43,30 +78,7 @@ class _ChatPageState extends State<ChatPage> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'New Matches',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.pinkAccent,
-                ),
-              ),
-              SizedBox(height: 12),
-              SizedBox(
-                height: 90,
-                child: ListView(
-                  scrollDirection: Axis.horizontal,
-                  children: [
-                    _buildMatchAvatar('assets/images/1.jpg', 'Go Yoon Jung'),
-                    _buildMatchAvatar('assets/images/2.jpg', 'Jeon Jong Seo'),
-                    _buildMatchAvatar('assets/images/3.jpg', 'Baek Songmin'),
-                    _buildMatchAvatar('assets/images/jawa.png', 'Orang Kendal'),
-                    _buildMatchAvatar('assets/images/5.jpg', 'Orang Arab'),
-                  ],
-                ),
-              ),
-              SizedBox(height: 20),
-              Text(
-                'Messages',
+                'Your Match',
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
@@ -75,47 +87,73 @@ class _ChatPageState extends State<ChatPage> {
               ),
               SizedBox(height: 12),
               Expanded(
-                child: ListView(
+                child: Column(
                   children: [
-                    _buildMessageTile(
-                      'Go Yoon Jung',
-                      'Oh i don\'t like fish 🙈',
-                      'assets/images/1.jpg',
-                      unread: 2,
+                    Expanded(
+                      child: ListView(
+                        children:
+                            messages.map((msg) {
+                              return ListTile(
+                                contentPadding: EdgeInsets.symmetric(
+                                  vertical: 4,
+                                ),
+                                leading: CircleAvatar(
+                                  radius: 28,
+                                  backgroundImage: AssetImage(msg['image']!),
+                                ),
+                                title: Text(
+                                  msg['name']!,
+                                  style: TextStyle(fontWeight: FontWeight.bold),
+                                ),
+                                subtitle: Text(
+                                  msg['message']!,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                onTap: () => _onProfileSelected(msg),
+                              );
+                            }).toList(),
+                      ),
                     ),
-                    _buildMessageTile(
-                      'Jeon Jong Seo',
-                      'Can we go somewhere?',
-                      'assets/images/2.jpg',
-                      unread: 1,
-                    ),
-                    _buildMessageTile(
-                      'Baek Songmin',
-                      'You: If I were a stop light, I’d turn',
-                      'assets/images/3.jpg',
-                    ),
-                    _buildMessageTile(
-                      'Orang Kendal',
-                      'See you soon 😉',
-                      'assets/images/jawa.png',
-                    ),
-                    _buildMessageTile(
-                      'Orang Arab',
-                      'Are you serious?!',
-                      'assets/images/5.jpg',
-                      unread: 1,
-                    ),
-                    _buildMessageTile(
-                      'Monika ⭐',
-                      'You: How about a movie and',
-                      'assets/images/6.png',
-                    ),
-                    _buildMessageTile('Katrina', 'OK', 'assets/images/7.png'),
-                    _buildMessageTile(
-                      'Kiran',
-                      'You: How are you?',
-                      'assets/images/8.png',
-                    ),
+                    if (selectedProfile != null) ...[
+                      Divider(color: Colors.grey.shade300),
+                      Container(
+                        padding: EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(12),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black12,
+                              blurRadius: 8,
+                              offset: Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              selectedProfile!['name']!,
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                              ),
+                            ),
+                            SizedBox(height: 8),
+                            Text(
+                              'Instagram: @${selectedProfile!['name']!.toLowerCase().replaceAll(' ', '_')}',
+                              style: TextStyle(color: Colors.grey[700]),
+                            ),
+                            SizedBox(height: 4),
+                            Text(
+                              'Bio: This person is awesome and waiting to chat with you 😉',
+                              style: TextStyle(fontSize: 13),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ],
                 ),
               ),
@@ -139,64 +177,6 @@ class _ChatPageState extends State<ChatPage> {
           BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
         ],
       ),
-    );
-  }
-
-  Widget _buildMatchAvatar(String imgPath, String name) {
-    return Padding(
-      padding: const EdgeInsets.only(right: 16),
-      child: Column(
-        children: [
-          Stack(
-            children: [
-              CircleAvatar(radius: 28, backgroundImage: AssetImage(imgPath)),
-              Positioned(
-                right: 0,
-                bottom: 0,
-                child: Container(
-                  width: 10,
-                  height: 10,
-                  decoration: BoxDecoration(
-                    color: Colors.pinkAccent,
-                    shape: BoxShape.circle,
-                    border: Border.all(color: Colors.white, width: 1.5),
-                  ),
-                ),
-              ),
-            ],
-          ),
-          SizedBox(height: 4),
-          Text(name, style: TextStyle(fontSize: 12)),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildMessageTile(
-    String name,
-    String message,
-    String imgPath, {
-    int unread = 0,
-  }) {
-    return ListTile(
-      contentPadding: EdgeInsets.symmetric(vertical: 4),
-      leading: CircleAvatar(radius: 28, backgroundImage: AssetImage(imgPath)),
-      title: Text(name, style: TextStyle(fontWeight: FontWeight.bold)),
-      subtitle: Text(message, maxLines: 1, overflow: TextOverflow.ellipsis),
-      trailing:
-          unread > 0
-              ? Container(
-                padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: Colors.pinkAccent,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(
-                  unread.toString(),
-                  style: TextStyle(color: Colors.white, fontSize: 12),
-                ),
-              )
-              : null,
     );
   }
 }
