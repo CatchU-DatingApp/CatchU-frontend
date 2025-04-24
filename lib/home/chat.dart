@@ -9,7 +9,7 @@ class ChatPage extends StatefulWidget {
 
 class _ChatPageState extends State<ChatPage> {
   int _currentIndex = 1;
-  Map<String, String>? selectedProfile;
+  int? selectedIndex;
 
   final List<Map<String, String>> messages = [
     {
@@ -61,9 +61,9 @@ class _ChatPageState extends State<ChatPage> {
     });
   }
 
-  void _onProfileSelected(Map<String, String> profile) {
+  void _onProfileSelected(int index) {
     setState(() {
-      selectedProfile = profile;
+      selectedIndex = selectedIndex == index ? null : index;
     });
   }
 
@@ -87,74 +87,87 @@ class _ChatPageState extends State<ChatPage> {
               ),
               SizedBox(height: 12),
               Expanded(
-                child: Column(
-                  children: [
-                    Expanded(
-                      child: ListView(
-                        children:
-                            messages.map((msg) {
-                              return ListTile(
-                                contentPadding: EdgeInsets.symmetric(
-                                  vertical: 4,
-                                ),
-                                leading: CircleAvatar(
-                                  radius: 28,
-                                  backgroundImage: AssetImage(msg['image']!),
-                                ),
-                                title: Text(
-                                  msg['name']!,
-                                  style: TextStyle(fontWeight: FontWeight.bold),
-                                ),
-                                subtitle: Text(
-                                  msg['message']!,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                                onTap: () => _onProfileSelected(msg),
-                              );
-                            }).toList(),
-                      ),
-                    ),
-                    if (selectedProfile != null) ...[
-                      Divider(color: Colors.grey.shade300),
-                      Container(
-                        padding: EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(12),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black12,
-                              blurRadius: 8,
-                              offset: Offset(0, 2),
-                            ),
-                          ],
+                child: ListView.builder(
+                  itemCount: messages.length,
+                  itemBuilder: (context, index) {
+                    final msg = messages[index];
+                    final isSelected = selectedIndex == index;
+
+                    return Column(
+                      children: [
+                        ListTile(
+                          contentPadding: EdgeInsets.symmetric(vertical: 4),
+                          leading: CircleAvatar(
+                            radius: 28,
+                            backgroundImage: AssetImage(msg['image']!),
+                          ),
+                          title: Text(
+                            msg['name']!,
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          subtitle: Text(
+                            msg['message']!,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          onTap: () => _onProfileSelected(index),
                         ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              selectedProfile!['name']!,
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16,
-                              ),
-                            ),
-                            SizedBox(height: 8),
-                            Text(
-                              'Instagram: @${selectedProfile!['name']!.toLowerCase().replaceAll(' ', '_')}',
-                              style: TextStyle(color: Colors.grey[700]),
-                            ),
-                            SizedBox(height: 4),
-                            Text(
-                              'Bio: This person is awesome and waiting to chat with you 😉',
-                              style: TextStyle(fontSize: 13),
-                            ),
-                          ],
+                        AnimatedSwitcher(
+                          duration: Duration(milliseconds: 300),
+                          switchInCurve: Curves.easeInOut,
+                          child:
+                              isSelected
+                                  ? Container(
+                                    key: ValueKey(index),
+                                    margin: EdgeInsets.only(bottom: 12),
+                                    padding: EdgeInsets.all(16),
+                                    decoration: BoxDecoration(
+                                      color: Colors.white,
+                                      borderRadius: BorderRadius.circular(16),
+                                      border: Border.all(
+                                        color: Colors.pinkAccent,
+                                        width: 1.2,
+                                      ),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.black12,
+                                          blurRadius: 6,
+                                          offset: Offset(0, 3),
+                                        ),
+                                      ],
+                                    ),
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          msg['name']!,
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 16,
+                                          ),
+                                        ),
+                                        SizedBox(height: 6),
+                                        Text(
+                                          'Instagram: @${msg['name']!.toLowerCase().replaceAll(' ', '_')}',
+                                          style: TextStyle(
+                                            color: Colors.pinkAccent,
+                                            fontStyle: FontStyle.italic,
+                                          ),
+                                        ),
+                                        SizedBox(height: 6),
+                                        Text(
+                                          'Bio: This person is awesome and waiting to chat with you 😉',
+                                          style: TextStyle(fontSize: 13),
+                                        ),
+                                      ],
+                                    ),
+                                  )
+                                  : SizedBox.shrink(),
                         ),
-                      ),
-                    ],
-                  ],
+                      ],
+                    );
+                  },
                 ),
               ),
             ],
