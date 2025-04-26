@@ -83,6 +83,19 @@ class EnableLocationPage extends StatelessWidget {
               style: TextStyle(fontSize: 16, color: Colors.grey[700]),
             ),
             SizedBox(height: 40),
+            ElevatedButton(
+              onPressed: () {
+                // Langsung lanjut ke halaman berikutnya
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => SignUpRulesPage(), // Ganti dengan page setelah EnableLocation
+                  ),
+                );
+              },
+              child: Text('Skip For Now'),
+            ),
+
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24.0),
               child: ElevatedButton(

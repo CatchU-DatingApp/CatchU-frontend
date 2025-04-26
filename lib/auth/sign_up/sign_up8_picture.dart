@@ -1,15 +1,146 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:catchu/auth/sign_up/sign_up9_Location.dart';
 
 class SignUpPage8 extends StatefulWidget {
-  @override
-  _SignUpPage8State createState() => _SignUpPage8State();
   final String phoneNumber;
   const SignUpPage8({Key? key, required this.phoneNumber}) : super(key: key);
+
+  @override
+  _SignUpPage8State createState() => _SignUpPage8State();
 }
 
 class _SignUpPage8State extends State<SignUpPage8> {
+  final ImagePicker _picker = ImagePicker();
   List<ImageProvider> uploadedImages = [AssetImage('assets/images/jawa.png')];
+
+  Future<void> _pickImage(ImageSource source) async {
+    final XFile? image = await _picker.pickImage(source: source);
+    if (image != null) {
+      setState(() {
+        uploadedImages.add(FileImage(File(image.path)));
+      });
+    }
+  }
+
+  void _showPhotoSelectionModal() {
+    showModalBottomSheet(
+      context: context,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      backgroundColor: Colors.transparent,
+      builder: (BuildContext context) {
+        return Container(
+          height: 200,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(20),
+              topRight: Radius.circular(20),
+            ),
+          ),
+          child: Column(
+            children: [
+              Container(
+                padding: EdgeInsets.all(16),
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  color: Colors.pinkAccent,
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(20),
+                    topRight: Radius.circular(20),
+                  ),
+                ),
+                child: Column(
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Add More Photo',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        GestureDetector(
+                          onTap: () {
+                            Navigator.pop(context);
+                          },
+                          child: Icon(Icons.close, color: Colors.white),
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 8),
+                    Text(
+                      'Try To Find Ones That Show Off Your Smile',
+                      style: TextStyle(color: Colors.white, fontSize: 14),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
+              ),
+              Expanded(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    InkWell(
+                      onTap: () async {
+                        Navigator.pop(context);
+                        await _pickImage(ImageSource.gallery);
+                      },
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        child: Row(
+                          children: [
+                            Icon(Icons.image, color: Colors.pinkAccent),
+                            SizedBox(width: 16),
+                            Text(
+                              'Upload Photo',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    Divider(height: 1),
+                    InkWell(
+                      onTap: () async {
+                        Navigator.pop(context);
+                        await _pickImage(ImageSource.camera);
+                      },
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        child: Row(
+                          children: [
+                            Icon(Icons.camera_alt, color: Colors.pinkAccent),
+                            SizedBox(width: 16),
+                            Text(
+                              'Take Photo',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -70,7 +201,7 @@ class _SignUpPage8State extends State<SignUpPage8> {
                 } else {
                   return GestureDetector(
                     onTap: () {
-                      // Aksi saat klik tambah gambar (implementasi sesuai kebutuhan)
+                      _showPhotoSelectionModal();
                     },
                     child: Container(
                       width: 100,
@@ -94,13 +225,10 @@ class _SignUpPage8State extends State<SignUpPage8> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder:
-                        (_) =>
-                            EnableLocationPage(phoneNumber: widget.phoneNumber),
+                    builder: (_) => EnableLocationPage(phoneNumber: widget.phoneNumber),
                   ),
                 );
               },
-
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.pink[400],
                 foregroundColor: Colors.white,
