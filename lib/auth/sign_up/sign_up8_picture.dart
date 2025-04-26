@@ -1,10 +1,10 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:catchu/auth/sign_up/sign_up9_Location.dart';
+import 'dart:io';
 
 class SignUpPage8 extends StatefulWidget {
   final String phoneNumber;
+
   const SignUpPage8({Key? key, required this.phoneNumber}) : super(key: key);
 
   @override
@@ -12,135 +12,9 @@ class SignUpPage8 extends StatefulWidget {
 }
 
 class _SignUpPage8State extends State<SignUpPage8> {
-  final ImagePicker _picker = ImagePicker();
   List<ImageProvider> uploadedImages = [AssetImage('assets/images/jawa.png')];
 
-  Future<void> _pickImage(ImageSource source) async {
-    final XFile? image = await _picker.pickImage(source: source);
-    if (image != null) {
-      setState(() {
-        uploadedImages.add(FileImage(File(image.path)));
-      });
-    }
-  }
-
-  void _showPhotoSelectionModal() {
-    showModalBottomSheet(
-      context: context,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      backgroundColor: Colors.transparent,
-      builder: (BuildContext context) {
-        return Container(
-          height: 200,
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.only(
-              topLeft: Radius.circular(20),
-              topRight: Radius.circular(20),
-            ),
-          ),
-          child: Column(
-            children: [
-              Container(
-                padding: EdgeInsets.all(16),
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  color: Colors.pinkAccent,
-                  borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(20),
-                    topRight: Radius.circular(20),
-                  ),
-                ),
-                child: Column(
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          'Add More Photo',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        GestureDetector(
-                          onTap: () {
-                            Navigator.pop(context);
-                          },
-                          child: Icon(Icons.close, color: Colors.white),
-                        ),
-                      ],
-                    ),
-                    SizedBox(height: 8),
-                    Text(
-                      'Try To Find Ones That Show Off Your Smile',
-                      style: TextStyle(color: Colors.white, fontSize: 14),
-                      textAlign: TextAlign.center,
-                    ),
-                  ],
-                ),
-              ),
-              Expanded(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    InkWell(
-                      onTap: () async {
-                        Navigator.pop(context);
-                        await _pickImage(ImageSource.gallery);
-                      },
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        child: Row(
-                          children: [
-                            Icon(Icons.image, color: Colors.pinkAccent),
-                            SizedBox(width: 16),
-                            Text(
-                              'Upload Photo',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    Divider(height: 1),
-                    InkWell(
-                      onTap: () async {
-                        Navigator.pop(context);
-                        await _pickImage(ImageSource.camera);
-                      },
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        child: Row(
-                          children: [
-                            Icon(Icons.camera_alt, color: Colors.pinkAccent),
-                            SizedBox(width: 16),
-                            Text(
-                              'Take Photo',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
+  final ImagePicker _picker = ImagePicker();
 
   @override
   Widget build(BuildContext context) {
@@ -159,7 +33,7 @@ class _SignUpPage8State extends State<SignUpPage8> {
           child: ClipRRect(
             borderRadius: BorderRadius.circular(50),
             child: LinearProgressIndicator(
-              value: 0.975, // Progress step ke-9
+              value: 0.975,
               backgroundColor: const Color.fromARGB(255, 255, 233, 241),
               valueColor: AlwaysStoppedAnimation<Color>(Colors.pink[400]!),
             ),
@@ -222,12 +96,7 @@ class _SignUpPage8State extends State<SignUpPage8> {
             Spacer(),
             ElevatedButton(
               onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => EnableLocationPage(phoneNumber: widget.phoneNumber),
-                  ),
-                );
+                // Navigator.push ke halaman berikutnya (location page)
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.pink[400],
@@ -245,5 +114,147 @@ class _SignUpPage8State extends State<SignUpPage8> {
         ),
       ),
     );
+  }
+
+  void _showPhotoSelectionModal() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      backgroundColor: Colors.transparent,
+      builder: (BuildContext context) {
+        final screenHeight = MediaQuery.of(context).size.height;
+        return Container(
+          height: screenHeight * 0.28, // Lebih pendek
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(20),
+              topRight: Radius.circular(20),
+            ),
+          ),
+          child: Column(
+            children: [
+              Container(
+                padding: EdgeInsets.all(16),
+                height: screenHeight * 0.10, // Pink header lebih tinggi dikit
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  color: Colors.pinkAccent,
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(20),
+                    topRight: Radius.circular(20),
+                  ),
+                ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Add More Photo',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        GestureDetector(
+                          onTap: () {
+                            Navigator.pop(context);
+                          },
+                          child: Icon(Icons.close, color: Colors.white),
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 6),
+                    Text(
+                      'Try To Find Ones That Show Off Your Smile',
+                      style: TextStyle(color: Colors.white, fontSize: 13),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
+              ),
+              Expanded(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    InkWell(
+                      onTap: () {
+                        Navigator.pop(context);
+                        _pickImageFromGallery();
+                      },
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        child: Row(
+                          children: [
+                            Icon(Icons.image, color: Colors.pinkAccent),
+                            SizedBox(width: 16),
+                            Text(
+                              'Upload Photo',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    Divider(height: 1),
+                    InkWell(
+                      onTap: () {
+                        Navigator.pop(context);
+                        _pickImageFromCamera();
+                      },
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        child: Row(
+                          children: [
+                            Icon(Icons.camera_alt, color: Colors.pinkAccent),
+                            SizedBox(width: 16),
+                            Text(
+                              'Take Photo',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+
+
+  Future<void> _pickImageFromGallery() async {
+    final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
+    if (pickedFile != null) {
+      setState(() {
+        uploadedImages.add(FileImage(File(pickedFile.path)));
+      });
+    }
+  }
+
+  Future<void> _pickImageFromCamera() async {
+    final pickedFile = await _picker.pickImage(source: ImageSource.camera);
+    if (pickedFile != null) {
+      setState(() {
+        uploadedImages.add(FileImage(File(pickedFile.path)));
+      });
+    }
   }
 }
