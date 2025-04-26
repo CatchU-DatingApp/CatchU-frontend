@@ -8,15 +8,15 @@ environment:
 
 # FIREBASE PACKAGES
 dependencies:
-  geolocator: ^10.1.0
+  geolocator: ^14.0.0
   flutter:
     sdk: flutter
   flutter_native_splash: ^2.4.5
 
-  firebase_core: ^2.32.0 # Core Firebase functionality
-  cloud_firestore: ^4.17.1 # Firestore database
-  firebase_auth: ^4.19.0 # Firebase Authentication
-  firebase_storage: ^11.7.7 # Firebase Storage for file uploads
+  firebase_core: ^3.13.0 # Core Firebase functionality
+  cloud_firestore: ^5.6.6 # Firestore database
+  firebase_auth: ^5.5.2 # Firebase Authentication
+  firebase_storage: ^12.4.5 # Firebase Storage for file uploads
   url_launcher: ^6.2.5
 
 dev_dependencies:
