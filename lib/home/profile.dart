@@ -48,6 +48,127 @@ class _ProfilePageState extends State<ProfilePage> {
     'Fakultas Ilmu Terapan',
   ];
 
+  // Profile completion details
+  final Map<String, Map<String, dynamic>> profileItems = {
+    'Photos': {'completed': 1, 'total': 6, 'icon': Icons.photo_library},
+    'Interest': {'completed': 0, 'total': 3, 'icon': Icons.favorite},
+    'Bio': {'completed': 0, 'total': 1, 'icon': Icons.description},
+    'Faculty': {'completed': 0, 'total': 1, 'icon': Icons.school},
+  };
+
+  void _showProfileCompletionPopup() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          child: Container(
+            width: MediaQuery.of(context).size.width * 0.9,
+            padding: EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: Color(0xFFFF375F),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Progress indicator
+                Container(
+                  width: 80,
+                  height: 80,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(color: Colors.white, width: 3),
+                  ),
+                  child: Center(
+                    child: Text(
+                      '${(profileCompletion * 100).toInt()}%',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+                SizedBox(height: 16),
+
+                // Motivational text
+                Text(
+                  'Just a little bit more! 🍋',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                SizedBox(height: 8),
+
+                Text(
+                  'Transform your profile from solid to stellar.',
+                  style: TextStyle(color: Colors.white, fontSize: 14),
+                  textAlign: TextAlign.center,
+                ),
+                Text(
+                  'The finer points matter!',
+                  style: TextStyle(color: Colors.white, fontSize: 14),
+                  textAlign: TextAlign.center,
+                ),
+                SizedBox(height: 16),
+
+                // Profile completion grid
+                GridView.count(
+                  shrinkWrap: true,
+                  crossAxisCount: 2,
+                  childAspectRatio: 1.5,
+                  crossAxisSpacing: 8,
+                  mainAxisSpacing: 8,
+                  children:
+                      profileItems.entries.map((entry) {
+                        return Container(
+                          decoration: BoxDecoration(
+                            border: Border.all(color: Colors.white, width: 1),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                entry.value['icon'],
+                                color: Colors.white,
+                                size: 24,
+                              ),
+                              SizedBox(height: 4),
+                              Text(
+                                entry.key,
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              SizedBox(height: 4),
+                              Text(
+                                '${entry.value['completed']} of ${entry.value['total']} added',
+                                style: TextStyle(
+                                  color: Colors.white70,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      }).toList(),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   void _showInterestSelector() {
     showModalBottomSheet(
       context: context,
@@ -145,6 +266,9 @@ class _ProfilePageState extends State<ProfilePage> {
                     onPressed: () {
                       setState(() {
                         selectedInterests = List.from(tempSelected);
+                        // Update completion status
+                        profileItems['Interest']!['completed'] =
+                            selectedInterests.length;
                       });
                       Navigator.pop(context);
                     },
@@ -238,6 +362,9 @@ class _ProfilePageState extends State<ProfilePage> {
                     onPressed: () {
                       setState(() {
                         selectedFaculty = tempSelectedFaculty;
+                        // Update completion status
+                        profileItems['Faculty']!['completed'] =
+                            selectedFaculty != null ? 1 : 0;
                       });
                       Navigator.pop(context);
                     },
@@ -250,66 +377,6 @@ class _ProfilePageState extends State<ProfilePage> {
           },
         );
       },
-    );
-  }
-
-  void _onTabTapped(int index) {
-    if (index == 0) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => DiscoverPage()),
-      );
-      return;
-    }
-
-    if (index == 1) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => ChatPage()),
-      );
-      return;
-    }
-
-    setState(() {
-      _currentIndex = index;
-    });
-  }
-
-  Widget _buildPhotoSlot({String? imagePath}) {
-    return GestureDetector(
-      onTap: () {
-        _showPhotoSelectionModal();
-      },
-      child: Container(
-        decoration:
-            imagePath != null
-                ? ShapeDecoration(
-                  image: DecorationImage(
-                    image: AssetImage(imagePath),
-                    fit: BoxFit.cover,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                )
-                : ShapeDecoration(
-                  color: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    side: BorderSide(width: 1, color: const Color(0xFFFF375F)),
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                ),
-        child:
-            imagePath == null
-                ? Center(
-                  child: Icon(
-                    Icons.add,
-                    color: const Color(0xFFFF375F),
-                    size: 32,
-                  ),
-                )
-                : null,
-      ),
     );
   }
 
@@ -433,6 +500,66 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
+  void _onTabTapped(int index) {
+    if (index == 0) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => DiscoverPage()),
+      );
+      return;
+    }
+
+    if (index == 1) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => ChatPage()),
+      );
+      return;
+    }
+
+    setState(() {
+      _currentIndex = index;
+    });
+  }
+
+  Widget _buildPhotoSlot({String? imagePath}) {
+    return GestureDetector(
+      onTap: () {
+        _showPhotoSelectionModal();
+      },
+      child: Container(
+        decoration:
+            imagePath != null
+                ? ShapeDecoration(
+                  image: DecorationImage(
+                    image: AssetImage(imagePath),
+                    fit: BoxFit.cover,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                )
+                : ShapeDecoration(
+                  color: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    side: BorderSide(width: 1, color: const Color(0xFFFF375F)),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                ),
+        child:
+            imagePath == null
+                ? Center(
+                  child: Icon(
+                    Icons.add,
+                    color: const Color(0xFFFF375F),
+                    size: 32,
+                  ),
+                )
+                : null,
+      ),
+    );
+  }
+
   Widget _buildSocialMediaInput({
     required String platform,
     required TextEditingController controller,
@@ -472,6 +599,40 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
+  Widget _buildSectionHeader(String title, String subtitle, IconData icon) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(icon, size: 24, color: const Color(0xFFFF375F)),
+            SizedBox(width: 8),
+            Text(
+              title,
+              style: TextStyle(
+                color: Colors.black,
+                fontSize: 20,
+                fontFamily: 'Inter',
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
+        SizedBox(height: 4),
+        Text(
+          subtitle,
+          style: TextStyle(
+            color: const Color(0xFF333333),
+            fontSize: 14,
+            fontFamily: 'Inter',
+            fontWeight: FontWeight.w400,
+            height: 1.43,
+          ),
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
@@ -490,63 +651,89 @@ class _ProfilePageState extends State<ProfilePage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 SizedBox(height: screenHeight * 0.03),
-                Text(
-                  'Profile',
-                  style: TextStyle(
-                    color: const Color(0xFF333333),
-                    fontSize: screenWidth * 0.09,
-                    fontFamily: 'Nunito',
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-                SizedBox(height: screenHeight * 0.03),
-                Container(
-                  width: contentWidth,
-                  height: 56,
-                  clipBehavior: Clip.antiAlias,
-                  decoration: ShapeDecoration(
-                    color: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      side: BorderSide(
-                        width: 2,
-                        color: const Color(0xFFFF375F),
-                      ),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 15, vertical: 15),
-                    child: Text(
-                      '${(profileCompletion * 100).toInt()}% complete',
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Profile',
                       style: TextStyle(
-                        color: Colors.black,
-                        fontSize: 15,
-                        fontFamily: 'Inter',
-                        fontWeight: FontWeight.w400,
+                        color: const Color(0xFF333333),
+                        fontSize: screenWidth * 0.09,
+                        fontFamily: 'Nunito',
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    OutlinedButton(
+                      onPressed: () {},
+                      style: OutlinedButton.styleFrom(
+                        backgroundColor: Colors.white,
+                        side: BorderSide(color: Colors.blue.shade300),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          Text(
+                            'Get Verified',
+                            style: TextStyle(
+                              color: Colors.blue.shade600,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          SizedBox(width: 4),
+                          Icon(Icons.verified, color: Colors.blue, size: 16),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: screenHeight * 0.03),
+                GestureDetector(
+                  onTap: _showProfileCompletionPopup,
+                  child: Container(
+                    width: contentWidth,
+                    height: 56,
+                    clipBehavior: Clip.antiAlias,
+                    decoration: ShapeDecoration(
+                      color: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        side: BorderSide(
+                          width: 2,
+                          color: const Color(0xFFFF375F),
+                        ),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 15),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            '${(profileCompletion * 100).toInt()}% complete',
+                            style: TextStyle(
+                              color: Colors.black,
+                              fontSize: 15,
+                              fontFamily: 'Inter',
+                              fontWeight: FontWeight.w400,
+                            ),
+                          ),
+                          Icon(
+                            Icons.arrow_forward_ios,
+                            color: const Color(0xFFFF375F),
+                            size: 16,
+                          ),
+                        ],
                       ),
                     ),
                   ),
                 ),
                 SizedBox(height: screenHeight * 0.03),
-                Text(
+                _buildSectionHeader(
                   'Photos',
-                  style: TextStyle(
-                    color: Colors.black,
-                    fontSize: 20,
-                    fontFamily: 'Inter',
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                SizedBox(height: 4),
-                Text(
                   'pick some that show the true you.',
-                  style: TextStyle(
-                    color: const Color(0xFF333333),
-                    fontSize: 14,
-                    fontFamily: 'Inter',
-                    fontWeight: FontWeight.w400,
-                    height: 1.43,
-                  ),
+                  profileItems['Photos']!['icon'],
                 ),
                 SizedBox(height: 12),
                 Row(
@@ -593,25 +780,10 @@ class _ProfilePageState extends State<ProfilePage> {
                   ],
                 ),
                 SizedBox(height: screenHeight * 0.03),
-                Text(
+                _buildSectionHeader(
                   'Bio',
-                  style: TextStyle(
-                    color: Colors.black,
-                    fontSize: 20,
-                    fontFamily: 'Inter',
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                SizedBox(height: 4),
-                Text(
                   'Write a fun and punchy intro.',
-                  style: TextStyle(
-                    color: const Color(0xFF333333),
-                    fontSize: 14,
-                    fontFamily: 'Inter',
-                    fontWeight: FontWeight.w400,
-                    height: 1.43,
-                  ),
+                  profileItems['Bio']!['icon'],
                 ),
                 SizedBox(height: 12),
                 Container(
@@ -636,28 +808,19 @@ class _ProfilePageState extends State<ProfilePage> {
                       hintText: 'Write something about yourself...',
                     ),
                     maxLines: 5,
+                    onChanged: (value) {
+                      setState(() {
+                        profileItems['Bio']!['completed'] =
+                            value.isNotEmpty ? 1 : 0;
+                      });
+                    },
                   ),
                 ),
                 SizedBox(height: screenHeight * 0.03),
-                Text(
+                _buildSectionHeader(
                   'Interest',
-                  style: TextStyle(
-                    color: Colors.black,
-                    fontSize: 20,
-                    fontFamily: 'Inter',
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                SizedBox(height: 4),
-                Text(
                   'Get specific about the things you love.',
-                  style: TextStyle(
-                    color: const Color(0xFF333333),
-                    fontSize: 14,
-                    fontFamily: 'Inter',
-                    fontWeight: FontWeight.w400,
-                    height: 1.43,
-                  ),
+                  profileItems['Interest']!['icon'],
                 ),
                 SizedBox(height: 12),
                 GestureDetector(
@@ -706,7 +869,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                           Icon(
                                             icon,
                                             size: 16,
-                                            color: Colors.pink,
+                                            color: Colors.white,
                                           ),
                                           SizedBox(width: 6),
                                           Text(
@@ -724,25 +887,10 @@ class _ProfilePageState extends State<ProfilePage> {
                   ),
                 ),
                 SizedBox(height: screenHeight * 0.03),
-                Text(
+                _buildSectionHeader(
                   'Faculty',
-                  style: TextStyle(
-                    color: Colors.black,
-                    fontSize: 20,
-                    fontFamily: 'Inter',
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                SizedBox(height: 4),
-                Text(
                   'Time to flex your faculty with pride.',
-                  style: TextStyle(
-                    color: const Color(0xFF333333),
-                    fontSize: 14,
-                    fontFamily: 'Inter',
-                    fontWeight: FontWeight.w400,
-                    height: 1.43,
-                  ),
+                  profileItems['Faculty']!['icon'],
                 ),
                 SizedBox(height: 12),
                 GestureDetector(
@@ -788,25 +936,10 @@ class _ProfilePageState extends State<ProfilePage> {
 
                 // Social Media URLs Section
                 SizedBox(height: screenHeight * 0.03),
-                Text(
+                _buildSectionHeader(
                   'Social URLs',
-                  style: TextStyle(
-                    color: Colors.black,
-                    fontSize: 20,
-                    fontFamily: 'Inter',
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                SizedBox(height: 4),
-                Text(
-                  'Show us where you’re hanging out online!.',
-                  style: TextStyle(
-                    color: const Color(0xFF333333),
-                    fontSize: 14,
-                    fontFamily: 'Inter',
-                    fontWeight: FontWeight.w400,
-                    height: 1.43,
-                  ),
+                  'Show us where you\'re hanging out online!',
+                  Icons.link,
                 ),
                 SizedBox(height: 12),
                 Container(
