@@ -6,7 +6,7 @@ class EnableLocationPage extends StatelessWidget {
   final String phoneNumber;
 
   const EnableLocationPage({Key? key, required this.phoneNumber})
-      : super(key: key);
+    : super(key: key);
 
   Future<void> _getCurrentLocation(BuildContext context) async {
     bool serviceEnabled;
