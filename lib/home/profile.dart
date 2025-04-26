@@ -276,35 +276,160 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   Widget _buildPhotoSlot({String? imagePath}) {
-    return Container(
-      decoration:
-          imagePath != null
-              ? ShapeDecoration(
-                image: DecorationImage(
-                  image: AssetImage(imagePath),
-                  fit: BoxFit.cover,
+    return GestureDetector(
+      onTap: () {
+        _showPhotoSelectionModal();
+      },
+      child: Container(
+        decoration:
+            imagePath != null
+                ? ShapeDecoration(
+                  image: DecorationImage(
+                    image: AssetImage(imagePath),
+                    fit: BoxFit.cover,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                )
+                : ShapeDecoration(
+                  color: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    side: BorderSide(width: 1, color: const Color(0xFFFF375F)),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
                 ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
+        child:
+            imagePath == null
+                ? Center(
+                  child: Icon(
+                    Icons.add,
+                    color: const Color(0xFFFF375F),
+                    size: 32,
+                  ),
+                )
+                : null,
+      ),
+    );
+  }
+
+  void _showPhotoSelectionModal() {
+    showModalBottomSheet(
+      context: context,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      backgroundColor: Colors.transparent,
+      builder: (BuildContext context) {
+        return Container(
+          height: 200,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(20),
+              topRight: Radius.circular(20),
+            ),
+          ),
+          child: Column(
+            children: [
+              Container(
+                padding: EdgeInsets.all(16),
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  color: Colors.pinkAccent,
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(20),
+                    topRight: Radius.circular(20),
+                  ),
                 ),
-              )
-              : ShapeDecoration(
-                color: Colors.white,
-                shape: RoundedRectangleBorder(
-                  side: BorderSide(width: 1, color: const Color(0xFFFF375F)),
-                  borderRadius: BorderRadius.circular(16),
+                child: Column(
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Add More Photo',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        GestureDetector(
+                          onTap: () {
+                            Navigator.pop(context);
+                          },
+                          child: Icon(Icons.close, color: Colors.white),
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 8),
+                    Text(
+                      'Try To Find Ones That Show Off Your Smile',
+                      style: TextStyle(color: Colors.white, fontSize: 14),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
                 ),
               ),
-      child:
-          imagePath == null
-              ? Center(
-                child: Icon(
-                  Icons.add,
-                  color: const Color(0xFFFF375F),
-                  size: 32,
+              Expanded(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    InkWell(
+                      onTap: () {
+                        // Handle upload photo
+                        Navigator.pop(context);
+                        // Add your photo upload logic here
+                      },
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        child: Row(
+                          children: [
+                            Icon(Icons.image, color: Colors.pinkAccent),
+                            SizedBox(width: 16),
+                            Text(
+                              'Upload Photo',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    Divider(height: 1),
+                    InkWell(
+                      onTap: () {
+                        // Handle take photo
+                        Navigator.pop(context);
+                        // Add your camera logic here
+                      },
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        child: Row(
+                          children: [
+                            Icon(Icons.camera_alt, color: Colors.pinkAccent),
+                            SizedBox(width: 16),
+                            Text(
+                              'Take Photo',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-              )
-              : null,
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 
