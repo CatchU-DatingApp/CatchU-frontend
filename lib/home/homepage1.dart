@@ -144,31 +144,57 @@ class _DiscoverPageState extends State<DiscoverPage>
 
   void _swipeLeft() {
     if (_isAnimating) return;
-    _scrollController.jumpTo(0); // Reset scroll before swipe
+
+    _scrollController.jumpTo(0); // Reset scroll sebelum swipe
     setState(() => _isAnimating = true);
+
     _slideAnimation = Tween<Offset>(
       begin: Offset.zero,
-      end: Offset(-1.0, 0.0),
-    ).animate(CurvedAnimation(parent: _swipeController, curve: Curves.easeOut));
+      end: Offset(-1.0, 0.0), // Arahkan ke kiri
+    ).animate(
+      CurvedAnimation(
+        parent: _swipeController,
+        curve:
+            Curves
+                .easeInOut, // Menggunakan easeInOut untuk transisi lebih smooth
+      ),
+    );
+
     _rotationAnimation = Tween<double>(
       begin: 0.0,
-      end: -0.3,
-    ).animate(CurvedAnimation(parent: _swipeController, curve: Curves.easeOut));
+      end: -0.15, // Putar sedikit saja
+    ).animate(
+      CurvedAnimation(parent: _swipeController, curve: Curves.easeInOut),
+    );
+
     _swipeController.forward();
   }
 
   void _swipeRight() {
     if (_isAnimating) return;
-    _scrollController.jumpTo(0); // Reset scroll before swipe
+
+    _scrollController.jumpTo(0); // Reset scroll sebelum swipe
     setState(() => _isAnimating = true);
+
     _slideAnimation = Tween<Offset>(
       begin: Offset.zero,
-      end: Offset(1.0, 0.0),
-    ).animate(CurvedAnimation(parent: _swipeController, curve: Curves.easeOut));
+      end: Offset(1.0, 0.0), // Arahkan ke kanan
+    ).animate(
+      CurvedAnimation(
+        parent: _swipeController,
+        curve:
+            Curves
+                .easeInOut, // Menggunakan easeInOut untuk transisi lebih smooth
+      ),
+    );
+
     _rotationAnimation = Tween<double>(
       begin: 0.0,
-      end: 0.3,
-    ).animate(CurvedAnimation(parent: _swipeController, curve: Curves.easeOut));
+      end: 0.15, // Putar sedikit saja
+    ).animate(
+      CurvedAnimation(parent: _swipeController, curve: Curves.easeInOut),
+    );
+
     _swipeController.forward();
   }
 
@@ -199,9 +225,9 @@ class _DiscoverPageState extends State<DiscoverPage>
   Widget build(BuildContext context) {
     final currentProfile = _profiles[_currentProfileIndex];
     final nextProfile =
-    _profiles[(_currentProfileIndex + 1) % _profiles.length];
+        _profiles[(_currentProfileIndex + 1) % _profiles.length];
     final nextNextProfile =
-    _profiles[(_currentProfileIndex + 2) % _profiles.length];
+        _profiles[(_currentProfileIndex + 2) % _profiles.length];
 
     final screenHeight = MediaQuery.of(context).size.height;
     final cardTopOffset = 110.0;
@@ -241,32 +267,37 @@ class _DiscoverPageState extends State<DiscoverPage>
               child: Stack(
                 alignment: Alignment.center,
                 children: [
-                  Transform.scale(
-                    scale: 0.8,
-                    child: Transform.translate(
-                      offset: Offset(0, -30),
-                      child: _buildProfileCard(nextNextProfile, cardHeight, (_currentProfileIndex + 2) % _profiles.length),
-                    ),
+                  // Dua kartu di belakang, sama persis ukuran & posisinya
+                  _buildProfileCard(
+                    nextNextProfile,
+                    cardHeight,
+                    (_currentProfileIndex + 2) % _profiles.length,
                   ),
-                  Transform.scale(
-                    scale: 0.9,
-                    child: Transform.translate(
-                      offset: Offset(0, -15),
-                      child: _buildProfileCard(nextProfile, cardHeight, (_currentProfileIndex + 1) % _profiles.length),
-                    ),
+                  _buildProfileCard(
+                    nextProfile,
+                    cardHeight,
+                    (_currentProfileIndex + 1) % _profiles.length,
                   ),
+
+                  // Kartu aktif dengan animasi swipe
                   AnimatedBuilder(
                     animation: _swipeController,
                     builder: (context, child) {
                       return Transform.translate(
-                        offset: _slideAnimation.value * MediaQuery.of(context).size.width,
+                        offset:
+                            _slideAnimation.value *
+                            MediaQuery.of(context).size.width,
                         child: Transform.rotate(
                           angle: _rotationAnimation.value,
                           child: child,
                         ),
                       );
                     },
-                    child: _buildProfileCard(currentProfile, cardHeight, _currentProfileIndex),
+                    child: _buildProfileCard(
+                      currentProfile,
+                      cardHeight,
+                      _currentProfileIndex,
+                    ),
                   ),
                 ],
               ),
@@ -318,7 +349,11 @@ class _DiscoverPageState extends State<DiscoverPage>
     );
   }
 
-  Widget _buildProfileCard(ProfileData profile, double cardHeight, int profileIndex) {
+  Widget _buildProfileCard(
+    ProfileData profile,
+    double cardHeight,
+    int profileIndex,
+  ) {
     // Get current image index for this profile
     final currentImageIndex = _currentImageIndices[profileIndex] ?? 0;
     final currentImage = profile.images[currentImageIndex];
@@ -335,7 +370,8 @@ class _DiscoverPageState extends State<DiscoverPage>
         width: 520,
         height: cardHeight,
         child: SingleChildScrollView(
-          controller: profileIndex == _currentProfileIndex ? _scrollController : null,
+          controller:
+              profileIndex == _currentProfileIndex ? _scrollController : null,
           physics: BouncingScrollPhysics(),
           padding: EdgeInsets.only(bottom: 20),
           child: Column(
@@ -362,31 +398,34 @@ class _DiscoverPageState extends State<DiscoverPage>
                         ),
 
                         // Left and right navigation areas
-                        if (profileIndex == _currentProfileIndex) Row(
-                          children: [
-                            // Left navigation (previous image)
-                            Expanded(
-                              flex: 1,
-                              child: GestureDetector(
-                                onTap: currentImageIndex > 0 ? _previousImage : null,
-                                child: Container(
-                                  color: Colors.transparent,
+                        if (profileIndex == _currentProfileIndex)
+                          Row(
+                            children: [
+                              // Left navigation (previous image)
+                              Expanded(
+                                flex: 1,
+                                child: GestureDetector(
+                                  onTap:
+                                      currentImageIndex > 0
+                                          ? _previousImage
+                                          : null,
+                                  child: Container(color: Colors.transparent),
                                 ),
                               ),
-                            ),
 
-                            // Right navigation (next image)
-                            Expanded(
-                              flex: 1,
-                              child: GestureDetector(
-                                onTap: currentImageIndex < totalImages - 1 ? _nextImage : null,
-                                child: Container(
-                                  color: Colors.transparent,
+                              // Right navigation (next image)
+                              Expanded(
+                                flex: 1,
+                                child: GestureDetector(
+                                  onTap:
+                                      currentImageIndex < totalImages - 1
+                                          ? _nextImage
+                                          : null,
+                                  child: Container(color: Colors.transparent),
                                 ),
                               ),
-                            ),
-                          ],
-                        ),
+                            ],
+                          ),
 
                         // Image indicators
                         Positioned(
@@ -397,15 +436,16 @@ class _DiscoverPageState extends State<DiscoverPage>
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: List.generate(
                               totalImages,
-                                  (index) => Container(
+                              (index) => Container(
                                 margin: EdgeInsets.symmetric(horizontal: 3),
                                 width: 8,
                                 height: 8,
                                 decoration: BoxDecoration(
                                   shape: BoxShape.circle,
-                                  color: index == currentImageIndex
-                                      ? Colors.white
-                                      : Colors.white.withOpacity(0.5),
+                                  color:
+                                      index == currentImageIndex
+                                          ? Colors.white
+                                          : Colors.white.withOpacity(0.5),
                                 ),
                               ),
                             ),
@@ -488,9 +528,9 @@ class _DiscoverPageState extends State<DiscoverPage>
                       spacing: 8,
                       runSpacing: 8,
                       children:
-                      profile.interests
-                          .map((interest) => _interestTag(interest))
-                          .toList(),
+                          profile.interests
+                              .map((interest) => _interestTag(interest))
+                              .toList(),
                     ),
                   ],
                 ),
