@@ -8,7 +8,6 @@ environment:
 
 # FIREBASE PACKAGES
 dependencies:
-  geolocator: ^10.1.0
   flutter:
     sdk: flutter
   flutter_native_splash: ^2.4.5

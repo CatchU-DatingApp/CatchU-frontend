@@ -1,61 +1,11 @@
 import 'package:catchu/auth/sign_up/sign_up10_Rules.dart';
 import 'package:flutter/material.dart';
-import 'package:geolocator/geolocator.dart'; // ADD THIS
 
 class EnableLocationPage extends StatelessWidget {
   final String phoneNumber;
 
   const EnableLocationPage({Key? key, required this.phoneNumber})
-      : super(key: key);
-
-  Future<void> _getCurrentLocation(BuildContext context) async {
-    bool serviceEnabled;
-    LocationPermission permission;
-
-    // Check if location services are enabled
-    serviceEnabled = await Geolocator.isLocationServiceEnabled();
-    if (!serviceEnabled) {
-      // Location services are not enabled
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Please enable location services')),
-      );
-      return;
-    }
-
-    // Check permission
-    permission = await Geolocator.checkPermission();
-    if (permission == LocationPermission.denied) {
-      permission = await Geolocator.requestPermission();
-      if (permission == LocationPermission.denied) {
-        // Permissions are denied
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Location permissions are denied')),
-        );
-        return;
-      }
-    }
-
-    if (permission == LocationPermission.deniedForever) {
-      // Permissions are permanently denied
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Location permissions are permanently denied')),
-      );
-      return;
-    }
-
-    // Get current location
-    Position position = await Geolocator.getCurrentPosition(
-      desiredAccuracy: LocationAccuracy.high,
-    );
-
-    print('Current location: ${position.latitude}, ${position.longitude}');
-
-    // After getting location, navigate to the next page
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (_) => SignUpRulesPage()),
-    );
-  }
+    : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -87,7 +37,10 @@ class EnableLocationPage extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 24.0),
               child: ElevatedButton(
                 onPressed: () {
-                  _getCurrentLocation(context);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => SignUpRulesPage()),
+                  );
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Color(0xFFFF2E63),
