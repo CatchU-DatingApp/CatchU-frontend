@@ -1,6 +1,14 @@
 import 'package:flutter/material.dart';
 import 'chat.dart';
 import 'homepage1.dart';
+import 'profile_completion_popup.dart';
+import 'interest_selector.dart';
+import 'faculty_selector.dart';
+import 'photo_selection.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
+
+
 
 class ProfilePage extends StatefulWidget {
   @override
@@ -8,6 +16,8 @@ class ProfilePage extends StatefulWidget {
 }
 
 class _ProfilePageState extends State<ProfilePage> {
+  final ImagePicker _picker = ImagePicker();  // Initialize the ImagePicker
+  List<ImageProvider> uploadedImages = [AssetImage('assets/images/jawa.png')];
   int _currentIndex = 2;
   double profileCompletion = 0.58;
   TextEditingController bioController = TextEditingController(
@@ -60,445 +70,103 @@ class _ProfilePageState extends State<ProfilePage> {
     showDialog(
       context: context,
       builder: (BuildContext context) {
-        return Dialog(
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          child: Container(
-            width: MediaQuery.of(context).size.width * 0.9,
-            padding: EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: Color(0xFFFF375F),
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // Progress indicator
-                Container(
-                  width: 80,
-                  height: 80,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    border: Border.all(color: Colors.white, width: 3),
-                  ),
-                  child: Center(
-                    child: Text(
-                      '${(profileCompletion * 100).toInt()}%',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ),
-                SizedBox(height: 16),
-
-                // Motivational text
-                Text(
-                  'Just a little bit more! 🍋',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                SizedBox(height: 8),
-
-                Text(
-                  'Transform your profile from solid to stellar.',
-                  style: TextStyle(color: Colors.white, fontSize: 14),
-                  textAlign: TextAlign.center,
-                ),
-                Text(
-                  'The finer points matter!',
-                  style: TextStyle(color: Colors.white, fontSize: 14),
-                  textAlign: TextAlign.center,
-                ),
-                SizedBox(height: 16),
-
-                // Profile completion grid
-                GridView.count(
-                  shrinkWrap: true,
-                  crossAxisCount: 2,
-                  childAspectRatio: 1.5,
-                  crossAxisSpacing: 8,
-                  mainAxisSpacing: 8,
-                  children:
-                      profileItems.entries.map((entry) {
-                        return Container(
-                          decoration: BoxDecoration(
-                            border: Border.all(color: Colors.white, width: 1),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(
-                                entry.value['icon'],
-                                color: Colors.white,
-                                size: 24,
-                              ),
-                              SizedBox(height: 4),
-                              Text(
-                                entry.key,
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                              SizedBox(height: 4),
-                              Text(
-                                '${entry.value['completed']} of ${entry.value['total']} added',
-                                style: TextStyle(
-                                  color: Colors.white70,
-                                  fontSize: 12,
-                                ),
-                              ),
-                            ],
-                          ),
-                        );
-                      }).toList(),
-                ),
-              ],
-            ),
-          ),
+        return ProfileCompletionPopup(
+          profileCompletion: profileCompletion,
+          profileItems: profileItems,
         );
       },
     );
   }
+
 
   void _showInterestSelector() {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.white,
-      shape: RoundedRectangleBorder(
+      shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (context) {
-        List<String> tempSelected = List.from(selectedInterests);
-
-        return StatefulBuilder(
-          builder: (context, setModalState) {
-            return Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    "Select Interests (Max 3)",
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                  SizedBox(height: 16),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children:
-                        interests.map((interest) {
-                          final label = interest['label'];
-                          final icon = interest['icon'];
-                          final isSelected = tempSelected.contains(label);
-
-                          return GestureDetector(
-                            onTap: () {
-                              setModalState(() {
-                                if (isSelected) {
-                                  tempSelected.remove(label);
-                                } else {
-                                  if (tempSelected.length < 3) {
-                                    tempSelected.add(label);
-                                  }
-                                }
-                              });
-                            },
-                            child: Container(
-                              padding: EdgeInsets.symmetric(
-                                horizontal: 14,
-                                vertical: 8,
-                              ),
-                              decoration: BoxDecoration(
-                                color:
-                                    isSelected
-                                        ? Colors.pink[400]
-                                        : Colors.white,
-                                borderRadius: BorderRadius.circular(30),
-                                border: Border.all(color: Colors.pink.shade100),
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(
-                                    icon,
-                                    size: 18,
-                                    color:
-                                        isSelected
-                                            ? Colors.white
-                                            : Colors.pink[400],
-                                  ),
-                                  SizedBox(width: 6),
-                                  Text(
-                                    label,
-                                    style: TextStyle(
-                                      color:
-                                          isSelected
-                                              ? Colors.white
-                                              : Colors.black87,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          );
-                        }).toList(),
-                  ),
-                  SizedBox(height: 20),
-                  ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.pinkAccent,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      minimumSize: Size(double.infinity, 48),
-                    ),
-                    onPressed: () {
-                      setState(() {
-                        selectedInterests = List.from(tempSelected);
-                        // Update completion status
-                        profileItems['Interest']!['completed'] =
-                            selectedInterests.length;
-                      });
-                      Navigator.pop(context);
-                    },
-                    child: Text("Save", style: TextStyle(color: Colors.white)),
-                  ),
-                  SizedBox(height: 16),
-                ],
-              ),
-            );
+        return InterestSelectorBottomSheet(
+          selectedInterests: selectedInterests,
+          interests: interests,
+          onSave: (updatedInterests) {
+            setState(() {
+              selectedInterests = updatedInterests;
+              profileItems['Interest']!['completed'] = selectedInterests.length;
+            });
           },
         );
       },
     );
   }
+
 
   void _showFacultySelector() {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.white,
-      shape: RoundedRectangleBorder(
+      shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (context) {
-        String? tempSelectedFaculty = selectedFaculty;
-
-        return StatefulBuilder(
-          builder: (context, setModalState) {
-            return Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    "Select Faculty",
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                  SizedBox(height: 16),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children:
-                        faculties.map((faculty) {
-                          final isSelected = tempSelectedFaculty == faculty;
-                          return GestureDetector(
-                            onTap: () {
-                              setModalState(() {
-                                if (tempSelectedFaculty == faculty) {
-                                  tempSelectedFaculty = null;
-                                } else {
-                                  tempSelectedFaculty = faculty;
-                                }
-                              });
-                            },
-                            child: Container(
-                              padding: EdgeInsets.symmetric(
-                                horizontal: 14,
-                                vertical: 8,
-                              ),
-                              decoration: BoxDecoration(
-                                color:
-                                    isSelected
-                                        ? Colors.pink[400]
-                                        : Colors.white,
-                                borderRadius: BorderRadius.circular(30),
-                                border: Border.all(color: Colors.pink.shade100),
-                              ),
-                              child: Text(
-                                faculty,
-                                style: TextStyle(
-                                  color:
-                                      isSelected
-                                          ? Colors.white
-                                          : Colors.black87,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ),
-                          );
-                        }).toList(),
-                  ),
-                  SizedBox(height: 20),
-                  ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.pinkAccent,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      minimumSize: Size(double.infinity, 48),
-                    ),
-                    onPressed: () {
-                      setState(() {
-                        selectedFaculty = tempSelectedFaculty;
-                        // Update completion status
-                        profileItems['Faculty']!['completed'] =
-                            selectedFaculty != null ? 1 : 0;
-                      });
-                      Navigator.pop(context);
-                    },
-                    child: Text("Save", style: TextStyle(color: Colors.white)),
-                  ),
-                  SizedBox(height: 16),
-                ],
-              ),
-            );
+        return FacultySelectorBottomSheet(
+          selectedFaculty: selectedFaculty,
+          faculties: faculties,
+          onSave: (updatedFaculty) {
+            setState(() {
+              selectedFaculty = updatedFaculty;
+              profileItems['Faculty']!['completed'] = selectedFaculty != null ? 1 : 0;
+            });
           },
         );
       },
     );
   }
 
+
   void _showPhotoSelectionModal() {
     showModalBottomSheet(
       context: context,
-      shape: RoundedRectangleBorder(
+      shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       backgroundColor: Colors.transparent,
       builder: (BuildContext context) {
-        return Container(
-          height: 200,
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.only(
-              topLeft: Radius.circular(20),
-              topRight: Radius.circular(20),
-            ),
-          ),
-          child: Column(
-            children: [
-              Container(
-                padding: EdgeInsets.all(16),
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  color: Colors.pinkAccent,
-                  borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(20),
-                    topRight: Radius.circular(20),
-                  ),
-                ),
-                child: Column(
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          'Add More Photo',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        GestureDetector(
-                          onTap: () {
-                            Navigator.pop(context);
-                          },
-                          child: Icon(Icons.close, color: Colors.white),
-                        ),
-                      ],
-                    ),
-                    SizedBox(height: 8),
-                    Text(
-                      'Try To Find Ones That Show Off Your Smile',
-                      style: TextStyle(color: Colors.white, fontSize: 14),
-                      textAlign: TextAlign.center,
-                    ),
-                  ],
-                ),
-              ),
-              Expanded(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    InkWell(
-                      onTap: () {
-                        // Handle upload photo
-                        Navigator.pop(context);
-                        // Add your photo upload logic here
-                      },
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        child: Row(
-                          children: [
-                            Icon(Icons.image, color: Colors.pinkAccent),
-                            SizedBox(width: 16),
-                            Text(
-                              'Upload Photo',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    Divider(height: 1),
-                    InkWell(
-                      onTap: () {
-                        // Handle take photo
-                        Navigator.pop(context);
-                        // Add your camera logic here
-                      },
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        child: Row(
-                          children: [
-                            Icon(Icons.camera_alt, color: Colors.pinkAccent),
-                            SizedBox(width: 16),
-                            Text(
-                              'Take Photo',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
+        return PhotoSelectionBottomSheet(
+          onUploadPhoto: () async {
+            Navigator.pop(context); // Tutup bottom sheet dulu
+            await _pickImageFromGallery();
+          },
+          onTakePhoto: () async {
+            Navigator.pop(context); // Tutup bottom sheet dulu
+            await _pickImageFromCamera();
+          },
         );
       },
     );
   }
+  Future<void> _pickImageFromGallery() async {
+    final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
+    if (pickedFile != null) {
+      setState(() {
+        uploadedImages.add(FileImage(File(pickedFile.path)));
+      });
+    }
+  }
+
+  Future<void> _pickImageFromCamera() async {
+    final pickedFile = await _picker.pickImage(source: ImageSource.camera);
+    if (pickedFile != null) {
+      setState(() {
+        uploadedImages.add(FileImage(File(pickedFile.path)));
+      });
+    }
+  }
+
+
 
   void _onTabTapped(int index) {
     if (index == 0) {
@@ -522,43 +190,42 @@ class _ProfilePageState extends State<ProfilePage> {
     });
   }
 
-  Widget _buildPhotoSlot({String? imagePath}) {
+  Widget _buildPhotoSlot({ImageProvider<Object>? image}) {
     return GestureDetector(
       onTap: () {
         _showPhotoSelectionModal();
       },
       child: Container(
-        decoration:
-            imagePath != null
-                ? ShapeDecoration(
-                  image: DecorationImage(
-                    image: AssetImage(imagePath),
-                    fit: BoxFit.cover,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                )
-                : ShapeDecoration(
-                  color: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    side: BorderSide(width: 1, color: const Color(0xFFFF375F)),
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                ),
-        child:
-            imagePath == null
-                ? Center(
-                  child: Icon(
-                    Icons.add,
-                    color: const Color(0xFFFF375F),
-                    size: 32,
-                  ),
-                )
-                : null,
+        decoration: image != null
+            ? ShapeDecoration(
+          image: DecorationImage(
+            image: image,  // Now using ImageProvider instead of String
+            fit: BoxFit.cover,
+          ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+        )
+            : ShapeDecoration(
+          color: Colors.white,
+          shape: RoundedRectangleBorder(
+            side: BorderSide(width: 1, color: const Color(0xFFFF375F)),
+            borderRadius: BorderRadius.circular(16),
+          ),
+        ),
+        child: image == null
+            ? Center(
+          child: Icon(
+            Icons.add,
+            color: const Color(0xFFFF375F),
+            size: 32,
+          ),
+        )
+            : null,
       ),
     );
   }
+
 
   Widget _buildSocialMediaInput({
     required String platform,
@@ -639,7 +306,7 @@ class _ProfilePageState extends State<ProfilePage> {
     final screenHeight = MediaQuery.of(context).size.height;
     final horizontalPadding = screenWidth * 0.06;
     final contentWidth = screenWidth - (horizontalPadding * 2);
-    final photoSize = (contentWidth - 32) / 3;
+    final photoSize = (contentWidth - 32) / 3; // Size for each photo slot
 
     return Scaffold(
       backgroundColor: const Color(0xFFFDFAF6),
@@ -732,52 +399,32 @@ class _ProfilePageState extends State<ProfilePage> {
                 SizedBox(height: screenHeight * 0.03),
                 _buildSectionHeader(
                   'Photos',
-                  'pick some that show the true you.',
+                  'Pick some that show the true you.',
                   profileItems['Photos']!['icon'],
                 ),
                 SizedBox(height: 12),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    SizedBox(
-                      width: photoSize,
-                      height: photoSize,
-                      child: _buildPhotoSlot(
-                        imagePath: 'assets/images/jawa.png',
+                // Photo grid
+                Column(
+                  children: List.generate(2, (rowIndex) {
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: List.generate(3, (colIndex) {
+                          int index = rowIndex * 3 + colIndex;
+                          return SizedBox(
+                            width: photoSize,
+                            height: photoSize,
+                            child: _buildPhotoSlot(
+                              image: index < uploadedImages.length
+                                  ? uploadedImages[index] // This is expected to be of type ImageProvider
+                                  : null,
+                            )
+                          );
+                        }),
                       ),
-                    ),
-                    SizedBox(
-                      width: photoSize,
-                      height: photoSize,
-                      child: _buildPhotoSlot(),
-                    ),
-                    SizedBox(
-                      width: photoSize,
-                      height: photoSize,
-                      child: _buildPhotoSlot(),
-                    ),
-                  ],
-                ),
-                SizedBox(height: 12),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    SizedBox(
-                      width: photoSize,
-                      height: photoSize,
-                      child: _buildPhotoSlot(),
-                    ),
-                    SizedBox(
-                      width: photoSize,
-                      height: photoSize,
-                      child: _buildPhotoSlot(),
-                    ),
-                    SizedBox(
-                      width: photoSize,
-                      height: photoSize,
-                      child: _buildPhotoSlot(),
-                    ),
-                  ],
+                    );
+                  }),
                 ),
                 SizedBox(height: screenHeight * 0.03),
                 _buildSectionHeader(
@@ -1004,4 +651,5 @@ class _ProfilePageState extends State<ProfilePage> {
       ),
     );
   }
+
 }
