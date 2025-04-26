@@ -278,8 +278,6 @@ class _DiscoverPageState extends State<DiscoverPage>
                     cardHeight,
                     (_currentProfileIndex + 1) % _profiles.length,
                   ),
-
-                  // Kartu aktif dengan animasi swipe
                   AnimatedBuilder(
                     animation: _swipeController,
                     builder: (context, child) {
@@ -444,7 +442,12 @@ class _DiscoverPageState extends State<DiscoverPage>
                                   shape: BoxShape.circle,
                                   color:
                                       index == currentImageIndex
-                                          ? Colors.white
+                                          ? const Color.fromARGB(
+                                            255,
+                                            250,
+                                            60,
+                                            60,
+                                          )
                                           : Colors.white.withOpacity(0.5),
                                 ),
                               ),
