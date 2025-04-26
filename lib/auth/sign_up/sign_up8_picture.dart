@@ -1,3 +1,4 @@
+import 'package:catchu/auth/sign_up/sign_up9_Location.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
@@ -96,7 +97,12 @@ class _SignUpPage8State extends State<SignUpPage8> {
             Spacer(),
             ElevatedButton(
               onPressed: () {
-                // Navigator.push ke halaman berikutnya (location page)
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => EnableLocationPage(phoneNumber: widget.phoneNumber),
+                  ),
+                );
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.pink[400],
