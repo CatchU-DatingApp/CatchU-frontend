@@ -190,41 +190,75 @@ class _ProfilePageState extends State<ProfilePage> {
     });
   }
 
-  Widget _buildPhotoSlot({ImageProvider<Object>? image}) {
-    return GestureDetector(
-      onTap: () {
-        _showPhotoSelectionModal();
-      },
-      child: Container(
-        decoration: image != null
-            ? ShapeDecoration(
-          image: DecorationImage(
-            image: image,  // Now using ImageProvider instead of String
-            fit: BoxFit.cover,
-          ),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-        )
-            : ShapeDecoration(
-          color: Colors.white,
-          shape: RoundedRectangleBorder(
-            side: BorderSide(width: 1, color: const Color(0xFFFF375F)),
-            borderRadius: BorderRadius.circular(16),
+  Widget _buildPhotoSlot({ImageProvider<Object>? image, required int index}) {
+    return Stack(
+      children: [
+        GestureDetector(
+          onTap: image == null
+              ? () {
+            _showPhotoSelectionModal();
+          }
+              : null,
+          child: Container(
+            width: 100,
+            height: 100,
+            decoration: image != null
+                ? ShapeDecoration(
+              image: DecorationImage(
+                image: image,
+                fit: BoxFit.cover,
+              ),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+            )
+                : ShapeDecoration(
+              color: Colors.white,
+              shape: RoundedRectangleBorder(
+                side: BorderSide(width: 1, color: const Color(0xFFFF375F)),
+                borderRadius: BorderRadius.circular(16),
+              ),
+            ),
+            child: image == null
+                ? Center(
+              child: Icon(
+                Icons.add,
+                color: const Color(0xFFFF375F),
+                size: 32,
+              ),
+            )
+                : null,
           ),
         ),
-        child: image == null
-            ? Center(
-          child: Icon(
-            Icons.add,
-            color: const Color(0xFFFF375F),
-            size: 32,
+        if (image != null)
+          Positioned(
+            top: 7,
+            right: 14,
+            child: GestureDetector(
+              onTap: () {
+                setState(() {
+                  uploadedImages.removeAt(index);
+                });
+              },
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.black.withOpacity(0.5),
+                  shape: BoxShape.circle,
+                ),
+                padding: EdgeInsets.all(4),
+                child: Icon(
+                  Icons.close,
+                  size: 16,
+                  color: Colors.white,
+                ),
+              ),
+            ),
           ),
-        )
-            : null,
-      ),
+      ],
     );
   }
+
+
 
 
   Widget _buildSocialMediaInput({
@@ -416,16 +450,16 @@ class _ProfilePageState extends State<ProfilePage> {
                             width: photoSize,
                             height: photoSize,
                             child: _buildPhotoSlot(
-                              image: index < uploadedImages.length
-                                  ? uploadedImages[index] // This is expected to be of type ImageProvider
-                                  : null,
-                            )
+                              image: index < uploadedImages.length ? uploadedImages[index] : null,
+                              index: index,
+                            ),
                           );
                         }),
                       ),
                     );
                   }),
                 ),
+
                 SizedBox(height: screenHeight * 0.03),
                 _buildSectionHeader(
                   'Bio',

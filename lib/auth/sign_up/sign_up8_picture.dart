@@ -64,14 +64,37 @@ class _SignUpPage8State extends State<SignUpPage8> {
               runSpacing: 10,
               children: List.generate(6, (index) {
                 if (index < uploadedImages.length) {
-                  return ClipRRect(
-                    borderRadius: BorderRadius.circular(12),
-                    child: Image(
-                      image: uploadedImages[index],
-                      width: 100,
-                      height: 100,
-                      fit: BoxFit.cover,
-                    ),
+                  return Stack(
+                    children: [
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(12),
+                        child: Image(
+                          image: uploadedImages[index],
+                          width: 100,
+                          height: 100,
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+                      Positioned(
+                        top: 4,
+                        right: 4,
+                        child: GestureDetector(
+                          onTap: () {
+                            setState(() {
+                              uploadedImages.removeAt(index);
+                            });
+                          },
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: Colors.black54,
+                              shape: BoxShape.circle,
+                            ),
+                            padding: EdgeInsets.all(4),
+                            child: Icon(Icons.close, size: 16, color: Colors.white),
+                          ),
+                        ),
+                      ),
+                    ],
                   );
                 } else {
                   return GestureDetector(
@@ -94,6 +117,7 @@ class _SignUpPage8State extends State<SignUpPage8> {
                 }
               }),
             ),
+
             Spacer(),
             ElevatedButton(
               onPressed: () {
