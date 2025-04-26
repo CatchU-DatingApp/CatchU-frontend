@@ -201,11 +201,11 @@ class _ChatPageState extends State<ChatPage> {
                             ],
                           ),
                         ),
-                        // Expand/collapse icon
+                        // Expand/collapse icon - changed to horizontal arrow
                         Icon(
                           isExpanded
                               ? Icons.keyboard_arrow_up
-                              : Icons.keyboard_arrow_down,
+                              : Icons.keyboard_arrow_right,
                           color: Colors.grey,
                         ),
                       ],
@@ -235,8 +235,8 @@ class _ChatPageState extends State<ChatPage> {
         showSelectedLabels: false,
         showUnselectedLabels: false,
         items: [
-          BottomNavigationBarItem(icon: Icon(Icons.refresh), label: 'Refresh'),
-          BottomNavigationBarItem(icon: Icon(Icons.favorite), label: 'Like'),
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
+          BottomNavigationBarItem(icon: Icon(Icons.message), label: 'Messages'),
           BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
         ],
       ),
