@@ -10,43 +10,53 @@ class ChatPage extends StatefulWidget {
 
 class _ChatPageState extends State<ChatPage> {
   int _currentIndex = 1;
-  int? selectedIndex;
+  List<int> expandedIndices = [];
 
   final List<Map<String, String>> messages = [
     {
-      'name': 'Go Yoon Jung',
-      'message': 'Oh i don\'t like fish 🙈',
+      'name': 'Muhammad Roif Baktiar',
+      'message': 'Aku orangnya baik banget sampai a...',
       'image': 'assets/images/3_1.jpg',
-      'instagram': 'goyoonjung',
-      'facebook': 'goyoonjung.official',
+      'instagram': 'loifu6969',
+      'facebook': 'loifu6969',
+      'twitter': 'loifu6969',
+      'whatsapp': 'loifu6969',
     },
     {
-      'name': 'Jeon Jong Seo',
-      'message': 'Can we go somewhere?',
+      'name': 'Muhammad Roif Baktiar',
+      'message': 'Aku orangnya baik banget sampai a...',
       'image': 'assets/images/3_2.jpg',
-      'instagram': 'jeonjongseo',
-      'facebook': 'jeonjongseo.fb',
+      'instagram': 'loifu6969',
+      'facebook': 'loifu6969',
+      'twitter': 'loifu6969',
+      'whatsapp': 'loifu6969',
     },
     {
-      'name': 'Baek Songmin',
-      'message': 'You: If I were a stop light, I’d turn',
+      'name': 'Muhammad Roif Baktiar',
+      'message': 'Aku orangnya baik banget sampai a...',
       'image': 'assets/images/3_3.jpg',
-      'instagram': 'baeksongmin',
-      'facebook': 'baeksongmin.page',
+      'instagram': 'loifu6969',
+      'facebook': 'loifu6969',
+      'twitter': 'loifu6969',
+      'whatsapp': 'loifu6969',
     },
     {
-      'name': 'Orang Kendal',
-      'message': 'See you soon 😉',
+      'name': 'Muhammad Roif Baktiar',
+      'message': 'Aku orangnya baik banget sampai a...',
       'image': 'assets/images/jawa.png',
-      'instagram': 'orangkendal',
-      'facebook': 'orangkendal.fb',
+      'instagram': 'loifu6969',
+      'facebook': 'loifu6969',
+      'twitter': 'loifu6969',
+      'whatsapp': 'loifu6969',
     },
     {
-      'name': 'Orang Arab',
-      'message': 'Are you serious?!',
+      'name': 'Muhammad Roif Baktiar',
+      'message': 'Aku orangnya baik banget sampai a...',
       'image': 'assets/images/5.jpg',
-      'instagram': 'orangarab',
-      'facebook': 'orangarab.page',
+      'instagram': 'loifu6969',
+      'facebook': 'loifu6969',
+      'twitter': 'loifu6969',
+      'whatsapp': 'loifu6969',
     },
   ];
 
@@ -72,166 +82,150 @@ class _ChatPageState extends State<ChatPage> {
     });
   }
 
-  void _onProfileSelected(int index) {
+  void _toggleExpanded(int index) {
     setState(() {
-      selectedIndex = selectedIndex == index ? null : index;
+      if (expandedIndices.contains(index)) {
+        expandedIndices.remove(index);
+      } else {
+        expandedIndices.add(index);
+      }
     });
+  }
+
+  void _launchSocialMedia(String platform, String username) async {
+    String url;
+    switch (platform) {
+      case 'instagram':
+        url = 'https://instagram.com/$username';
+        break;
+      case 'facebook':
+        url = 'https://facebook.com/$username';
+        break;
+      case 'twitter':
+        url = 'https://twitter.com/$username';
+        break;
+      case 'whatsapp':
+        url = 'https://wa.me/$username';
+        break;
+      default:
+        url = '';
+    }
+
+    if (await canLaunch(url)) {
+      await launch(url);
+    } else {
+      print('Could not launch $url');
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xFFFCF9F8),
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Your Match',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.pinkAccent,
-                ),
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 0,
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'MatchU',
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: Colors.pinkAccent,
               ),
-              SizedBox(height: 12),
-              Expanded(
-                child: ListView.builder(
-                  itemCount: messages.length,
-                  itemBuilder: (context, index) {
-                    final msg = messages[index];
-                    final isSelected = selectedIndex == index;
+            ),
+            Text(
+              'Perfect match with you!',
+              style: TextStyle(fontSize: 14, color: Colors.grey),
+            ),
+          ],
+        ),
+      ),
+      body: ListView.builder(
+        padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        itemCount: messages.length,
+        itemBuilder: (context, index) {
+          final msg = messages[index];
+          final isExpanded = expandedIndices.contains(index);
 
-                    return Column(
+          return Container(
+            margin: EdgeInsets.only(bottom: 8),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: Colors.pinkAccent),
+            ),
+            child: Column(
+              children: [
+                InkWell(
+                  onTap: () => _toggleExpanded(index),
+                  child: Padding(
+                    padding: EdgeInsets.all(12),
+                    child: Row(
                       children: [
-                        ListTile(
-                          contentPadding: EdgeInsets.symmetric(vertical: 4),
-                          leading: CircleAvatar(
-                            radius: 28,
-                            backgroundImage: AssetImage(msg['image']!),
+                        // Profile image
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(10),
+                          child: Image.asset(
+                            msg['image']!,
+                            width: 70,
+                            height: 70,
+                            fit: BoxFit.cover,
                           ),
-                          title: Text(
-                            msg['name']!,
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                          subtitle: Text(
-                            msg['message']!,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          onTap: () => _onProfileSelected(index),
                         ),
-                        AnimatedSwitcher(
-                          duration: Duration(milliseconds: 300),
-                          switchInCurve: Curves.easeInOut,
-                          child:
-                              isSelected
-                                  ? Container(
-                                    key: ValueKey(index),
-                                    margin: EdgeInsets.only(bottom: 12),
-                                    padding: EdgeInsets.all(16),
-                                    decoration: BoxDecoration(
-                                      color: Colors.white,
-                                      borderRadius: BorderRadius.circular(16),
-                                      border: Border.all(
-                                        color: Colors.pinkAccent,
-                                        width: 1.2,
-                                      ),
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: Colors.black12,
-                                          blurRadius: 6,
-                                          offset: Offset(0, 3),
-                                        ),
-                                      ],
-                                    ),
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          msg['name']!,
-                                          style: TextStyle(
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 16,
-                                          ),
-                                        ),
-                                        SizedBox(height: 8),
-                                        Row(
-                                          children: [
-                                            Icon(
-                                              Icons.camera_alt_outlined,
-                                              size: 18,
-                                              color: Colors.pinkAccent,
-                                            ),
-                                            SizedBox(width: 6),
-                                            GestureDetector(
-                                              onTap: () {
-                                                launchUrl(
-                                                  Uri.parse(
-                                                    'https://instagram.com/${msg['instagram']}',
-                                                  ),
-                                                );
-                                              },
-                                              child: Text(
-                                                '@${msg['instagram']}',
-                                                style: TextStyle(
-                                                  color: Colors.pinkAccent,
-                                                  decoration:
-                                                      TextDecoration.underline,
-                                                ),
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                        SizedBox(height: 8),
-                                        Row(
-                                          children: [
-                                            Icon(
-                                              Icons.facebook_rounded,
-                                              size: 18,
-                                              color: Colors.blueAccent,
-                                            ),
-                                            SizedBox(width: 6),
-                                            GestureDetector(
-                                              onTap: () {
-                                                launchUrl(
-                                                  Uri.parse(
-                                                    'https://facebook.com/${msg['facebook']}',
-                                                  ),
-                                                );
-                                              },
-                                              child: Text(
-                                                '${msg['facebook']}',
-                                                style: TextStyle(
-                                                  color: Colors.blueAccent,
-                                                  decoration:
-                                                      TextDecoration.underline,
-                                                ),
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                        SizedBox(height: 8),
-                                        Text(
-                                          'Bio: This person is awesome and waiting to chat with you 😉',
-                                          style: TextStyle(fontSize: 13),
-                                        ),
-                                      ],
-                                    ),
-                                  )
-                                  : SizedBox.shrink(),
+                        SizedBox(width: 12),
+                        // Name and message
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                msg['name']!,
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.black87,
+                                ),
+                              ),
+                              SizedBox(height: 4),
+                              Text(
+                                msg['message']!,
+                                style: TextStyle(
+                                  color: Colors.grey,
+                                  fontSize: 14,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ],
+                          ),
+                        ),
+                        // Expand/collapse icon
+                        Icon(
+                          isExpanded
+                              ? Icons.keyboard_arrow_up
+                              : Icons.keyboard_arrow_down,
+                          color: Colors.grey,
                         ),
                       ],
-                    );
-                  },
+                    ),
+                  ),
                 ),
-              ),
-            ],
-          ),
-        ),
+                // Social Media section (shows when expanded)
+                AnimatedCrossFade(
+                  firstChild: SizedBox.shrink(),
+                  secondChild: _buildSocialMediaSection(msg),
+                  crossFadeState:
+                      isExpanded
+                          ? CrossFadeState.showSecond
+                          : CrossFadeState.showFirst,
+                  duration: Duration(milliseconds: 300),
+                ),
+              ],
+            ),
+          );
+        },
       ),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
@@ -241,13 +235,104 @@ class _ChatPageState extends State<ChatPage> {
         showSelectedLabels: false,
         showUnselectedLabels: false,
         items: [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.chat_bubble_outline),
-            label: 'Chat',
-          ),
+          BottomNavigationBarItem(icon: Icon(Icons.refresh), label: 'Refresh'),
+          BottomNavigationBarItem(icon: Icon(Icons.favorite), label: 'Like'),
           BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
         ],
+      ),
+    );
+  }
+
+  Widget _buildSocialMediaSection(Map<String, String> profile) {
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: _buildSocialButton(
+                  icon: Icons.camera_alt,
+                  username: '@${profile['instagram']}',
+                  backgroundColor: Color(0xFFFF426D),
+                  onTap:
+                      () => _launchSocialMedia(
+                        'instagram',
+                        profile['instagram']!,
+                      ),
+                ),
+              ),
+              SizedBox(width: 8),
+              Expanded(
+                child: _buildSocialButton(
+                  icon: Icons.facebook,
+                  username: '@${profile['facebook']}',
+                  backgroundColor: Color(0xFFFF426D),
+                  onTap:
+                      () =>
+                          _launchSocialMedia('facebook', profile['facebook']!),
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 8),
+          Row(
+            children: [
+              Expanded(
+                child: _buildSocialButton(
+                  icon: Icons.close, // X icon for Twitter
+                  username: '@${profile['twitter']}',
+                  backgroundColor: Color(0xFFFF426D),
+                  onTap:
+                      () => _launchSocialMedia('twitter', profile['twitter']!),
+                ),
+              ),
+              SizedBox(width: 8),
+              Expanded(
+                child: _buildSocialButton(
+                  icon: Icons.phone_iphone,
+                  username: '@${profile['whatsapp']}',
+                  backgroundColor: Color(0xFFFF426D),
+                  onTap:
+                      () =>
+                          _launchSocialMedia('whatsapp', profile['whatsapp']!),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSocialButton({
+    required IconData icon,
+    required String username,
+    required Color backgroundColor,
+    required Function onTap,
+  }) {
+    return InkWell(
+      onTap: () => onTap(),
+      child: Container(
+        padding: EdgeInsets.symmetric(vertical: 12),
+        decoration: BoxDecoration(
+          color: backgroundColor,
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, color: Colors.white, size: 22),
+            SizedBox(width: 8),
+            Text(
+              username,
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
