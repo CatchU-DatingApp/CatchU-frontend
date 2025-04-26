@@ -17,8 +17,8 @@ class ProfilePage extends StatefulWidget {
 
 class _ProfilePageState extends State<ProfilePage> {
   final ImagePicker _picker = ImagePicker();  // Initialize the ImagePicker
-  List<ImageProvider> uploadedImages = List.generate(6, (index) => AssetImage('assets/images/placeholder.png'));
-  int _currentIndex = 2;  // Used for navigation
+  List<ImageProvider> uploadedImages = [AssetImage('assets/images/jawa.png')];
+  int _currentIndex = 2;
   double profileCompletion = 0.58;
   TextEditingController bioController = TextEditingController(
     text: 'baik sekali',
@@ -127,8 +127,7 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
 
-
-  void _showPhotoSelectionModal(int index) {
+  void _showPhotoSelectionModal() {
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(
@@ -138,36 +137,35 @@ class _ProfilePageState extends State<ProfilePage> {
       builder: (BuildContext context) {
         return PhotoSelectionBottomSheet(
           onUploadPhoto: () async {
-            Navigator.pop(context); // Close the bottom sheet
-            await _pickImageFromGallery(index); // Pass index to update the correct image
+            Navigator.pop(context); // Tutup bottom sheet dulu
+            await _pickImageFromGallery();
           },
           onTakePhoto: () async {
-            Navigator.pop(context); // Close the bottom sheet
-            await _pickImageFromCamera(index); // Pass index to update the correct image
+            Navigator.pop(context); // Tutup bottom sheet dulu
+            await _pickImageFromCamera();
           },
         );
       },
     );
   }
-  Future<void> _pickImageFromGallery(int index) async {
+  Future<void> _pickImageFromGallery() async {
     final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
     if (pickedFile != null) {
       setState(() {
-        // Replace the image at the specified index
-        uploadedImages[index] = FileImage(File(pickedFile.path));
+        uploadedImages.add(FileImage(File(pickedFile.path)));
       });
     }
   }
 
-  Future<void> _pickImageFromCamera(int index) async {
+  Future<void> _pickImageFromCamera() async {
     final pickedFile = await _picker.pickImage(source: ImageSource.camera);
     if (pickedFile != null) {
       setState(() {
-        // Replace the image at the specified index
-        uploadedImages[index] = FileImage(File(pickedFile.path));
+        uploadedImages.add(FileImage(File(pickedFile.path)));
       });
     }
   }
+
 
 
   void _onTabTapped(int index) {
@@ -192,16 +190,16 @@ class _ProfilePageState extends State<ProfilePage> {
     });
   }
 
-  Widget _buildPhotoSlot({ImageProvider<Object>? image, required int index}) {
+  Widget _buildPhotoSlot({ImageProvider<Object>? image}) {
     return GestureDetector(
       onTap: () {
-        _showPhotoSelectionModal(index);
+        _showPhotoSelectionModal();
       },
       child: Container(
         decoration: image != null
             ? ShapeDecoration(
           image: DecorationImage(
-            image: image,
+            image: image,  // Now using ImageProvider instead of String
             fit: BoxFit.cover,
           ),
           shape: RoundedRectangleBorder(
@@ -418,11 +416,10 @@ class _ProfilePageState extends State<ProfilePage> {
                             width: photoSize,
                             height: photoSize,
                             child: _buildPhotoSlot(
-                              index: index, // Pass index to each photo slot
                               image: index < uploadedImages.length
-                                  ? uploadedImages[index]
+                                  ? uploadedImages[index] // This is expected to be of type ImageProvider
                                   : null,
-                            ),
+                            )
                           );
                         }),
                       ),
