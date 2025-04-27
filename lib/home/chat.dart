@@ -125,108 +125,118 @@ class _ChatPageState extends State<ChatPage> {
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
+        automaticallyImplyLeading: false,
+        toolbarHeight: 70,
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            SizedBox(height: 10),
             Text(
               'MatchU',
               style: TextStyle(
-                fontSize: 24,
+                fontSize: 28,
                 fontWeight: FontWeight.bold,
                 color: Colors.pinkAccent,
               ),
             ),
             Text(
               'Perfect match with you!',
-              style: TextStyle(fontSize: 14, color: Colors.grey),
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey,
+              ),
             ),
           ],
         ),
       ),
-      body: ListView.builder(
-        padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        itemCount: messages.length,
-        itemBuilder: (context, index) {
-          final msg = messages[index];
-          final isExpanded = expandedIndices.contains(index);
 
-          return Container(
-            margin: EdgeInsets.only(bottom: 8),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: Colors.pinkAccent),
-            ),
-            child: Column(
-              children: [
-                InkWell(
-                  onTap: () => _toggleExpanded(index),
-                  child: Padding(
-                    padding: EdgeInsets.all(12),
-                    child: Row(
-                      children: [
-                        // Profile image
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(10),
-                          child: Image.asset(
-                            msg['image']!,
-                            width: 70,
-                            height: 70,
-                            fit: BoxFit.cover,
-                          ),
-                        ),
-                        SizedBox(width: 12),
-                        // Name and message
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+      body: Column(
+        children: [
+          Expanded(
+            child: ListView.builder(
+              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              itemCount: messages.length,
+              itemBuilder: (context, index) {
+                final msg = messages[index];
+                final isExpanded = expandedIndices.contains(index);
+
+                return Container(
+                  margin: EdgeInsets.only(bottom: 8),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: Colors.pinkAccent),
+                  ),
+                  child: Column(
+                    children: [
+                      InkWell(
+                        onTap: () => _toggleExpanded(index),
+                        child: Padding(
+                          padding: EdgeInsets.all(12),
+                          child: Row(
                             children: [
-                              Text(
-                                msg['name']!,
-                                style: TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.black87,
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(10),
+                                child: Image.asset(
+                                  msg['image']!,
+                                  width: 70,
+                                  height: 70,
+                                  fit: BoxFit.cover,
                                 ),
                               ),
-                              SizedBox(height: 4),
-                              Text(
-                                msg['message']!,
-                                style: TextStyle(
-                                  color: Colors.grey,
-                                  fontSize: 14,
+                              SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      msg['name']!,
+                                      style: TextStyle(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.black87,
+                                      ),
+                                    ),
+                                    SizedBox(height: 4),
+                                    Text(
+                                      msg['message']!,
+                                      style: TextStyle(
+                                        color: Colors.grey,
+                                        fontSize: 14,
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ],
                                 ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
+                              ),
+                              Icon(
+                                isExpanded
+                                    ? Icons.keyboard_arrow_up
+                                    : Icons.keyboard_arrow_right,
+                                color: Colors.grey,
                               ),
                             ],
                           ),
                         ),
-                        // Expand/collapse icon - changed to horizontal arrow
-                        Icon(
-                          isExpanded
-                              ? Icons.keyboard_arrow_up
-                              : Icons.keyboard_arrow_right,
-                          color: Colors.grey,
-                        ),
-                      ],
-                    ),
+                      ),
+                      AnimatedCrossFade(
+                        firstChild: SizedBox.shrink(),
+                        secondChild: _buildSocialMediaSection(msg),
+                        crossFadeState:
+                        isExpanded
+                            ? CrossFadeState.showSecond
+                            : CrossFadeState.showFirst,
+                        duration: Duration(milliseconds: 300),
+                      ),
+                    ],
                   ),
-                ),
-                // Social Media section (shows when expanded)
-                AnimatedCrossFade(
-                  firstChild: SizedBox.shrink(),
-                  secondChild: _buildSocialMediaSection(msg),
-                  crossFadeState:
-                      isExpanded
-                          ? CrossFadeState.showSecond
-                          : CrossFadeState.showFirst,
-                  duration: Duration(milliseconds: 300),
-                ),
-              ],
+                );
+              },
             ),
-          );
-        },
+          ),
+        ],
       ),
+
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
         onTap: _onTabTapped,
@@ -255,11 +265,7 @@ class _ChatPageState extends State<ChatPage> {
                   icon: Icons.camera_alt,
                   username: '@${profile['instagram']}',
                   backgroundColor: Color(0xFFFF426D),
-                  onTap:
-                      () => _launchSocialMedia(
-                        'instagram',
-                        profile['instagram']!,
-                      ),
+                  onTap: () => _launchSocialMedia('instagram', profile['instagram']!),
                 ),
               ),
               SizedBox(width: 8),
@@ -268,9 +274,7 @@ class _ChatPageState extends State<ChatPage> {
                   icon: Icons.facebook,
                   username: '@${profile['facebook']}',
                   backgroundColor: Color(0xFFFF426D),
-                  onTap:
-                      () =>
-                          _launchSocialMedia('facebook', profile['facebook']!),
+                  onTap: () => _launchSocialMedia('facebook', profile['facebook']!),
                 ),
               ),
             ],
@@ -280,11 +284,10 @@ class _ChatPageState extends State<ChatPage> {
             children: [
               Expanded(
                 child: _buildSocialButton(
-                  icon: Icons.close, // X icon for Twitter
+                  icon: Icons.close,
                   username: '@${profile['twitter']}',
                   backgroundColor: Color(0xFFFF426D),
-                  onTap:
-                      () => _launchSocialMedia('twitter', profile['twitter']!),
+                  onTap: () => _launchSocialMedia('twitter', profile['twitter']!),
                 ),
               ),
               SizedBox(width: 8),
@@ -293,9 +296,7 @@ class _ChatPageState extends State<ChatPage> {
                   icon: Icons.phone_iphone,
                   username: '@${profile['whatsapp']}',
                   backgroundColor: Color(0xFFFF426D),
-                  onTap:
-                      () =>
-                          _launchSocialMedia('whatsapp', profile['whatsapp']!),
+                  onTap: () => _launchSocialMedia('whatsapp', profile['whatsapp']!),
                 ),
               ),
             ],

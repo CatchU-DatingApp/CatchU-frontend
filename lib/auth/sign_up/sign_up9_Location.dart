@@ -191,17 +191,7 @@ class EnableLocationPage extends StatelessWidget {
             Text(
               'Choose your location to start find people around you',
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 16, color: Colors.grey[700]),
-            ),
-            SizedBox(height: 40),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => SignUpRulesPage()),
-                );
-              },
-              child: Text('Skip For Now'),
+              style: TextStyle(fontSize: 14, color: Colors.grey[700]),
             ),
             SizedBox(height: 12),
             Padding(
