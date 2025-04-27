@@ -43,15 +43,12 @@ class _LoginPageState extends State<LoginPage> {
         _isLoading = true;
       });
 
-      // First, check if the phone number is registered
       _authController
           .checkPhoneNumberRegistered('$_countryCode$_phoneNumber')
           .then((isRegistered) {
             if (isRegistered) {
-              // Phone number is registered, proceed with OTP
               _sendOtp();
             } else {
-              // Phone number is not registered, show error
               setState(() {
                 _isLoading = false;
                 _errorMessage =
@@ -72,7 +69,6 @@ class _LoginPageState extends State<LoginPage> {
     _authController.sendOtp(
       phoneNumber: '$_countryCode$_phoneNumber',
       verificationCompleted: (PhoneAuthCredential credential) {
-        // Auto-verification, biasanya di Android
         _authController.verifyOtp(verificationId: '', smsCode: '').then((
           userCredential,
         ) {
@@ -171,7 +167,6 @@ class _LoginPageState extends State<LoginPage> {
                 ),
               ),
 
-              // Title
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 24.0),
                 child: Text(
@@ -186,7 +181,6 @@ class _LoginPageState extends State<LoginPage> {
               ),
               const SizedBox(height: 32),
 
-              // Phone Number Input with Validation
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 24.0),
                 child: Container(
@@ -378,7 +372,10 @@ class _LoginPageState extends State<LoginPage> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => SignUpPhonePage(dataHolder: SignUpDataHolder()),
+                          builder:
+                              (context) => SignUpPhonePage(
+                                dataHolder: SignUpDataHolder(),
+                              ),
                         ),
                       );
                     },

@@ -91,7 +91,11 @@ class _SignUpPage8State extends State<SignUpPage8> {
                               shape: BoxShape.circle,
                             ),
                             padding: EdgeInsets.all(4),
-                            child: Icon(Icons.close, size: 16, color: Colors.white),
+                            child: Icon(
+                              Icons.close,
+                              size: 16,
+                              color: Colors.white,
+                            ),
                           ),
                         ),
                       ),
@@ -125,7 +129,9 @@ class _SignUpPage8State extends State<SignUpPage8> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (_) => SignUpPage9Location(dataHolder: widget.dataHolder),
+                    builder:
+                        (_) =>
+                            SignUpPage9Location(dataHolder: widget.dataHolder),
                   ),
                 );
               },
@@ -158,7 +164,7 @@ class _SignUpPage8State extends State<SignUpPage8> {
       builder: (BuildContext context) {
         final screenHeight = MediaQuery.of(context).size.height;
         return Container(
-          height: screenHeight * 0.28, // Lebih pendek
+          height: screenHeight * 0.28,
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.only(
@@ -170,7 +176,7 @@ class _SignUpPage8State extends State<SignUpPage8> {
             children: [
               Container(
                 padding: EdgeInsets.all(16),
-                height: screenHeight * 0.10, // Pink header lebih tinggi dikit
+                height: screenHeight * 0.10,
                 width: double.infinity,
                 decoration: BoxDecoration(
                   color: Colors.pinkAccent,

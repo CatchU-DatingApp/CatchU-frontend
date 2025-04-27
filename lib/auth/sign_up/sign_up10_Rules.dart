@@ -66,7 +66,6 @@ class SignUpRulesPage extends StatelessWidget {
 
               const Spacer(),
 
-              // I AGREE Button
               SizedBox(
                 width: double.infinity,
                 height: 55,

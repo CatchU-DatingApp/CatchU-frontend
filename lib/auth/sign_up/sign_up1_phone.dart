@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'sign_up2_otp.dart'; // Import halaman OTP
+import 'sign_up2_otp.dart';
 import 'package:catchu/sign_up_data_holder.dart';
 
 class SignUpPhonePage extends StatefulWidget {
@@ -38,7 +38,6 @@ class _SignUpPhonePageState extends State<SignUpPhonePage> {
         _isLoading = true;
       });
 
-      // Simulasi delay, lalu navigasi ke halaman OTP
       Future.delayed(const Duration(seconds: 1), () {
         setState(() {
           _isLoading = false;
@@ -97,7 +96,6 @@ class _SignUpPhonePageState extends State<SignUpPhonePage> {
               ),
               SizedBox(height: 12),
 
-              // Description
               Text(
                 "We'll need your phone number to send an OTP for verification.",
                 style: TextStyle(fontSize: 16, color: Colors.black54),
@@ -105,7 +103,6 @@ class _SignUpPhonePageState extends State<SignUpPhonePage> {
               ),
               SizedBox(height: 40),
 
-              // Phone Number Input with Validation
               Container(
                 decoration: BoxDecoration(
                   border: Border.all(
@@ -120,7 +117,6 @@ class _SignUpPhonePageState extends State<SignUpPhonePage> {
                 ),
                 child: Row(
                   children: [
-                    // Country Code Dropdown
                     Padding(
                       padding: const EdgeInsets.only(left: 16),
                       child: DropdownButtonHideUnderline(
@@ -143,8 +139,6 @@ class _SignUpPhonePageState extends State<SignUpPhonePage> {
                         ),
                       ),
                     ),
-
-                    // Vertical Divider
                     Container(
                       height: 24,
                       width: 1,
@@ -152,7 +146,6 @@ class _SignUpPhonePageState extends State<SignUpPhonePage> {
                       margin: EdgeInsets.symmetric(horizontal: 8),
                     ),
 
-                    // Phone Number Field
                     Expanded(
                       child: TextField(
                         onChanged: (value) {
@@ -176,8 +169,6 @@ class _SignUpPhonePageState extends State<SignUpPhonePage> {
                   ],
                 ),
               ),
-
-              // Error Message
               if (_errorMessage != null)
                 Padding(
                   padding: const EdgeInsets.only(left: 16.0, top: 8.0),
@@ -193,8 +184,6 @@ class _SignUpPhonePageState extends State<SignUpPhonePage> {
                   ),
                 ),
               SizedBox(height: _errorMessage != null ? 24 : 40),
-
-              // Continue Button
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(

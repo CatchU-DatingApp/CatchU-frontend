@@ -19,7 +19,6 @@ class _SignUpPage5State extends State<SignUpPage5> {
   @override
   void initState() {
     super.initState();
-    // Set warna status bar sesuai background
     SystemChrome.setSystemUIOverlayStyle(
       SystemUiOverlayStyle(
         statusBarColor: const Color.fromARGB(255, 253, 250, 246),
@@ -50,9 +49,11 @@ class _SignUpPage5State extends State<SignUpPage5> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            // Custom AppBar
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 16.0,
+                vertical: 8.0,
+              ),
               child: Row(
                 children: [
                   IconButton(
@@ -66,9 +67,16 @@ class _SignUpPage5State extends State<SignUpPage5> {
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(50),
                         child: LinearProgressIndicator(
-                          value: 0.5, // 50% progress for step 5
-                          backgroundColor: const Color.fromARGB(255, 255, 233, 241),
-                          valueColor: AlwaysStoppedAnimation<Color>(Colors.pink[400]!),
+                          value: 0.5,
+                          backgroundColor: const Color.fromARGB(
+                            255,
+                            255,
+                            233,
+                            241,
+                          ),
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            Colors.pink[400]!,
+                          ),
                         ),
                       ),
                     ),
@@ -76,8 +84,6 @@ class _SignUpPage5State extends State<SignUpPage5> {
                 ],
               ),
             ),
-
-            // Konten utama
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24.0),
               child: Column(
@@ -101,8 +107,6 @@ class _SignUpPage5State extends State<SignUpPage5> {
                 ],
               ),
             ),
-
-            // Age Picker (Cupertino)
             Expanded(
               child: Stack(
                 alignment: Alignment.center,
@@ -121,30 +125,35 @@ class _SignUpPage5State extends State<SignUpPage5> {
                         selectedAge = 17 + index;
                       });
                     },
-                    children: List<Widget>.generate(
-                      44, // 17 - 60
-                      (index) {
-                        final age = 17 + index;
-                        return Center(
-                          child: Text(
-                            '$age',
-                            style: TextStyle(
-                              fontSize: 24,
-                              color: age == selectedAge ? Colors.pink[400] : Colors.black,
-                              fontWeight: age == selectedAge ? FontWeight.bold : FontWeight.normal,
-                            ),
+                    children: List<Widget>.generate(44, (index) {
+                      final age = 17 + index;
+                      return Center(
+                        child: Text(
+                          '$age',
+                          style: TextStyle(
+                            fontSize: 24,
+                            color:
+                                age == selectedAge
+                                    ? Colors.pink[400]
+                                    : Colors.black,
+                            fontWeight:
+                                age == selectedAge
+                                    ? FontWeight.bold
+                                    : FontWeight.normal,
                           ),
-                        );
-                      },
-                    ),
+                        ),
+                      );
+                    }),
                   ),
                 ],
               ),
             ),
 
-            // Continue Button
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 24.0,
+                vertical: 16.0,
+              ),
               child: SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
@@ -158,22 +167,23 @@ class _SignUpPage5State extends State<SignUpPage5> {
                       borderRadius: BorderRadius.circular(25),
                     ),
                   ),
-                  child: _isLoading
-                      ? SizedBox(
-                          height: 20,
-                          width: 20,
-                          child: CircularProgressIndicator(
-                            color: Colors.white,
-                            strokeWidth: 2,
+                  child:
+                      _isLoading
+                          ? SizedBox(
+                            height: 20,
+                            width: 20,
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 2,
+                            ),
+                          )
+                          : Text(
+                            'Continue',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
-                        )
-                      : Text(
-                          'Continue',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
                 ),
               ),
             ),

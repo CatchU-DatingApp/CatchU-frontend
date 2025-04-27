@@ -196,7 +196,6 @@ class _SignUpPage6State extends State<SignUpPage6> {
   }
 }
 
-// Untuk menghilangkan efek scroll glow
 class NoGlowScrollBehavior extends ScrollBehavior {
   Widget buildViewportChrome(
     BuildContext context,

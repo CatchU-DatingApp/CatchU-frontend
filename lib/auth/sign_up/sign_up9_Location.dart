@@ -6,11 +6,12 @@ import 'package:latlong2/latlong.dart';
 import 'package:catchu/sign_up_data_holder.dart';
 import 'package:catchu/user_model.dart';
 import 'package:catchu/user_repository.dart';
-import 'package:catchu/home/homepage1.dart'; // Ganti sesuai file DiscoverPage kamu
+import 'package:catchu/home/homepage1.dart';
 
 class SignUpPage9Location extends StatefulWidget {
   final SignUpDataHolder dataHolder;
-  const SignUpPage9Location({Key? key, required this.dataHolder}) : super(key: key);
+  const SignUpPage9Location({Key? key, required this.dataHolder})
+    : super(key: key);
 
   @override
   State<SignUpPage9Location> createState() => _SignUpPage9LocationState();
@@ -95,12 +96,16 @@ class _SignUpPage9LocationState extends State<SignUpPage9Location> {
                       ),
                       children: [
                         TileLayer(
-                          urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                          urlTemplate:
+                              'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
                         ),
                         MarkerLayer(
                           markers: [
                             Marker(
-                              point: LatLng(position.latitude, position.longitude),
+                              point: LatLng(
+                                position.latitude,
+                                position.longitude,
+                              ),
                               width: 80,
                               height: 80,
                               child: Icon(
@@ -160,16 +165,17 @@ class _SignUpPage9LocationState extends State<SignUpPage9Location> {
                               borderRadius: BorderRadius.circular(20),
                             ),
                           ),
-                          child: _isLoading
-                              ? SizedBox(
-                                  height: 20,
-                                  width: 20,
-                                  child: CircularProgressIndicator(
-                                    color: Colors.white,
-                                    strokeWidth: 2,
-                                  ),
-                                )
-                              : Text('Confirm'),
+                          child:
+                              _isLoading
+                                  ? SizedBox(
+                                    height: 20,
+                                    width: 20,
+                                    child: CircularProgressIndicator(
+                                      color: Colors.white,
+                                      strokeWidth: 2,
+                                    ),
+                                  )
+                                  : Text('Confirm'),
                         ),
                       ),
                     ],
@@ -201,7 +207,6 @@ class _SignUpPage9LocationState extends State<SignUpPage9Location> {
         interest: widget.dataHolder.interest ?? [],
         kodeOtp: '1234',
         location: widget.dataHolder.location ?? [0.0, 0.0],
-        // photoUrl: widget.dataHolder.photoUrl, // jika ada di model
       );
 
       await UserRepository().addUser(user);
@@ -230,10 +235,7 @@ class _SignUpPage9LocationState extends State<SignUpPage9Location> {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Center(
-            child: Image.asset(
-              'assets/images/LocationImage.png',
-              height: 200,
-            ),
+            child: Image.asset('assets/images/LocationImage.png', height: 200),
           ),
           SizedBox(height: 30),
           Text(
@@ -253,11 +255,12 @@ class _SignUpPage9LocationState extends State<SignUpPage9Location> {
               child: Text(_errorMessage!, style: TextStyle(color: Colors.red)),
             ),
           ElevatedButton(
-            onPressed: _isLoading
-                ? null
-                : () {
-                    _getCurrentLocation();
-                  },
+            onPressed:
+                _isLoading
+                    ? null
+                    : () {
+                      _getCurrentLocation();
+                    },
             style: ElevatedButton.styleFrom(
               backgroundColor: Color(0xFFFF2E63),
               foregroundColor: Colors.white,
@@ -267,19 +270,20 @@ class _SignUpPage9LocationState extends State<SignUpPage9Location> {
                 borderRadius: BorderRadius.circular(25),
               ),
             ),
-            child: _isLoading
-                ? SizedBox(
-                    height: 20,
-                    width: 20,
-                    child: CircularProgressIndicator(
-                      color: Colors.white,
-                      strokeWidth: 2,
+            child:
+                _isLoading
+                    ? SizedBox(
+                      height: 20,
+                      width: 20,
+                      child: CircularProgressIndicator(
+                        color: Colors.white,
+                        strokeWidth: 2,
+                      ),
+                    )
+                    : Text(
+                      'Allow Location Access & Finish',
+                      style: TextStyle(fontSize: 16),
                     ),
-                  )
-                : Text(
-                    'Allow Location Access & Finish',
-                    style: TextStyle(fontSize: 16),
-                  ),
           ),
         ],
       ),

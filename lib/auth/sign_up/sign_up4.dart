@@ -13,15 +13,11 @@ class SignUpPage4 extends StatefulWidget {
 class _SignUpPage4State extends State<SignUpPage4> {
   final TextEditingController _emailController = TextEditingController();
   bool _isLoading = false;
-  String? _emailError; // Menyimpan pesan error untuk validasi
-
-  // Fungsi untuk memvalidasi email
+  String? _emailError;
   String? _validateEmail(String value) {
     if (value.isEmpty) {
       return 'Email cannot be empty';
     }
-
-    // Regex pattern untuk validasi email
     final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
     if (!emailRegex.hasMatch(value)) {
       return 'Please enter a valid email address';
@@ -47,7 +43,7 @@ class _SignUpPage4State extends State<SignUpPage4> {
           child: ClipRRect(
             borderRadius: BorderRadius.circular(50),
             child: LinearProgressIndicator(
-              value: 0.375, // 37,5% progress for step 4
+              value: 0.375,
               backgroundColor: const Color.fromARGB(255, 255, 233, 241),
               valueColor: AlwaysStoppedAnimation<Color>(Colors.pink[400]!),
             ),
@@ -61,7 +57,7 @@ class _SignUpPage4State extends State<SignUpPage4> {
           children: [
             SizedBox(height: 24),
             Text(
-              "Email Address", // Mengoreksi enjadi "Email Address"
+              "Email Address",
               style: TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
@@ -95,14 +91,13 @@ class _SignUpPage4State extends State<SignUpPage4> {
                   borderRadius: BorderRadius.circular(25),
                   borderSide: BorderSide(color: Colors.red),
                 ),
-                errorText: _emailError, // Menampilkan pesan error
+                errorText: _emailError,
                 contentPadding: EdgeInsets.symmetric(
                   horizontal: 16,
                   vertical: 16,
                 ),
               ),
-              keyboardType:
-                  TextInputType.emailAddress, // Menambahkan tipe keyboard email
+              keyboardType: TextInputType.emailAddress,
               style: TextStyle(fontSize: 16),
               onChanged: (value) {
                 setState(() {
@@ -128,7 +123,9 @@ class _SignUpPage4State extends State<SignUpPage4> {
                               context,
                               MaterialPageRoute(
                                 builder:
-                                    (context) => SignUpPage5(dataHolder: widget.dataHolder),
+                                    (context) => SignUpPage5(
+                                      dataHolder: widget.dataHolder,
+                                    ),
                               ),
                             );
                           });

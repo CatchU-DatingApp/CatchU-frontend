@@ -1,8 +1,8 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'sign_up3.dart'; // Halaman berikutnya
-import 'package:catchu/sign_up_data_holder.dart'; // jika perlu
+import 'sign_up3.dart';
+import 'package:catchu/sign_up_data_holder.dart';
 
 class SignUpOtpPage extends StatefulWidget {
   final SignUpDataHolder dataHolder;
@@ -13,7 +13,10 @@ class SignUpOtpPage extends StatefulWidget {
 }
 
 class _SignUpOtpPageState extends State<SignUpOtpPage> {
-  final List<TextEditingController> _otpControllers = List.generate(4, (_) => TextEditingController());
+  final List<TextEditingController> _otpControllers = List.generate(
+    4,
+    (_) => TextEditingController(),
+  );
   final List<FocusNode> _focusNodes = List.generate(4, (_) => FocusNode());
   bool _isLoading = false;
   String? _errorMessage;
@@ -49,8 +52,9 @@ class _SignUpOtpPageState extends State<SignUpOtpPage> {
       setState(() => _isLoading = false);
 
       if (otp == '1234') {
-        // Buat objek dataHolder dan isi nomor telepon
-        final dataHolder = SignUpDataHolder(phoneNumber: widget.dataHolder.phoneNumber);
+        final dataHolder = SignUpDataHolder(
+          phoneNumber: widget.dataHolder.phoneNumber,
+        );
         Navigator.push(
           context,
           MaterialPageRoute(
@@ -65,7 +69,6 @@ class _SignUpOtpPageState extends State<SignUpOtpPage> {
       }
     });
   }
-
 
   void _clearOtpFields() {
     for (var controller in _otpControllers) {
@@ -88,9 +91,7 @@ class _SignUpOtpPageState extends State<SignUpOtpPage> {
         }
       });
     });
-  } 
-
-
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -122,7 +123,6 @@ class _SignUpOtpPageState extends State<SignUpOtpPage> {
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             SizedBox(height: 24),
-            // Title
             Text(
               'Verification Code',
               style: TextStyle(
@@ -132,7 +132,6 @@ class _SignUpOtpPageState extends State<SignUpOtpPage> {
               ),
             ),
             SizedBox(height: 16),
-            // Description
             Text.rich(
               TextSpan(
                 text: 'Please enter code we just send to\n',

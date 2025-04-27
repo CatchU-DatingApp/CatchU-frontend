@@ -13,16 +13,12 @@ class WelcomeScreen extends StatelessWidget {
       body: SafeArea(
         child: Column(
           children: [
-            // App Bar with Logo Image (diganti dari Text)
             Padding(
               padding: const EdgeInsets.all(16.0),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Image.asset(
-                    'assets/images/CatchU_Logo.png', // Path gambar logo
-                    height: 150, // Sesuaikan ukuran
-                  ),
+                  Image.asset('assets/images/CatchU_Logo.png', height: 150),
                 ],
               ),
             ),
@@ -30,13 +26,12 @@ class WelcomeScreen extends StatelessWidget {
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 24.0),
                 child: Image.asset(
-                  'assets/images/couple-watching-sunset-concept-illustration 1.png', // Path gambar ilustrasi
+                  'assets/images/couple-watching-sunset-concept-illustration 1.png',
                   fit: BoxFit.contain,
                 ),
               ),
             ),
 
-            // Text Content
             Padding(
               padding: const EdgeInsets.symmetric(
                 horizontal: 24.0,
@@ -63,14 +58,12 @@ class WelcomeScreen extends StatelessWidget {
               ),
             ),
 
-            // Login Button
             Padding(
               padding: const EdgeInsets.symmetric(
                 horizontal: 24.0,
                 vertical: 16.0,
               ),
               child: ElevatedButton.icon(
-                //icon: Icon(Icons.phone, color: Colors.white),
                 label: Text(
                   'Login',
                   style: TextStyle(
@@ -87,7 +80,6 @@ class WelcomeScreen extends StatelessWidget {
                   ),
                 ),
                 onPressed: () {
-                  // Handle login action
                   Navigator.push(
                     context,
                     MaterialPageRoute(builder: (context) => const LoginPage()),
@@ -96,7 +88,6 @@ class WelcomeScreen extends StatelessWidget {
               ),
             ),
 
-            // Sign Up Text
             Padding(
               padding: const EdgeInsets.only(bottom: 24.0),
               child: Row(
@@ -108,11 +99,13 @@ class WelcomeScreen extends StatelessWidget {
                   ),
                   GestureDetector(
                     onTap: () {
-                      // Handle sign up action
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => SignUpPhonePage(dataHolder: SignUpDataHolder()),
+                          builder:
+                              (context) => SignUpPhonePage(
+                                dataHolder: SignUpDataHolder(),
+                              ),
                         ),
                       );
                     },

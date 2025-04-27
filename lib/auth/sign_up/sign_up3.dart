@@ -45,8 +45,6 @@ class _SignUpPage3State extends State<SignUpPage3> {
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             SizedBox(height: 24),
-
-            // Title
             Text(
               "What's Your Name?",
               style: TextStyle(
@@ -56,16 +54,12 @@ class _SignUpPage3State extends State<SignUpPage3> {
               ),
             ),
             SizedBox(height: 8),
-
-            // Subtitle
             Text(
               "Let's Get to Know Each Other",
               style: TextStyle(fontSize: 16, color: Colors.black54),
               textAlign: TextAlign.center,
             ),
             SizedBox(height: 40),
-
-            // Name Input Field
             TextFormField(
               controller: _nameController,
               decoration: InputDecoration(
@@ -87,8 +81,6 @@ class _SignUpPage3State extends State<SignUpPage3> {
               onChanged: (value) => setState(() {}),
             ),
             SizedBox(height: 40),
-
-            // Continue Button
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
@@ -97,7 +89,6 @@ class _SignUpPage3State extends State<SignUpPage3> {
                         ? null
                         : () {
                           setState(() => _isLoading = true);
-                          // Simulate API call
                           Future.delayed(Duration(seconds: 1), () {
                             setState(() => _isLoading = false);
                             widget.dataHolder.nama = _nameController.text;
@@ -105,7 +96,9 @@ class _SignUpPage3State extends State<SignUpPage3> {
                               context,
                               MaterialPageRoute(
                                 builder:
-                                    (context) => SignUpPage4(dataHolder: widget.dataHolder),
+                                    (context) => SignUpPage4(
+                                      dataHolder: widget.dataHolder,
+                                    ),
                               ),
                             );
                           });
