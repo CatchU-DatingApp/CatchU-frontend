@@ -2,8 +2,9 @@ import 'dart:async';
 import 'package:catchu/auth/auth_controller.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'sign_up/sign_up1_dan_2.dart';
+import 'sign_up/sign_up1_phone.dart';
 import '../home/homepage1.dart';
+import 'package:catchu/sign_up_data_holder.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({Key? key}) : super(key: key);
@@ -332,7 +333,7 @@ class _LoginPageState extends State<LoginPage> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => const SignUpPage1(),
+                          builder: (context) => SignUpPhonePage(dataHolder: SignUpDataHolder()),
                         ),
                       );
                     },

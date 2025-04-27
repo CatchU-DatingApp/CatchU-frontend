@@ -1,534 +1,537 @@
-import 'dart:async';
+// import 'dart:async';
 
-import 'package:catchu/auth/sign_up/sign_up3.dart';
-import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+// import 'package:catchu/auth/sign_up/sign_up3.dart';
+// import 'package:flutter/material.dart';
+// import 'package:firebase_auth/firebase_auth.dart';
+// import 'package:cloud_firestore/cloud_firestore.dart';
+// import 'package:catchu/sign_up_data_holder.dart';
 
-class SignUpPage1 extends StatefulWidget {
-  const SignUpPage1({Key? key}) : super(key: key);
+// class SignUpPage1 extends StatefulWidget {
+//   const SignUpPage1({Key? key}) : super(key: key);
 
-  @override
-  _SignUpPage1State createState() => _SignUpPage1State();
-}
+//   @override
+//   _SignUpPage1State createState() => _SignUpPage1State();
+// }
 
-class _SignUpPage1State extends State<SignUpPage1> {
-  final _formKey = GlobalKey<FormState>();
-  String _countryCode = '+62';
-  String _phoneNumber = '';
-  bool _isLoading = false;
-  String? _errorMessage;
+// class _SignUpPage1State extends State<SignUpPage1> {
+//   final _formKey = GlobalKey<FormState>();
+//   String _countryCode = '+62';
+//   String _phoneNumber = '';
+//   bool _isLoading = false;
+//   String? _errorMessage;
 
-  void _validateInput(String value) {
-    setState(() {
-      if (value.isEmpty) {
-        _errorMessage = 'Please enter your phone number';
-      } else if (!RegExp(r'^[0-9]+$').hasMatch(value)) {
-        _errorMessage = 'Only numbers are allowed';
-      } else if (value.length < 8) {
-        _errorMessage = 'Phone number is too short';
-      } else {
-        _errorMessage = null;
-      }
-    });
-  }
+//   void _validateInput(String value) {
+//     setState(() {
+//       if (value.isEmpty) {
+//         _errorMessage = 'Please enter your phone number';
+//       } else if (!RegExp(r'^[0-9]+$').hasMatch(value)) {
+//         _errorMessage = 'Only numbers are allowed';
+//       } else if (value.length < 8) {
+//         _errorMessage = 'Phone number is too short';
+//       } else {
+//         _errorMessage = null;
+//       }
+//     });
+//   }
 
-  void _submitForm() {
-    _validateInput(_phoneNumber);
-    if (_errorMessage == null) {
-      setState(() {
-        _isLoading = true;
-      });
+//   void _submitForm() {
+//     _validateInput(_phoneNumber);
+//     if (_errorMessage == null) {
+//       setState(() {
+//         _isLoading = true;
+//       });
 
-      Future.delayed(const Duration(seconds: 2), () {
-        setState(() {
-          _isLoading = false;
-        });
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder:
-                (context) => OtpVerificationPageSignUp(
-                  phoneNumber: '$_countryCode$_phoneNumber',
-                ),
-          ),
-        );
-      });
-    }
-  }
+//       Future.delayed(const Duration(seconds: 2), () {
+//         setState(() {
+//           _isLoading = false;
+//         });
+//         Navigator.push(
+//           context,
+//           MaterialPageRoute(
+//             builder:
+//                 (context) => OtpVerificationPageSignUp(
+//                   phoneNumber: '$_countryCode$_phoneNumber',
+//                 ),
+//           ),
+//         );
+//       });
+//     }
+//   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color.fromARGB(255, 253, 250, 246),
-      appBar: AppBar(
-        elevation: 0,
-        backgroundColor: Colors.transparent,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: Container(
-          margin: EdgeInsets.only(right: 48),
-          height: 8,
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(50),
-            child: LinearProgressIndicator(
-              value: 0, // 0% progress for step 1
-              backgroundColor: const Color.fromARGB(255, 255, 233, 241),
-              valueColor: AlwaysStoppedAnimation<Color>(Colors.pink[400]!),
-            ),
-          ),
-        ),
-      ),
-      body: Form(
-        key: _formKey,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              SizedBox(height: 24),
-              // Title
-              Text(
-                'My Number Is',
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black87,
-                ),
-              ),
-              SizedBox(height: 12),
+//   void _onOtpVerified() {
+//     final data = SignUpDataHolder(phoneNumber: _phoneNumber);
+//     Navigator.push(
+//       context,
+//       MaterialPageRoute(builder: (context) => SignUpPage3(dataHolder: data)),
+//     );
+//   }
 
-              // Description
-              Text(
-                "We'll need your phone number to send an OTP for verification.",
-                style: TextStyle(fontSize: 16, color: Colors.black54),
-                textAlign: TextAlign.center,
-              ),
-              SizedBox(height: 40),
+//   void _verifyOtp() {
+//     final otp = _otpControllers.map((c) => c.text).join();
 
-              // Phone Number Input with Validation
-              Container(
-                decoration: BoxDecoration(
-                  border: Border.all(
-                    color:
-                        _errorMessage != null
-                            ? Colors.red
-                            : _phoneNumber.isNotEmpty
-                            ? Colors.pink[400]!
-                            : Colors.grey,
-                  ),
-                  borderRadius: BorderRadius.circular(25),
-                ),
-                child: Row(
-                  children: [
-                    // Country Code Dropdown
-                    Padding(
-                      padding: const EdgeInsets.only(left: 16),
-                      child: DropdownButtonHideUnderline(
-                        child: DropdownButton<String>(
-                          value: _countryCode,
-                          icon: Icon(Icons.arrow_drop_down, size: 24),
-                          style: TextStyle(fontSize: 16, color: Colors.black87),
-                          items:
-                              ['+62', '+1', '+44', '+81'].map((String value) {
-                                return DropdownMenuItem<String>(
-                                  value: value,
-                                  child: Text(value),
-                                );
-                              }).toList(),
-                          onChanged: (String? newValue) {
-                            setState(() {
-                              _countryCode = newValue!;
-                            });
-                          },
-                        ),
-                      ),
-                    ),
+//     if (otp.length < 4) {
+//       setState(() => _errorMessage = 'Please enter complete OTP code');
+//       return;
+//     }
 
-                    // Vertical Divider
-                    Container(
-                      height: 24,
-                      width: 1,
-                      color: Colors.grey,
-                      margin: EdgeInsets.symmetric(horizontal: 8),
-                    ),
+//     setState(() {
+//       _isLoading = true;
+//       _errorMessage = null;
+//     });
 
-                    // Phone Number Field
-                    Expanded(
-                      child: TextField(
-                        onChanged: (value) {
-                          setState(() {
-                            _phoneNumber = value;
-                          });
-                          _validateInput(value);
-                        },
-                        decoration: InputDecoration(
-                          hintText: "Enter phone number",
-                          border: InputBorder.none,
-                          contentPadding: EdgeInsets.symmetric(
-                            vertical: 16,
-                            horizontal: 12,
-                          ),
-                          hintStyle: TextStyle(color: Colors.grey),
-                        ),
-                        keyboardType: TextInputType.phone,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+//     // Simulate API verification
+//     Future.delayed(Duration(seconds: 2), () {
+//       setState(() => _isLoading = false);
 
-              // Error Message
-              if (_errorMessage != null)
-                Padding(
-                  padding: const EdgeInsets.only(left: 16.0, top: 8.0),
-                  child: Row(
-                    children: [
-                      Icon(Icons.error_outline, size: 16, color: Colors.red),
-                      SizedBox(width: 4),
-                      Text(
-                        _errorMessage!,
-                        style: TextStyle(color: Colors.red, fontSize: 12),
-                      ),
-                    ],
-                  ),
-                ),
-              SizedBox(height: _errorMessage != null ? 24 : 40),
+//       // Mock verification - in real app, check with your backend
+//       if (otp == '1234') {
+//         _onOtpVerified();
+//       } else {
+//         setState(() => _errorMessage = 'Invalid OTP code. Please try again');
+//         _clearOtpFields();
+//       }
+//     });
+//   }
 
-              // Continue Button
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: _isLoading ? null : _submitForm,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.pink[400],
-                    foregroundColor: Colors.white,
-                    disabledBackgroundColor: Colors.pink[200],
-                    minimumSize: Size(double.infinity, 50),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(25),
-                    ),
-                  ),
-                  child:
-                      _isLoading
-                          ? SizedBox(
-                            height: 20,
-                            width: 20,
-                            child: CircularProgressIndicator(
-                              color: Colors.white,
-                              strokeWidth: 2,
-                            ),
-                          )
-                          : Text(
-                            'Continue',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
+//   @override
+//   Widget build(BuildContext context) {
+//     return Scaffold(
+//       backgroundColor: const Color.fromARGB(255, 253, 250, 246),
+//       appBar: AppBar(
+//         elevation: 0,
+//         backgroundColor: Colors.transparent,
+//         leading: IconButton(
+//           icon: Icon(Icons.arrow_back, color: Colors.black),
+//           onPressed: () => Navigator.pop(context),
+//         ),
+//         title: Container(
+//           margin: EdgeInsets.only(right: 48),
+//           height: 8,
+//           child: ClipRRect(
+//             borderRadius: BorderRadius.circular(50),
+//             child: LinearProgressIndicator(
+//               value: 0, // 0% progress for step 1
+//               backgroundColor: const Color.fromARGB(255, 255, 233, 241),
+//               valueColor: AlwaysStoppedAnimation<Color>(Colors.pink[400]!),
+//             ),
+//           ),
+//         ),
+//       ),
+//       body: Form(
+//         key: _formKey,
+//         child: Padding(
+//           padding: const EdgeInsets.symmetric(horizontal: 24.0),
+//           child: Column(
+//             crossAxisAlignment: CrossAxisAlignment.center,
+//             children: [
+//               SizedBox(height: 24),
+//               // Title
+//               Text(
+//                 'My Number Is',
+//                 style: TextStyle(
+//                   fontSize: 24,
+//                   fontWeight: FontWeight.bold,
+//                   color: Colors.black87,
+//                 ),
+//               ),
+//               SizedBox(height: 12),
 
-class OtpVerificationPageSignUp extends StatefulWidget {
-  final String phoneNumber;
+//               // Description
+//               Text(
+//                 "We'll need your phone number to send an OTP for verification.",
+//                 style: TextStyle(fontSize: 16, color: Colors.black54),
+//                 textAlign: TextAlign.center,
+//               ),
+//               SizedBox(height: 40),
 
-  const OtpVerificationPageSignUp({Key? key, required this.phoneNumber})
-    : super(key: key);
+//               // Phone Number Input with Validation
+//               Container(
+//                 decoration: BoxDecoration(
+//                   border: Border.all(
+//                     color:
+//                         _errorMessage != null
+//                             ? Colors.red
+//                             : _phoneNumber.isNotEmpty
+//                             ? Colors.pink[400]!
+//                             : Colors.grey,
+//                   ),
+//                   borderRadius: BorderRadius.circular(25),
+//                 ),
+//                 child: Row(
+//                   children: [
+//                     // Country Code Dropdown
+//                     Padding(
+//                       padding: const EdgeInsets.only(left: 16),
+//                       child: DropdownButtonHideUnderline(
+//                         child: DropdownButton<String>(
+//                           value: _countryCode,
+//                           icon: Icon(Icons.arrow_drop_down, size: 24),
+//                           style: TextStyle(fontSize: 16, color: Colors.black87),
+//                           items:
+//                               ['+62', '+1', '+44', '+81'].map((String value) {
+//                                 return DropdownMenuItem<String>(
+//                                   value: value,
+//                                   child: Text(value),
+//                                 );
+//                               }).toList(),
+//                           onChanged: (String? newValue) {
+//                             setState(() {
+//                               _countryCode = newValue!;
+//                             });
+//                           },
+//                         ),
+//                       ),
+//                     ),
 
-  @override
-  _OtpVerificationPageSignUpState createState() =>
-      _OtpVerificationPageSignUpState();
-}
+//                     // Vertical Divider
+//                     Container(
+//                       height: 24,
+//                       width: 1,
+//                       color: Colors.grey,
+//                       margin: EdgeInsets.symmetric(horizontal: 8),
+//                     ),
 
-class _OtpVerificationPageSignUpState extends State<OtpVerificationPageSignUp> {
-  final List<TextEditingController> _otpControllers = List.generate(
-    4,
-    (index) => TextEditingController(),
-  );
-  final List<FocusNode> _focusNodes = List.generate(4, (index) => FocusNode());
-  bool _isLoading = false;
-  bool _isResending = false;
-  int _resendCountdown = 30;
-  Timer? _resendTimer;
-  String? _errorMessage;
+//                     // Phone Number Field
+//                     Expanded(
+//                       child: TextField(
+//                         onChanged: (value) {
+//                           setState(() {
+//                             _phoneNumber = value;
+//                           });
+//                           _validateInput(value);
+//                         },
+//                         decoration: InputDecoration(
+//                           hintText: "Enter phone number",
+//                           border: InputBorder.none,
+//                           contentPadding: EdgeInsets.symmetric(
+//                             vertical: 16,
+//                             horizontal: 12,
+//                           ),
+//                           hintStyle: TextStyle(color: Colors.grey),
+//                         ),
+//                         keyboardType: TextInputType.phone,
+//                       ),
+//                     ),
+//                   ],
+//                 ),
+//               ),
 
-  @override
-  void initState() {
-    super.initState();
-    _startResendTimer();
+//               // Error Message
+//               if (_errorMessage != null)
+//                 Padding(
+//                   padding: const EdgeInsets.only(left: 16.0, top: 8.0),
+//                   child: Row(
+//                     children: [
+//                       Icon(Icons.error_outline, size: 16, color: Colors.red),
+//                       SizedBox(width: 4),
+//                       Text(
+//                         _errorMessage!,
+//                         style: TextStyle(color: Colors.red, fontSize: 12),
+//                       ),
+//                     ],
+//                   ),
+//                 ),
+//               SizedBox(height: _errorMessage != null ? 24 : 40),
 
-    // Pindahkan auto-focus ke didChangeDependencies
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      FocusScope.of(context).requestFocus(_focusNodes[0]);
-    });
-  }
+//               // Continue Button
+//               SizedBox(
+//                 width: double.infinity,
+//                 child: ElevatedButton(
+//                   onPressed: _isLoading ? null : _submitForm,
+//                   style: ElevatedButton.styleFrom(
+//                     backgroundColor: Colors.pink[400],
+//                     foregroundColor: Colors.white,
+//                     disabledBackgroundColor: Colors.pink[200],
+//                     minimumSize: Size(double.infinity, 50),
+//                     shape: RoundedRectangleBorder(
+//                       borderRadius: BorderRadius.circular(25),
+//                     ),
+//                   ),
+//                   child:
+//                       _isLoading
+//                           ? SizedBox(
+//                             height: 20,
+//                             width: 20,
+//                             child: CircularProgressIndicator(
+//                               color: Colors.white,
+//                               strokeWidth: 2,
+//                             ),
+//                           )
+//                           : Text(
+//                             'Continue',
+//                             style: TextStyle(
+//                               fontSize: 16,
+//                               fontWeight: FontWeight.bold,
+//                             ),
+//                           ),
+//                 ),
+//               ),
+//             ],
+//           ),
+//         ),
+//       ),
+//     );
+//   }
+// }
 
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    // Alternatif: bisa juga dipindahkan ke sini
-  }
+// class OtpVerificationPageSignUp extends StatefulWidget {
+//   final String phoneNumber;
 
-  @override
-  void dispose() {
-    _resendTimer?.cancel();
-    for (var controller in _otpControllers) {
-      controller.dispose();
-    }
-    for (var node in _focusNodes) {
-      node.dispose();
-    }
-    super.dispose();
-  }
+//   const OtpVerificationPageSignUp({Key? key, required this.phoneNumber})
+//     : super(key: key);
 
-  void _startResendTimer() {
-    _resendTimer = Timer.periodic(Duration(seconds: 1), (timer) {
-      if (_resendCountdown == 0) {
-        timer.cancel();
-      } else {
-        setState(() => _resendCountdown--);
-      }
-    });
-  }
+//   @override
+//   _OtpVerificationPageSignUpState createState() =>
+//       _OtpVerificationPageSignUpState();
+// }
 
-  void _resendOtp() {
-    setState(() {
-      _isResending = true;
-      _resendCountdown = 30;
-    });
+// class _OtpVerificationPageSignUpState extends State<OtpVerificationPageSignUp> {
+//   final List<TextEditingController> _otpControllers = List.generate(
+//     4,
+//     (index) => TextEditingController(),
+//   );
+//   final List<FocusNode> _focusNodes = List.generate(4, (index) => FocusNode());
+//   bool _isLoading = false;
+//   bool _isResending = false;
+//   int _resendCountdown = 30;
+//   Timer? _resendTimer;
+//   String? _errorMessage;
 
-    // Simulate API call
-    Future.delayed(Duration(seconds: 1), () {
-      setState(() => _isResending = false);
-      _startResendTimer();
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('OTP has been resent')));
-    });
-  }
+//   @override
+//   void initState() {
+//     super.initState();
+//     _startResendTimer();
 
-  void _verifyOtp() {
-    final otp = _otpControllers.map((c) => c.text).join();
+//     // Pindahkan auto-focus ke didChangeDependencies
+//     WidgetsBinding.instance.addPostFrameCallback((_) {
+//       FocusScope.of(context).requestFocus(_focusNodes[0]);
+//     });
+//   }
 
-    if (otp.length < 4) {
-      setState(() => _errorMessage = 'Please enter complete OTP code');
-      return;
-    }
+//   @override
+//   void didChangeDependencies() {
+//     super.didChangeDependencies();
+//     // Alternatif: bisa juga dipindahkan ke sini
+//   }
 
-    setState(() {
-      _isLoading = true;
-      _errorMessage = null;
-    });
+//   @override
+//   void dispose() {
+//     _resendTimer?.cancel();
+//     for (var controller in _otpControllers) {
+//       controller.dispose();
+//     }
+//     for (var node in _focusNodes) {
+//       node.dispose();
+//     }
+//     super.dispose();
+//   }
 
-    // Simulate API verification
-    Future.delayed(Duration(seconds: 2), () {
-      setState(() => _isLoading = false);
+//   void _startResendTimer() {
+//     _resendTimer = Timer.periodic(Duration(seconds: 1), (timer) {
+//       if (_resendCountdown == 0) {
+//         timer.cancel();
+//       } else {
+//         setState(() => _resendCountdown--);
+//       }
+//     });
+//   }
 
-      // Mock verification - in real app, check with your backend
-      if (otp == '1234') {
-        // Replace with actual verification
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => SignUpPage3(phoneNumber: widget.phoneNumber),
-          ),
-        );
-      } else {
-        setState(() => _errorMessage = 'Invalid OTP code. Please try again');
-        _clearOtpFields();
-      }
-    });
-  }
+//   void _resendOtp() {
+//     setState(() {
+//       _isResending = true;
+//       _resendCountdown = 30;
+//     });
 
-  void _clearOtpFields() {
-    for (var controller in _otpControllers) {
-      controller.clear();
-    }
-    FocusScope.of(context).requestFocus(_focusNodes[0]);
-  }
+//     // Simulate API call
+//     Future.delayed(Duration(seconds: 1), () {
+//       setState(() => _isResending = false);
+//       _startResendTimer();
+//       ScaffoldMessenger.of(
+//         context,
+//       ).showSnackBar(SnackBar(content: Text('OTP has been resent')));
+//     });
+//   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color.fromARGB(255, 253, 250, 246),
-      appBar: AppBar(
-        elevation: 0,
-        backgroundColor: Colors.transparent,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: Container(
-          margin: EdgeInsets.only(right: 48),
-          height: 8,
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(50),
-            child: LinearProgressIndicator(
-              value: 0.125,
-              backgroundColor: const Color.fromARGB(255, 255, 233, 241),
-              valueColor: AlwaysStoppedAnimation<Color>(Colors.pink[400]!),
-            ),
-          ),
-        ),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 24.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            SizedBox(height: 24),
-            // Title
-            Text(
-              'Verification Code',
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: Colors.black87,
-              ),
-            ),
-            SizedBox(height: 16),
-            // Description
-            Text.rich(
-              TextSpan(
-                text: 'Please enter code we just send to\n',
-                style: TextStyle(fontSize: 16, color: Colors.black54),
-                children: [
-                  TextSpan(
-                    text: widget.phoneNumber,
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black87,
-                    ),
-                  ),
-                ],
-              ),
-              textAlign: TextAlign.center,
-            ),
-            SizedBox(height: 40),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: List.generate(4, (index) {
-                return Container(
-                  width: 60,
-                  height: 60,
-                  decoration: BoxDecoration(
-                    border: Border.all(
-                      color:
-                          _errorMessage != null
-                              ? Colors.red
-                              : Colors.grey.withOpacity(0.5),
-                    ),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: TextField(
-                    controller: _otpControllers[index],
-                    focusNode: _focusNodes[index],
-                    textAlign: TextAlign.center,
-                    keyboardType: TextInputType.number,
-                    maxLength: 1,
-                    style: TextStyle(fontSize: 24),
-                    decoration: InputDecoration(
-                      counterText: '',
-                      border: InputBorder.none,
-                    ),
-                    onChanged: (value) {
-                      if (value.length == 1 && index < 3) {
-                        FocusScope.of(
-                          context,
-                        ).requestFocus(_focusNodes[index + 1]);
-                      } else if (value.isEmpty && index > 0) {
-                        FocusScope.of(
-                          context,
-                        ).requestFocus(_focusNodes[index - 1]);
-                      }
-                      setState(() => _errorMessage = null);
-                    },
-                  ),
-                );
-              }),
-            ),
-            if (_errorMessage != null)
-              Padding(
-                padding: EdgeInsets.only(top: 8),
-                child: Text(
-                  _errorMessage!,
-                  style: TextStyle(color: Colors.red, fontSize: 12),
-                ),
-              ),
-            SizedBox(height: 24),
-            Center(
-              child:
-                  _resendCountdown > 0
-                      ? Text(
-                        'Resend code in $_resendCountdown seconds',
-                        style: TextStyle(color: Colors.grey),
-                      )
-                      : TextButton(
-                        onPressed: _isResending ? null : _resendOtp,
-                        child:
-                            _isResending
-                                ? SizedBox(
-                                  height: 16,
-                                  width: 16,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                  ),
-                                )
-                                : Text(
-                                  'Resend Code',
-                                  style: TextStyle(
-                                    color: Colors.pink[400],
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                      ),
-            ),
-            SizedBox(height: 40),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: _isLoading ? null : _verifyOtp,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.pink[400],
-                  foregroundColor: Colors.white,
-                  disabledBackgroundColor: Colors.pink[200],
-                  minimumSize: Size(double.infinity, 50),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(25),
-                  ),
-                ),
-                child:
-                    _isLoading
-                        ? SizedBox(
-                          height: 20,
-                          width: 20,
-                          child: CircularProgressIndicator(
-                            color: Colors.white,
-                            strokeWidth: 2,
-                          ),
-                        )
-                        : Text(
-                          'Verify',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
+//   void _clearOtpFields() {
+//     for (var controller in _otpControllers) {
+//       controller.clear();
+//     }
+//     FocusScope.of(context).requestFocus(_focusNodes[0]);
+//   }
+
+//   @override
+//   Widget build(BuildContext context) {
+//     return Scaffold(
+//       backgroundColor: const Color.fromARGB(255, 253, 250, 246),
+//       appBar: AppBar(
+//         elevation: 0,
+//         backgroundColor: Colors.transparent,
+//         leading: IconButton(
+//           icon: Icon(Icons.arrow_back, color: Colors.black),
+//           onPressed: () => Navigator.pop(context),
+//         ),
+//         title: Container(
+//           margin: EdgeInsets.only(right: 48),
+//           height: 8,
+//           child: ClipRRect(
+//             borderRadius: BorderRadius.circular(50),
+//             child: LinearProgressIndicator(
+//               value: 0.125,
+//               backgroundColor: const Color.fromARGB(255, 255, 233, 241),
+//               valueColor: AlwaysStoppedAnimation<Color>(Colors.pink[400]!),
+//             ),
+//           ),
+//         ),
+//       ),
+//       body: Padding(
+//         padding: const EdgeInsets.symmetric(horizontal: 24.0),
+//         child: Column(
+//           crossAxisAlignment: CrossAxisAlignment.center,
+//           children: [
+//             SizedBox(height: 24),
+//             // Title
+//             Text(
+//               'Verification Code',
+//               style: TextStyle(
+//                 fontSize: 24,
+//                 fontWeight: FontWeight.bold,
+//                 color: Colors.black87,
+//               ),
+//             ),
+//             SizedBox(height: 16),
+//             // Description
+//             Text.rich(
+//               TextSpan(
+//                 text: 'Please enter code we just send to\n',
+//                 style: TextStyle(fontSize: 16, color: Colors.black54),
+//                 children: [
+//                   TextSpan(
+//                     text: widget.phoneNumber,
+//                     style: TextStyle(
+//                       fontWeight: FontWeight.bold,
+//                       color: Colors.black87,
+//                     ),
+//                   ),
+//                 ],
+//               ),
+//               textAlign: TextAlign.center,
+//             ),
+//             SizedBox(height: 40),
+//             Row(
+//               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+//               children: List.generate(4, (index) {
+//                 return Container(
+//                   width: 60,
+//                   height: 60,
+//                   decoration: BoxDecoration(
+//                     border: Border.all(
+//                       color:
+//                           _errorMessage != null
+//                               ? Colors.red
+//                               : Colors.grey.withOpacity(0.5),
+//                     ),
+//                     borderRadius: BorderRadius.circular(12),
+//                   ),
+//                   child: TextField(
+//                     controller: _otpControllers[index],
+//                     focusNode: _focusNodes[index],
+//                     textAlign: TextAlign.center,
+//                     keyboardType: TextInputType.number,
+//                     maxLength: 1,
+//                     style: TextStyle(fontSize: 24),
+//                     decoration: InputDecoration(
+//                       counterText: '',
+//                       border: InputBorder.none,
+//                     ),
+//                     onChanged: (value) {
+//                       if (value.length == 1 && index < 3) {
+//                         FocusScope.of(
+//                           context,
+//                         ).requestFocus(_focusNodes[index + 1]);
+//                       } else if (value.isEmpty && index > 0) {
+//                         FocusScope.of(
+//                           context,
+//                         ).requestFocus(_focusNodes[index - 1]);
+//                       }
+//                       setState(() => _errorMessage = null);
+//                     },
+//                   ),
+//                 );
+//               }),
+//             ),
+//             if (_errorMessage != null)
+//               Padding(
+//                 padding: EdgeInsets.only(top: 8),
+//                 child: Text(
+//                   _errorMessage!,
+//                   style: TextStyle(color: Colors.red, fontSize: 12),
+//                 ),
+//               ),
+//             SizedBox(height: 24),
+//             Center(
+//               child:
+//                   _resendCountdown > 0
+//                       ? Text(
+//                         'Resend code in $_resendCountdown seconds',
+//                         style: TextStyle(color: Colors.grey),
+//                       )
+//                       : TextButton(
+//                         onPressed: _isResending ? null : _resendOtp,
+//                         child:
+//                             _isResending
+//                                 ? SizedBox(
+//                                   height: 16,
+//                                   width: 16,
+//                                   child: CircularProgressIndicator(
+//                                     strokeWidth: 2,
+//                                   ),
+//                                 )
+//                                 : Text(
+//                                   'Resend Code',
+//                                   style: TextStyle(
+//                                     color: Colors.pink[400],
+//                                     fontWeight: FontWeight.bold,
+//                                   ),
+//                                 ),
+//                       ),
+//             ),
+//             SizedBox(height: 40),
+//             SizedBox(
+//               width: double.infinity,
+//               child: ElevatedButton(
+//                 onPressed: _isLoading ? null : _verifyOtp,
+//                 style: ElevatedButton.styleFrom(
+//                   backgroundColor: Colors.pink[400],
+//                   foregroundColor: Colors.white,
+//                   disabledBackgroundColor: Colors.pink[200],
+//                   minimumSize: Size(double.infinity, 50),
+//                   shape: RoundedRectangleBorder(
+//                     borderRadius: BorderRadius.circular(25),
+//                   ),
+//                 ),
+//                 child:
+//                     _isLoading
+//                         ? SizedBox(
+//                           height: 20,
+//                           width: 20,
+//                           child: CircularProgressIndicator(
+//                             color: Colors.white,
+//                             strokeWidth: 2,
+//                           ),
+//                         )
+//                         : Text(
+//                           'Verify',
+//                           style: TextStyle(
+//                             fontSize: 16,
+//                             fontWeight: FontWeight.bold,
+//                           ),
+//                         ),
+//               ),
+//             ),
+//           ],
+//         ),
+//       ),
+//     );
+//   }
+// }
 

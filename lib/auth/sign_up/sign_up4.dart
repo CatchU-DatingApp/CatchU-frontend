@@ -1,17 +1,17 @@
-import 'sign_up5_umur.dart';
+import 'package:catchu/auth/sign_up/sign_up5_Umur.dart';
 import 'package:flutter/material.dart';
+import 'package:catchu/sign_up_data_holder.dart';
 
 class SignUpPage4 extends StatefulWidget {
-  final String phoneNumber;
-
-  const SignUpPage4({Key? key, required this.phoneNumber}) : super(key: key);
+  final SignUpDataHolder dataHolder;
+  const SignUpPage4({Key? key, required this.dataHolder}) : super(key: key);
 
   @override
-  _SignUpPage4State createState() => _SignUpPage4State();
+  State<SignUpPage4> createState() => _SignUpPage4State();
 }
 
 class _SignUpPage4State extends State<SignUpPage4> {
-  final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
   bool _isLoading = false;
   String? _emailError; // Menyimpan pesan error untuk validasi
 
@@ -76,7 +76,7 @@ class _SignUpPage4State extends State<SignUpPage4> {
             ),
             SizedBox(height: 40),
             TextFormField(
-              controller: _nameController,
+              controller: _emailController,
               decoration: InputDecoration(
                 hintText: "Enter your email address",
                 border: OutlineInputBorder(
@@ -115,7 +115,7 @@ class _SignUpPage4State extends State<SignUpPage4> {
               width: double.infinity,
               child: ElevatedButton(
                 onPressed:
-                    (_nameController.text.isEmpty ||
+                    (_emailController.text.isEmpty ||
                             _isLoading ||
                             _emailError != null)
                         ? null
@@ -123,14 +123,12 @@ class _SignUpPage4State extends State<SignUpPage4> {
                           setState(() => _isLoading = true);
                           Future.delayed(Duration(seconds: 1), () {
                             setState(() => _isLoading = false);
-                            // signup5
+                            widget.dataHolder.email = _emailController.text;
                             Navigator.push(
                               context,
                               MaterialPageRoute(
                                 builder:
-                                    (context) => SignUpPage5(
-                                      phoneNumber: widget.phoneNumber,
-                                    ), // Replace with your next page
+                                    (context) => SignUpPage5(dataHolder: widget.dataHolder),
                               ),
                             );
                           });
@@ -171,7 +169,7 @@ class _SignUpPage4State extends State<SignUpPage4> {
 
   @override
   void dispose() {
-    _nameController.dispose();
+    _emailController.dispose();
     super.dispose();
   }
 }

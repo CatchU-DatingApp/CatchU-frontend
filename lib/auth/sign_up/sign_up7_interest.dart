@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:catchu/auth/sign_up/sign_up8_picture.dart';
+import 'package:catchu/sign_up_data_holder.dart';
 
 class SignUpPage7 extends StatefulWidget {
-  final String phoneNumber;
-  const SignUpPage7({Key? key, required this.phoneNumber}) : super(key: key);
+  final SignUpDataHolder dataHolder;
+  const SignUpPage7({Key? key, required this.dataHolder}) : super(key: key);
 
   @override
   State<SignUpPage7> createState() => _SignUpPage7State();
@@ -141,7 +142,7 @@ class _SignUpPage7State extends State<SignUpPage7> {
                           MaterialPageRoute(
                             builder:
                                 (context) => SignUpPage8(
-                                  phoneNumber: widget.phoneNumber,
+                                  dataHolder: widget.dataHolder,
                                 ),
                           ),
                         );

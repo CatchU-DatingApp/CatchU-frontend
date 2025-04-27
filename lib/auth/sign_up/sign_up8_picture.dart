@@ -2,11 +2,12 @@ import 'package:catchu/auth/sign_up/sign_up9_Location.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
+import 'package:catchu/sign_up_data_holder.dart';
 
 class SignUpPage8 extends StatefulWidget {
-  final String phoneNumber;
+  final SignUpDataHolder dataHolder;
 
-  const SignUpPage8({Key? key, required this.phoneNumber}) : super(key: key);
+  const SignUpPage8({Key? key, required this.dataHolder}) : super(key: key);
 
   @override
   _SignUpPage8State createState() => _SignUpPage8State();
@@ -124,7 +125,7 @@ class _SignUpPage8State extends State<SignUpPage8> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (_) => EnableLocationPage(phoneNumber: widget.phoneNumber),
+                    builder: (_) => EnableLocationPage(dataHolder: widget.dataHolder),
                   ),
                 );
               },
@@ -268,13 +269,12 @@ class _SignUpPage8State extends State<SignUpPage8> {
     );
   }
 
-
-
   Future<void> _pickImageFromGallery() async {
     final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
     if (pickedFile != null) {
       setState(() {
         uploadedImages.add(FileImage(File(pickedFile.path)));
+        widget.dataHolder.photoUrl = pickedFile.path;
       });
     }
   }
@@ -284,6 +284,7 @@ class _SignUpPage8State extends State<SignUpPage8> {
     if (pickedFile != null) {
       setState(() {
         uploadedImages.add(FileImage(File(pickedFile.path)));
+        widget.dataHolder.photoUrl = pickedFile.path;
       });
     }
   }

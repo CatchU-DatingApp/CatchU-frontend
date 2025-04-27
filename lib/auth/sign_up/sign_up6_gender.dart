@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:catchu/auth/sign_up/sign_up7_interest.dart';
+import 'package:catchu/sign_up_data_holder.dart';
 
 class SignUpPage6 extends StatefulWidget {
-  final String phoneNumber;
+  final SignUpDataHolder dataHolder;
 
-  const SignUpPage6({Key? key, required this.phoneNumber}) : super(key: key);
+  const SignUpPage6({Key? key, required this.dataHolder}) : super(key: key);
 
   @override
   _SignUpPage6State createState() => _SignUpPage6State();
@@ -51,7 +52,7 @@ class _SignUpPage6State extends State<SignUpPage6> {
                     children: [
                       SizedBox(height: 24),
                       Text(
-                        "What’s Your Gender?",
+                        "What's Your Gender?",
                         style: TextStyle(
                           fontSize: 24,
                           fontWeight: FontWeight.bold,
@@ -106,7 +107,7 @@ class _SignUpPage6State extends State<SignUpPage6> {
                                 MaterialPageRoute(
                                   builder:
                                       (context) => SignUpPage7(
-                                        phoneNumber: widget.phoneNumber,
+                                        dataHolder: widget.dataHolder,
                                       ),
                                 ),
                               );

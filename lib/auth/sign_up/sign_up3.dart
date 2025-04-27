@@ -1,10 +1,11 @@
 import 'package:catchu/auth/sign_up/sign_up4.dart';
 import 'package:flutter/material.dart';
+import 'package:catchu/sign_up_data_holder.dart';
 
 class SignUpPage3 extends StatefulWidget {
-  final String phoneNumber;
+  final SignUpDataHolder dataHolder;
 
-  const SignUpPage3({Key? key, required this.phoneNumber}) : super(key: key);
+  const SignUpPage3({Key? key, required this.dataHolder}) : super(key: key);
 
   @override
   _SignUpPage3State createState() => _SignUpPage3State();
@@ -99,13 +100,12 @@ class _SignUpPage3State extends State<SignUpPage3> {
                           // Simulate API call
                           Future.delayed(Duration(seconds: 1), () {
                             setState(() => _isLoading = false);
+                            widget.dataHolder.nama = _nameController.text;
                             Navigator.push(
                               context,
                               MaterialPageRoute(
                                 builder:
-                                    (context) => SignUpPage4(
-                                      phoneNumber: widget.phoneNumber,
-                                    ), // Replace with your next page
+                                    (context) => SignUpPage4(dataHolder: widget.dataHolder),
                               ),
                             );
                           });

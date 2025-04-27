@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'login.dart';
-import 'sign_up/sign_up1_dan_2.dart';
+import 'sign_up/sign_up1_phone.dart';
+import 'package:catchu/sign_up_data_holder.dart';
 
 class WelcomeScreen extends StatelessWidget {
   const WelcomeScreen({Key? key}) : super(key: key);
@@ -69,9 +70,9 @@ class WelcomeScreen extends StatelessWidget {
                 vertical: 16.0,
               ),
               child: ElevatedButton.icon(
-                icon: Icon(Icons.phone, color: Colors.white),
+                //icon: Icon(Icons.phone, color: Colors.white),
                 label: Text(
-                  'Login with Phone',
+                  'Login',
                   style: TextStyle(
                     fontSize: 16,
                     color: Colors.white,
@@ -111,7 +112,7 @@ class WelcomeScreen extends StatelessWidget {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => const SignUpPage1(),
+                          builder: (context) => SignUpPhonePage(dataHolder: SignUpDataHolder()),
                         ),
                       );
                     },

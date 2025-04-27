@@ -3,12 +3,12 @@ import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:catchu/sign_up_data_holder.dart';
 
 class EnableLocationPage extends StatelessWidget {
-  final String phoneNumber;
+  final SignUpDataHolder dataHolder;
 
-  const EnableLocationPage({Key? key, required this.phoneNumber})
-      : super(key: key);
+  const EnableLocationPage({Key? key, required this.dataHolder}) : super(key: key);
 
   Future<void> _getCurrentLocation(BuildContext context) async {
     bool serviceEnabled;
@@ -44,6 +44,9 @@ class EnableLocationPage extends StatelessWidget {
     Position position = await Geolocator.getCurrentPosition(
       desiredAccuracy: LocationAccuracy.high,
     );
+
+    // Simpan ke dataHolder
+    dataHolder.location = [position.latitude, position.longitude];
 
     print('Current location: ${position.latitude}, ${position.longitude}');
 
