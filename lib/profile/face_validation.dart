@@ -4,7 +4,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:path/path.dart' as path;
 import 'package:uuid/uuid.dart';
-import 'face_validation_scan..dart'; // Pastikan file ini betul
+import 'face_validation_scan.dart';
 
 class FaceValidationPhotoPage extends StatefulWidget {
   const FaceValidationPhotoPage({Key? key}) : super(key: key);

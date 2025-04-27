@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'profile.dart';
+import '../profile/profile.dart';
 import 'homepage1.dart';
 import 'package:url_launcher/url_launcher.dart';
 
