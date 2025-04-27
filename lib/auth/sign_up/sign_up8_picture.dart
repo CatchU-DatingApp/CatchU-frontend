@@ -125,7 +125,7 @@ class _SignUpPage8State extends State<SignUpPage8> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (_) => EnableLocationPage(dataHolder: widget.dataHolder),
+                    builder: (_) => SignUpPage9Location(dataHolder: widget.dataHolder),
                   ),
                 );
               },
