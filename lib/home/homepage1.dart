@@ -308,22 +308,22 @@ class _DiscoverPageState extends State<DiscoverPage>
         children: [
           GestureDetector(
             onTapDown: (_) => setState(() {}),
+            onTap: _swipeLeft,
             child: _actionButton(
               icon: Icons.clear,
               iconColor: Colors.red,
               shadowColor: Colors.redAccent.withOpacity(0.4),
             ),
-            onTap: _swipeLeft,
           ),
           SizedBox(width: 100),
           GestureDetector(
             onTapDown: (_) => setState(() {}),
+            onTap: _swipeRight,
             child: _actionButton(
               icon: Icons.favorite,
               iconColor: Colors.pink,
               shadowColor: Colors.pinkAccent.withOpacity(0.4),
             ),
-            onTap: _swipeRight,
           ),
         ],
       ),
@@ -348,10 +348,10 @@ class _DiscoverPageState extends State<DiscoverPage>
   }
 
   Widget _buildProfileCard(
-    ProfileData profile,
-    double cardHeight,
-    int profileIndex,
-  ) {
+      ProfileData profile,
+      double cardHeight,
+      int profileIndex,
+      ) {
     // Get current image index for this profile
     final currentImageIndex = _currentImageIndices[profileIndex] ?? 0;
     final currentImage = profile.images[currentImageIndex];
@@ -360,7 +360,7 @@ class _DiscoverPageState extends State<DiscoverPage>
     final totalImages = profile.images.length;
 
     return Card(
-      elevation: 8,
+      elevation: 3,
       margin: EdgeInsets.symmetric(horizontal: 16),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       clipBehavior: Clip.antiAlias,
@@ -369,8 +369,8 @@ class _DiscoverPageState extends State<DiscoverPage>
         height: cardHeight,
         child: SingleChildScrollView(
           controller:
-              profileIndex == _currentProfileIndex ? _scrollController : null,
-          physics: BouncingScrollPhysics(),
+          profileIndex == _currentProfileIndex ? _scrollController : null,
+          physics: ClampingScrollPhysics(), // Use ClampingScrollPhysics to prevent overscroll
           padding: EdgeInsets.only(bottom: 20),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -404,9 +404,9 @@ class _DiscoverPageState extends State<DiscoverPage>
                                 flex: 1,
                                 child: GestureDetector(
                                   onTap:
-                                      currentImageIndex > 0
-                                          ? _previousImage
-                                          : null,
+                                  currentImageIndex > 0
+                                      ? _previousImage
+                                      : null,
                                   child: Container(color: Colors.transparent),
                                 ),
                               ),
@@ -416,9 +416,9 @@ class _DiscoverPageState extends State<DiscoverPage>
                                 flex: 1,
                                 child: GestureDetector(
                                   onTap:
-                                      currentImageIndex < totalImages - 1
-                                          ? _nextImage
-                                          : null,
+                                  currentImageIndex < totalImages - 1
+                                      ? _nextImage
+                                      : null,
                                   child: Container(color: Colors.transparent),
                                 ),
                               ),
@@ -434,21 +434,21 @@ class _DiscoverPageState extends State<DiscoverPage>
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: List.generate(
                               totalImages,
-                              (index) => Container(
+                                  (index) => Container(
                                 margin: EdgeInsets.symmetric(horizontal: 3),
                                 width: 8,
                                 height: 8,
                                 decoration: BoxDecoration(
                                   shape: BoxShape.circle,
                                   color:
-                                      index == currentImageIndex
-                                          ? const Color.fromARGB(
-                                            255,
-                                            250,
-                                            60,
-                                            60,
-                                          )
-                                          : Colors.white.withOpacity(0.5),
+                                  index == currentImageIndex
+                                      ? const Color.fromARGB(
+                                    255,
+                                    250,
+                                    60,
+                                    60,
+                                  )
+                                      : Colors.white.withOpacity(0.5),
                                 ),
                               ),
                             ),
@@ -531,9 +531,9 @@ class _DiscoverPageState extends State<DiscoverPage>
                       spacing: 8,
                       runSpacing: 8,
                       children:
-                          profile.interests
-                              .map((interest) => _interestTag(interest))
-                              .toList(),
+                      profile.interests
+                          .map((interest) => _interestTag(interest))
+                          .toList(),
                     ),
                   ],
                 ),
@@ -544,6 +544,7 @@ class _DiscoverPageState extends State<DiscoverPage>
       ),
     );
   }
+
 
   Widget _interestTag(String text) {
     return Container(
@@ -579,11 +580,17 @@ class _DiscoverPageState extends State<DiscoverPage>
           color: Colors.white,
           shape: BoxShape.circle,
           boxShadow: [
-            BoxShadow(color: shadowColor, blurRadius: 12, offset: Offset(0, 6)),
+            BoxShadow(
+              color: shadowColor.withOpacity(0.2),
+              blurRadius: 8,
+              offset: Offset(0, 4),
+            ),
           ],
         ),
         child: Center(child: Icon(icon, color: iconColor, size: 32)),
       ),
     );
   }
+
+
 }
