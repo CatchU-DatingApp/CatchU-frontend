@@ -8,7 +8,7 @@ class EnableLocationPage extends StatelessWidget {
   final String phoneNumber;
 
   const EnableLocationPage({Key? key, required this.phoneNumber})
-      : super(key: key);
+    : super(key: key);
 
   Future<void> _getCurrentLocation(BuildContext context) async {
     bool serviceEnabled;
@@ -76,12 +76,16 @@ class EnableLocationPage extends StatelessWidget {
                       ),
                       children: [
                         TileLayer(
-                          urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                          urlTemplate:
+                              'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
                         ),
                         MarkerLayer(
                           markers: [
                             Marker(
-                              point: LatLng(position.latitude, position.longitude),
+                              point: LatLng(
+                                position.latitude,
+                                position.longitude,
+                              ),
                               width: 80,
                               height: 80,
                               child: Icon(
@@ -133,7 +137,9 @@ class EnableLocationPage extends StatelessWidget {
                             Navigator.pop(context);
                             Navigator.push(
                               context,
-                              MaterialPageRoute(builder: (_) => SignUpRulesPage()),
+                              MaterialPageRoute(
+                                builder: (_) => SignUpRulesPage(),
+                              ),
                             );
                           },
                           style: ElevatedButton.styleFrom(
@@ -158,7 +164,6 @@ class EnableLocationPage extends StatelessWidget {
       },
     );
   }
-
 
   @override
   Widget build(BuildContext context) {
