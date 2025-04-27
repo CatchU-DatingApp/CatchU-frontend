@@ -5,7 +5,7 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:path/path.dart' as path;
 import 'package:uuid/uuid.dart';
 import 'face_validation_scan.dart';
-
+//MASIH DEMO, BELUM BISA KONEK KE FIREBASE, MAKA BISA LANGSUNG NEXT UNTUK DEBUGGING
 class FaceValidationPhotoPage extends StatefulWidget {
   const FaceValidationPhotoPage({Key? key}) : super(key: key);
 
@@ -61,37 +61,33 @@ class _FaceValidationPhotoPageState extends State<FaceValidationPhotoPage> {
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child:
-                      _isLoading
-                          ? const Center(child: CircularProgressIndicator())
-                          : _imageFile != null
-                          ? ClipRRect(
-                            borderRadius: BorderRadius.circular(12),
-                            child: Image.file(
-                              _imageFile!,
-                              fit: BoxFit.cover,
-                              width: double.infinity,
-                              height: double.infinity,
-                            ),
-                          )
-                          : const Center(
-                            child: Icon(
-                              Icons.add_a_photo,
-                              size: 100,
-                              color: Colors.white,
-                            ),
-                          ),
+                  _isLoading
+                      ? const Center(child: CircularProgressIndicator())
+                      : _imageFile != null
+                      ? ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: Image.file(
+                      _imageFile!,
+                      fit: BoxFit.cover,
+                      width: double.infinity,
+                      height: double.infinity,
+                    ),
+                  )
+                      : const Center(
+                    child: Icon(
+                      Icons.add_a_photo,
+                      size: 100,
+                      color: Colors.white,
+                    ),
+                  ),
                 ),
               ),
               const Spacer(),
               ElevatedButton(
-                onPressed:
-                    (_uploadedImageUrl != null && !_isLoading)
-                        ? _navigateToScanPage
-                        : null,
+                onPressed: _navigateToScanPage,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFFFF4D6D),
                   minimumSize: const Size(double.infinity, 56),
-                  disabledBackgroundColor: Colors.grey,
                 ),
                 child: const Text('Next', style: TextStyle(fontSize: 18)),
               ),
@@ -132,6 +128,9 @@ class _FaceValidationPhotoPageState extends State<FaceValidationPhotoPage> {
         const SnackBar(content: Text('Image uploaded successfully')),
       );
     } catch (e) {
+      setState(() {
+        _uploadedImageUrl = null;
+      });
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text('Failed to upload image: $e')));
@@ -144,10 +143,9 @@ class _FaceValidationPhotoPageState extends State<FaceValidationPhotoPage> {
   void _navigateToScanPage() {
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder:
-            (context) => FaceValidationScanPage(
-              profilePhotoUrl: _uploadedImageUrl ?? '',
-            ),
+        builder: (context) => FaceValidationScanPage(
+          profilePhotoUrl: _uploadedImageUrl ?? '',
+        ),
       ),
     );
   }
