@@ -1,33 +1,31 @@
 import 'package:catchu/auth/sign_up/sign_up10_Rules.dart';
 import 'package:flutter/material.dart';
-import 'package:geolocator/geolocator.dart'; // ADD THIS
+import 'package:geolocator/geolocator.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong2/latlong.dart';
 
 class EnableLocationPage extends StatelessWidget {
   final String phoneNumber;
 
   const EnableLocationPage({Key? key, required this.phoneNumber})
-    : super(key: key);
+      : super(key: key);
 
   Future<void> _getCurrentLocation(BuildContext context) async {
     bool serviceEnabled;
     LocationPermission permission;
 
-    // Check if location services are enabled
     serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) {
-      // Location services are not enabled
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Please enable location services')),
       );
       return;
     }
 
-    // Check permission
     permission = await Geolocator.checkPermission();
     if (permission == LocationPermission.denied) {
       permission = await Geolocator.requestPermission();
       if (permission == LocationPermission.denied) {
-        // Permissions are denied
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Location permissions are denied')),
         );
@@ -36,26 +34,131 @@ class EnableLocationPage extends StatelessWidget {
     }
 
     if (permission == LocationPermission.deniedForever) {
-      // Permissions are permanently denied
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Location permissions are permanently denied')),
       );
       return;
     }
 
-    // Get current location
+    // Successfully get current position
     Position position = await Geolocator.getCurrentPosition(
       desiredAccuracy: LocationAccuracy.high,
     );
 
     print('Current location: ${position.latitude}, ${position.longitude}');
 
-    // After getting location, navigate to the next page
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (_) => SignUpRulesPage()),
+    // Show the confirmation popup
+    _showLocationDialog(context, position);
+  }
+
+  void _showLocationDialog(BuildContext context, Position position) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          contentPadding: const EdgeInsets.all(0),
+          content: Container(
+            width: double.maxFinite,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                ClipRRect(
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+                  child: Container(
+                    height: 300, // Lebihkan tinggi map
+                    child: FlutterMap(
+                      options: MapOptions(
+                        center: LatLng(position.latitude, position.longitude),
+                        zoom: 15,
+                      ),
+                      children: [
+                        TileLayer(
+                          urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                        ),
+                        MarkerLayer(
+                          markers: [
+                            Marker(
+                              point: LatLng(position.latitude, position.longitude),
+                              width: 80,
+                              height: 80,
+                              child: Icon(
+                                Icons.location_pin,
+                                color: Color(0xFFFF2E63),
+                                size: 40,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                SizedBox(height: 16),
+                Text(
+                  'Is this where you are?',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFFFF2E63),
+                  ),
+                ),
+                SizedBox(height: 16),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: () {
+                            Navigator.pop(context);
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.grey[300],
+                            foregroundColor: Colors.black,
+                            minimumSize: Size(double.infinity, 45),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                          ),
+                          child: Text('Deny'),
+                        ),
+                      ),
+                      SizedBox(width: 16),
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: () {
+                            Navigator.pop(context);
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (_) => SignUpRulesPage()),
+                            );
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Color(0xFFFF2E63),
+                            foregroundColor: Colors.white,
+                            minimumSize: Size(double.infinity, 45),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                          ),
+                          child: Text('Confirm'),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                SizedBox(height: 16),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -85,17 +188,14 @@ class EnableLocationPage extends StatelessWidget {
             SizedBox(height: 40),
             ElevatedButton(
               onPressed: () {
-                // Langsung lanjut ke halaman berikutnya
                 Navigator.push(
                   context,
-                  MaterialPageRoute(
-                    builder: (_) => SignUpRulesPage(), // Ganti dengan page setelah EnableLocation
-                  ),
+                  MaterialPageRoute(builder: (_) => SignUpRulesPage()),
                 );
               },
               child: Text('Skip For Now'),
             ),
-
+            SizedBox(height: 12),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24.0),
               child: ElevatedButton(
