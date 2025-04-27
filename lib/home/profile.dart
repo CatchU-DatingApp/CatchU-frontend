@@ -7,7 +7,7 @@ import 'faculty_selector.dart';
 import 'photo_selection.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
-import 'FaceValidation.dart'; // Fixed semicolon here
+import 'face_validation.dart';
 
 class ProfilePage extends StatefulWidget {
   @override
