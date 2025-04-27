@@ -206,10 +206,9 @@ class _SignUpPage9LocationState extends State<SignUpPage9Location> {
 
       await UserRepository().addUser(user);
 
-      Navigator.pushAndRemoveUntil(
+      Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => DiscoverPage()),
-        (route) => false,
+        MaterialPageRoute(builder: (context) => SignUpRulesPage()),
       );
     } catch (e) {
       setState(() {
