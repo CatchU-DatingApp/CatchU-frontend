@@ -2,6 +2,8 @@ import 'dart:async';
 
 import 'package:catchu/auth/sign_up/sign_up3.dart';
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class SignUpPage1 extends StatefulWidget {
   const SignUpPage1({Key? key}) : super(key: key);
@@ -529,3 +531,4 @@ class _OtpVerificationPageSignUpState extends State<OtpVerificationPageSignUp> {
     );
   }
 }
+
