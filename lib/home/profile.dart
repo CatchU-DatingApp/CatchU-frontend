@@ -7,8 +7,7 @@ import 'faculty_selector.dart';
 import 'photo_selection.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
-
-
+import 'FaceValidation.dart'; // Fixed semicolon here
 
 class ProfilePage extends StatefulWidget {
   @override
@@ -16,7 +15,7 @@ class ProfilePage extends StatefulWidget {
 }
 
 class _ProfilePageState extends State<ProfilePage> {
-  final ImagePicker _picker = ImagePicker();  // Initialize the ImagePicker
+  final ImagePicker _picker = ImagePicker(); // Initialize the ImagePicker
   List<ImageProvider> uploadedImages = [AssetImage('assets/images/jawa.png')];
   int _currentIndex = 2;
   double profileCompletion = 0.58;
@@ -78,7 +77,6 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-
   void _showInterestSelector() {
     showModalBottomSheet(
       context: context,
@@ -102,7 +100,6 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-
   void _showFacultySelector() {
     showModalBottomSheet(
       context: context,
@@ -118,14 +115,14 @@ class _ProfilePageState extends State<ProfilePage> {
           onSave: (updatedFaculty) {
             setState(() {
               selectedFaculty = updatedFaculty;
-              profileItems['Faculty']!['completed'] = selectedFaculty != null ? 1 : 0;
+              profileItems['Faculty']!['completed'] =
+                  selectedFaculty != null ? 1 : 0;
             });
           },
         );
       },
     );
   }
-
 
   void _showPhotoSelectionModal() {
     showModalBottomSheet(
@@ -148,6 +145,7 @@ class _ProfilePageState extends State<ProfilePage> {
       },
     );
   }
+
   Future<void> _pickImageFromGallery() async {
     final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
     if (pickedFile != null) {
@@ -165,8 +163,6 @@ class _ProfilePageState extends State<ProfilePage> {
       });
     }
   }
-
-
 
   void _onTabTapped(int index) {
     if (index == 0) {
@@ -194,40 +190,43 @@ class _ProfilePageState extends State<ProfilePage> {
     return Stack(
       children: [
         GestureDetector(
-          onTap: image == null
-              ? () {
-            _showPhotoSelectionModal();
-          }
-              : null,
+          onTap:
+              image == null
+                  ? () {
+                    _showPhotoSelectionModal();
+                  }
+                  : null,
           child: Container(
             width: 100,
             height: 100,
-            decoration: image != null
-                ? ShapeDecoration(
-              image: DecorationImage(
-                image: image,
-                fit: BoxFit.cover,
-              ),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
-            )
-                : ShapeDecoration(
-              color: Colors.white,
-              shape: RoundedRectangleBorder(
-                side: BorderSide(width: 1, color: const Color(0xFFFF375F)),
-                borderRadius: BorderRadius.circular(16),
-              ),
-            ),
-            child: image == null
-                ? Center(
-              child: Icon(
-                Icons.add,
-                color: const Color(0xFFFF375F),
-                size: 32,
-              ),
-            )
-                : null,
+            decoration:
+                image != null
+                    ? ShapeDecoration(
+                      image: DecorationImage(image: image, fit: BoxFit.cover),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                    )
+                    : ShapeDecoration(
+                      color: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        side: BorderSide(
+                          width: 1,
+                          color: const Color(0xFFFF375F),
+                        ),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                    ),
+            child:
+                image == null
+                    ? Center(
+                      child: Icon(
+                        Icons.add,
+                        color: const Color(0xFFFF375F),
+                        size: 32,
+                      ),
+                    )
+                    : null,
           ),
         ),
         if (image != null)
@@ -246,20 +245,13 @@ class _ProfilePageState extends State<ProfilePage> {
                   shape: BoxShape.circle,
                 ),
                 padding: EdgeInsets.all(4),
-                child: Icon(
-                  Icons.close,
-                  size: 16,
-                  color: Colors.white,
-                ),
+                child: Icon(Icons.close, size: 16, color: Colors.white),
               ),
             ),
           ),
       ],
     );
   }
-
-
-
 
   Widget _buildSocialMediaInput({
     required String platform,
@@ -365,7 +357,15 @@ class _ProfilePageState extends State<ProfilePage> {
                       ),
                     ),
                     OutlinedButton(
-                      onPressed: () {},
+                      onPressed: () {
+                        // Navigate to the FaceValidation page when the button is clicked
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => FaceValidationPhotoPage(),
+                          ),
+                        );
+                      },
                       style: OutlinedButton.styleFrom(
                         backgroundColor: Colors.white,
                         side: BorderSide(color: Colors.blue.shade300),
@@ -450,7 +450,10 @@ class _ProfilePageState extends State<ProfilePage> {
                             width: photoSize,
                             height: photoSize,
                             child: _buildPhotoSlot(
-                              image: index < uploadedImages.length ? uploadedImages[index] : null,
+                              image:
+                                  index < uploadedImages.length
+                                      ? uploadedImages[index]
+                                      : null,
                               index: index,
                             ),
                           );
@@ -685,5 +688,4 @@ class _ProfilePageState extends State<ProfilePage> {
       ),
     );
   }
-
 }
