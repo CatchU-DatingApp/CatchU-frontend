@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'profile.dart';
+import '../profile/profile.dart';
 import 'chat.dart';
 
 class ProfileData {

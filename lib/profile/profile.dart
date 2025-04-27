@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'chat.dart';
-import 'homepage1.dart';
+import '../home/chat.dart';
+import '../home/homepage1.dart';
 import 'profile_completion_popup.dart';
 import 'interest_selector.dart';
 import 'faculty_selector.dart';
