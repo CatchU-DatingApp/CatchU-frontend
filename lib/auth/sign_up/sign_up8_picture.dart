@@ -35,9 +35,9 @@ class _SignUpPage8State extends State<SignUpPage8> {
           child: ClipRRect(
             borderRadius: BorderRadius.circular(50),
             child: LinearProgressIndicator(
-              value: 0.975,
+              value: 0.850,
               backgroundColor: const Color.fromARGB(255, 255, 233, 241),
-              valueColor: AlwaysStoppedAnimation<Color>(Colors.pink[400]!),
+              valueColor: AlwaysStoppedAnimation<Color>(const Color(0xFFEC407A)),
             ),
           ),
         ),
@@ -172,7 +172,7 @@ class _SignUpPage8State extends State<SignUpPage8> {
             children: [
               Container(
                 padding: EdgeInsets.all(16),
-                height: screenHeight * 0.10,
+                height: screenHeight * 0.121,
                 width: double.infinity,
                 decoration: BoxDecoration(
                   color: Colors.pinkAccent,
@@ -207,7 +207,7 @@ class _SignUpPage8State extends State<SignUpPage8> {
                     Text(
                       'Try To Find Ones That Show Off Your Smile',
                       style: TextStyle(color: Colors.white, fontSize: 13),
-                      textAlign: TextAlign.center,
+                      textAlign: TextAlign.left,
                     ),
                   ],
                 ),

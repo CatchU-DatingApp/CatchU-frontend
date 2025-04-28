@@ -240,60 +240,85 @@ class _SignUpPage9LocationState extends State<SignUpPage9Location> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color.fromARGB(255, 253, 250, 246),
-      appBar: AppBar(title: Text('Aktifkan Lokasi')),
-      body: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Center(
-            child: Image.asset('assets/images/LocationImage.png', height: 200),
-          ),
-          SizedBox(height: 30),
-          Text(
-            'Enable Your Location',
-            style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-          ),
-          SizedBox(height: 12),
-          Text(
-            'Choose your location to start find people around you',
-            textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 16, color: Colors.grey[700]),
-          ),
-          SizedBox(height: 40),
-          if (_errorMessage != null)
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Text(_errorMessage!, style: TextStyle(color: Colors.red)),
+      appBar: AppBar(
+        elevation: 0,
+        backgroundColor: Colors.transparent,
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back, color: Colors.black),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: Container(
+          margin: EdgeInsets.only(right: 48),
+          height: 8,
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(50),
+            child: LinearProgressIndicator(
+              value: 0.920,
+              backgroundColor: const Color.fromARGB(255, 255, 233, 241),
+              valueColor: AlwaysStoppedAnimation<Color>(Colors.pink[400]!),
             ),
-          ElevatedButton(
-            onPressed:
-                _isLoading
-                    ? null
-                    : () {
-                      _getCurrentLocation();
-                    },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Color(0xFFFF2E63),
-              foregroundColor: Colors.white,
-              disabledBackgroundColor: Colors.pink[200],
-              minimumSize: Size(double.infinity, 50),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(25),
+          ),
+        ),
+      ),
+      body: Column(
+        children: [
+          Expanded(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Center(
+                  child: Image.asset('assets/images/LocationImage.png', height: 200),
+                ),
+                SizedBox(height: 30),
+                Text(
+                  'Enable Your Location',
+                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                ),
+                SizedBox(height: 12),
+                Text(
+                  'Choose your location to start find people around you',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 16, color: Colors.grey[700]),
+                ),
+                SizedBox(height: 40),
+                if (_errorMessage != null)
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Text(_errorMessage!, style: TextStyle(color: Colors.red)),
+                  ),
+              ],
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 24.0),
+            child: SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.pink[400],
+                  foregroundColor: Colors.white,
+                  disabledBackgroundColor: Colors.pink[200],
+                  minimumSize: Size(double.infinity, 50),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(25),
+                  ),
+                ),
+                onPressed: _isLoading ? null : _getCurrentLocation,
+                child: _isLoading
+                    ? SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(
+                          color: Colors.white,
+                          strokeWidth: 2,
+                        ),
+                      )
+                    : Text(
+                        'Allow Location Access & Finish',
+                        style: TextStyle(fontSize: 16),
+                      ),
               ),
             ),
-            child:
-                _isLoading
-                    ? SizedBox(
-                      height: 20,
-                      width: 20,
-                      child: CircularProgressIndicator(
-                        color: Colors.white,
-                        strokeWidth: 2,
-                      ),
-                    )
-                    : Text(
-                      'Allow Location Access & Finish',
-                      style: TextStyle(fontSize: 16),
-                    ),
           ),
         ],
       ),

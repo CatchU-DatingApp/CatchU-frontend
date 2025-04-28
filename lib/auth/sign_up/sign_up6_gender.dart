@@ -66,7 +66,7 @@ class _SignUpPage6State extends State<SignUpPage6> {
                         style: TextStyle(fontSize: 16, color: Colors.black54),
                         textAlign: TextAlign.center,
                       ),
-                      SizedBox(height: 40),
+                      SizedBox(height: 80),
                       Center(
                         child: Column(
                           children: [
