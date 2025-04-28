@@ -211,11 +211,9 @@ class _SignUpPage9LocationState extends State<SignUpPage9Location> {
         photos: widget.dataHolder.photos ?? [],
       );
 
-      await UserRepository().addUser(user);
-
-      // Get current Firebase user
       final currentUser = FirebaseAuth.instance.currentUser;
       if (currentUser != null) {
+        await UserRepository().addUser(user, currentUser.uid);
         await SessionManager.saveSession(
           userId: currentUser.uid,
           email: currentUser.email!,
@@ -267,7 +265,10 @@ class _SignUpPage9LocationState extends State<SignUpPage9Location> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Center(
-                  child: Image.asset('assets/images/LocationImage.png', height: 200),
+                  child: Image.asset(
+                    'assets/images/LocationImage.png',
+                    height: 200,
+                  ),
                 ),
                 SizedBox(height: 30),
                 Text(
@@ -284,13 +285,19 @@ class _SignUpPage9LocationState extends State<SignUpPage9Location> {
                 if (_errorMessage != null)
                   Padding(
                     padding: const EdgeInsets.all(8.0),
-                    child: Text(_errorMessage!, style: TextStyle(color: Colors.red)),
+                    child: Text(
+                      _errorMessage!,
+                      style: TextStyle(color: Colors.red),
+                    ),
                   ),
               ],
             ),
           ),
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 24.0),
+            padding: const EdgeInsets.symmetric(
+              horizontal: 24.0,
+              vertical: 24.0,
+            ),
             child: SizedBox(
               width: double.infinity,
               child: ElevatedButton(
@@ -304,19 +311,20 @@ class _SignUpPage9LocationState extends State<SignUpPage9Location> {
                   ),
                 ),
                 onPressed: _isLoading ? null : _getCurrentLocation,
-                child: _isLoading
-                    ? SizedBox(
-                        height: 20,
-                        width: 20,
-                        child: CircularProgressIndicator(
-                          color: Colors.white,
-                          strokeWidth: 2,
+                child:
+                    _isLoading
+                        ? SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 2,
+                          ),
+                        )
+                        : Text(
+                          'Allow Location Access & Finish',
+                          style: TextStyle(fontSize: 16),
                         ),
-                      )
-                    : Text(
-                        'Allow Location Access & Finish',
-                        style: TextStyle(fontSize: 16),
-                      ),
               ),
             ),
           ),

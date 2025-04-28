@@ -116,7 +116,7 @@ class AuthController {
 
       print('Google user obtained: ${googleUser.email}');
 
-      // Check if email exists in Firestore before proceeding
+      // Cek email di Firestore
       final emailCheck =
           await _firestore
               .collection('Users')
@@ -124,7 +124,6 @@ class AuthController {
               .get();
 
       if (emailCheck.docs.isEmpty) {
-        print('Email not registered in Firestore: ${googleUser.email}');
         throw FirebaseAuthException(
           code: 'user-not-found',
           message: 'Email belum terdaftar. Silakan sign up terlebih dahulu.',
@@ -145,12 +144,30 @@ class AuthController {
 
       // Sign in to Firebase with the Google credential
       final userCredential = await _auth.signInWithCredential(credential);
-      print('Firebase sign in successful: ${userCredential.user?.email}');
+      final uid = userCredential.user!.uid;
+
+      // Cek apakah dokumen user sudah ada
+      final userDoc = await _firestore.collection('Users').doc(uid).get();
+
+      if (!userDoc.exists) {
+        await _firestore.collection('Users').doc(uid).set({
+          'nomorTelepon': userCredential.user!.phoneNumber ?? '',
+          'nama': userCredential.user!.displayName ?? '',
+          'email': userCredential.user!.email ?? '',
+          'umur': 0, // default, bisa diisi user nanti
+          'gender': '', // default, bisa diisi user nanti
+          'interest': <String>[], // default kosong
+          'kodeOtp': '', // default kosong
+          'location': <double>[], // default kosong
+          'photos': <String>[], // default kosong
+          'createdAt': FieldValue.serverTimestamp(),
+        });
+      }
 
       // Update last login timestamp
-      await _firestore.collection('Users').doc(userCredential.user!.uid).update(
-        {'lastLogin': FieldValue.serverTimestamp()},
-      );
+      await _firestore.collection('Users').doc(uid).update({
+        'lastLogin': FieldValue.serverTimestamp(),
+      });
       print('User document updated with last login timestamp');
 
       print('Google sign in process completed successfully');
