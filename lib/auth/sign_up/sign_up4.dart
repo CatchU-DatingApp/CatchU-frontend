@@ -18,11 +18,13 @@ class _SignUpPage4State extends State<SignUpPage4> {
     if (value.isEmpty) {
       return 'Email cannot be empty';
     }
-    final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+    final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}[0m$');
     if (!emailRegex.hasMatch(value)) {
       return 'Please enter a valid email address';
     }
-
+    if (!value.endsWith('@gmail.com')) {
+      return 'Email must use @gmail.com domain';
+    }
     return null;
   }
 
