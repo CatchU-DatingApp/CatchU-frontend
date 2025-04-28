@@ -7,6 +7,7 @@ class SignUpDataHolder {
   List<String>? interest;
   String? photoUrl;
   List<double>? location;
+  List<String>? photos;
 
   SignUpDataHolder({
     this.phoneNumber,
@@ -17,5 +18,6 @@ class SignUpDataHolder {
     this.interest,
     this.photoUrl,
     this.location,
+    this.photos,
   });
 }

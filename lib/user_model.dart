@@ -10,7 +10,7 @@ class User {
   final List<String> interest;
   final String kodeOtp;
   final List<double> location;
-  // final String? photoUrl; // jika ada
+  final List<String> photos; // List of photo URLs
 
   User({
     this.id,
@@ -22,7 +22,7 @@ class User {
     required this.interest,
     required this.kodeOtp,
     required this.location,
-    // this.photoUrl,
+    required this.photos,
   });
 
   Map<String, dynamic> toMap() {
@@ -35,7 +35,7 @@ class User {
       'interest': interest,
       'kodeOtp': kodeOtp,
       'location': location,
-      // 'photoUrl': photoUrl,
+      'photos': photos,
     };
   }
 }

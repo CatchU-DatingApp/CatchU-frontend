@@ -8,6 +8,7 @@ import 'photo_selection.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'face_validation.dart';
+import '../services/session_manager.dart';
 
 class ProfilePage extends StatefulWidget {
   @override
@@ -665,6 +666,30 @@ class _ProfilePageState extends State<ProfilePage> {
                   ),
                 ),
                 SizedBox(height: screenHeight * 0.05),
+                // Logout Button
+                Center(
+                  child: TextButton(
+                    onPressed: () async {
+                      // Clear session
+                      await SessionManager.clearSession();
+                      // Navigate to get_started
+                      Navigator.pushNamedAndRemoveUntil(
+                        context,
+                        '/get_started',
+                        (route) => false,
+                      );
+                    },
+                    child: Text(
+                      'Logout',
+                      style: TextStyle(
+                        color: Colors.red,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ),
+                SizedBox(height: screenHeight * 0.02),
               ],
             ),
           ),

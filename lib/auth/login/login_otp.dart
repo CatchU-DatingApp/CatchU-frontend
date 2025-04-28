@@ -1,33 +1,46 @@
 import 'dart:async';
-
 import 'package:flutter/material.dart';
-import 'sign_up3.dart';
-import 'package:catchu/sign_up_data_holder.dart';
+import 'package:catchu/auth/auth_controller.dart';
+import 'package:catchu/home/homepage1.dart';
+import 'package:catchu/services/session_manager.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
-class SignUpOtpPage extends StatefulWidget {
-  final SignUpDataHolder dataHolder;
-  const SignUpOtpPage({Key? key, required this.dataHolder}) : super(key: key);
+class LoginOtpPage extends StatefulWidget {
+  final String phoneNumber;
+  final String verificationId;
+  final AuthController authController;
+
+  const LoginOtpPage({
+    Key? key,
+    required this.phoneNumber,
+    required this.verificationId,
+    required this.authController,
+  }) : super(key: key);
 
   @override
-  State<SignUpOtpPage> createState() => _SignUpOtpPageState();
+  _LoginOtpPageState createState() => _LoginOtpPageState();
 }
 
-class _SignUpOtpPageState extends State<SignUpOtpPage> {
+class _LoginOtpPageState extends State<LoginOtpPage> {
   final List<TextEditingController> _otpControllers = List.generate(
-    4,
-    (_) => TextEditingController(),
+    6,
+    (index) => TextEditingController(),
   );
-  final List<FocusNode> _focusNodes = List.generate(4, (_) => FocusNode());
+  final List<FocusNode> _focusNodes = List.generate(6, (index) => FocusNode());
   bool _isLoading = false;
-  String? _errorMessage;
-  int _resendCountdown = 30;
   bool _isResending = false;
+  int _resendCountdown = 30;
   Timer? _resendTimer;
+  String? _errorMessage;
 
   @override
   void initState() {
     super.initState();
     _startResendTimer();
+    // Auto focus first field
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      FocusScope.of(context).requestFocus(_focusNodes[0]);
+    });
   }
 
   @override
@@ -61,8 +74,8 @@ class _SignUpOtpPageState extends State<SignUpOtpPage> {
   void _verifyOtp() {
     final otp = _otpControllers.map((c) => c.text).join();
 
-    if (otp.length < 4) {
-      setState(() => _errorMessage = 'Masukkan 4 digit kode OTP');
+    if (otp.length < 6) {
+      setState(() => _errorMessage = 'Please enter complete OTP code');
       return;
     }
 
@@ -71,26 +84,27 @@ class _SignUpOtpPageState extends State<SignUpOtpPage> {
       _errorMessage = null;
     });
 
-    Future.delayed(Duration(seconds: 1), () {
-      setState(() => _isLoading = false);
+    widget.authController
+        .verifyOtp(verificationId: widget.verificationId, smsCode: otp)
+        .then((userCredential) async {
+          // Save session after successful login
+          await SessionManager.saveSession(
+            userId: userCredential.user!.uid,
+            email: userCredential.user!.email!,
+            name: userCredential.user!.displayName ?? 'User',
+          );
 
-      if (otp == '1234') {
-        final dataHolder = SignUpDataHolder(
-          phoneNumber: widget.dataHolder.phoneNumber,
-        );
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => SignUpPage3(dataHolder: dataHolder),
-          ),
-        );
-      } else {
-        setState(() {
-          _errorMessage = 'Kode OTP salah. Coba lagi.';
+          setState(() => _isLoading = false);
+          // Navigate to home and remove all previous routes
+          Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
+        })
+        .catchError((error) {
+          setState(() {
+            _isLoading = false;
+            _errorMessage = 'Invalid OTP code. Please try again';
+          });
+          _clearOtpFields();
         });
-        _clearOtpFields();
-      }
-    });
   }
 
   void _clearOtpFields() {
@@ -109,16 +123,53 @@ class _SignUpOtpPageState extends State<SignUpOtpPage> {
       _errorMessage = null;
     });
 
-    // Simulate OTP resend
-    Future.delayed(Duration(seconds: 1), () {
-      setState(() {
-        _isResending = false;
-      });
-      _startResendTimer();
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Kode OTP baru telah dikirim')));
-    });
+    // First check if phone number is still registered
+    widget.authController
+        .checkPhoneNumberRegistered(widget.phoneNumber)
+        .then((isRegistered) {
+          if (isRegistered) {
+            // Phone number is registered, resend OTP
+            widget.authController.sendOtp(
+              phoneNumber: widget.phoneNumber,
+              verificationCompleted: (PhoneAuthCredential credential) {
+                // Auto-verification
+              },
+              verificationFailed: (FirebaseAuthException e) {
+                setState(() {
+                  _isResending = false;
+                  _errorMessage = e.message ?? 'Verification failed';
+                });
+              },
+              codeSent: (String verificationId, int? resendToken) {
+                setState(() {
+                  _isResending = false;
+                });
+                _startResendTimer();
+                ScaffoldMessenger.of(
+                  context,
+                ).showSnackBar(SnackBar(content: Text('OTP has been resent')));
+              },
+            );
+          } else {
+            // Phone number is not registered anymore
+            setState(() {
+              _isResending = false;
+              _errorMessage =
+                  'Nomor telepon belum terdaftar. Please sign up first.';
+            });
+
+            // Navigate back to login after a delay
+            Future.delayed(Duration(seconds: 2), () {
+              Navigator.pop(context);
+            });
+          }
+        })
+        .catchError((error) {
+          setState(() {
+            _isResending = false;
+            _errorMessage = 'Error checking phone number. Please try again.';
+          });
+        });
   }
 
   @override
@@ -132,25 +183,24 @@ class _SignUpOtpPageState extends State<SignUpOtpPage> {
           icon: Icon(Icons.arrow_back, color: Colors.black),
           onPressed: () => Navigator.pop(context),
         ),
-        title: Container(
-          margin: EdgeInsets.only(right: 48),
-          height: 8,
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(50),
-            child: LinearProgressIndicator(
-              value: 0.125,
-              backgroundColor: const Color.fromARGB(255, 255, 233, 241),
-              valueColor: AlwaysStoppedAnimation<Color>(Colors.pink[400]!),
-            ),
-          ),
-        ),
       ),
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 24.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            SizedBox(height: 24),
+            // Logo Header
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Center(
+                child: Image.asset(
+                  'assets/images/CatchU_Logo.png',
+                  height: 150,
+                ),
+              ),
+            ),
+
+            // Title
             Text(
               'Verification Code',
               style: TextStyle(
@@ -160,13 +210,14 @@ class _SignUpOtpPageState extends State<SignUpOtpPage> {
               ),
             ),
             SizedBox(height: 16),
+            // Description
             Text.rich(
               TextSpan(
                 text: 'Please enter code we just send to\n',
                 style: TextStyle(fontSize: 16, color: Colors.black54),
                 children: [
                   TextSpan(
-                    text: widget.dataHolder.phoneNumber,
+                    text: widget.phoneNumber,
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
                       color: Colors.black87,
@@ -179,9 +230,9 @@ class _SignUpOtpPageState extends State<SignUpOtpPage> {
             SizedBox(height: 40),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: List.generate(4, (index) {
+              children: List.generate(6, (index) {
                 return Container(
-                  width: 60,
+                  width: 50,
                   height: 60,
                   decoration: BoxDecoration(
                     border: Border.all(
@@ -204,7 +255,7 @@ class _SignUpOtpPageState extends State<SignUpOtpPage> {
                       border: InputBorder.none,
                     ),
                     onChanged: (value) {
-                      if (value.length == 1 && index < 3) {
+                      if (value.length == 1 && index < 5) {
                         FocusScope.of(
                           context,
                         ).requestFocus(_focusNodes[index + 1]);

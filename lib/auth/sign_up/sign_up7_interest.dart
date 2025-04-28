@@ -137,6 +137,7 @@ class _SignUpPage7State extends State<SignUpPage7> {
                   selectedInterests.isEmpty
                       ? null
                       : () {
+                        widget.dataHolder.interest = selectedInterests;
                         Navigator.push(
                           context,
                           MaterialPageRoute(

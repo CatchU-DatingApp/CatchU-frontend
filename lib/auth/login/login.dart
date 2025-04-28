@@ -2,10 +2,12 @@ import 'dart:async';
 import 'package:catchu/auth/auth_controller.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'sign_up/sign_up1_phone.dart';
-import '../home/homepage1.dart';
+import 'package:catchu/auth/sign_up/sign_up1_phone.dart';
+import 'package:catchu/home/homepage1.dart';
 import 'package:catchu/sign_up_data_holder.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:catchu/services/session_manager.dart';
+import 'login_otp.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({Key? key}) : super(key: key);
@@ -20,7 +22,9 @@ class _LoginPageState extends State<LoginPage> {
   String _countryCode = '+62';
   String _phoneNumber = '';
   bool _isLoading = false;
+  bool _isGoogleLoading = false; // Separate loading state for Google
   String? _errorMessage;
+  String? _googleErrorMessage; // Separate error message for Google
 
   void _validateInput(String value) {
     setState(() {
@@ -43,9 +47,14 @@ class _LoginPageState extends State<LoginPage> {
         _isLoading = true;
       });
 
+      // Format phone number
+      final formattedPhoneNumber = '$_countryCode$_phoneNumber';
+      print('Checking phone number: $formattedPhoneNumber'); // Debug log
+
       _authController
-          .checkPhoneNumberRegistered('$_countryCode$_phoneNumber')
+          .checkPhoneNumberRegistered(formattedPhoneNumber)
           .then((isRegistered) {
+            print('Is registered: $isRegistered'); // Debug log
             if (isRegistered) {
               _sendOtp();
             } else {
@@ -57,6 +66,7 @@ class _LoginPageState extends State<LoginPage> {
             }
           })
           .catchError((error) {
+            print('Error checking phone: $error'); // Debug log
             setState(() {
               _isLoading = false;
               _errorMessage = 'Error checking phone number. Please try again.';
@@ -66,25 +76,35 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   void _sendOtp() {
+    final formattedPhoneNumber = '$_countryCode$_phoneNumber';
+    print('Sending OTP to: $formattedPhoneNumber'); // Debug log
+
     _authController.sendOtp(
-      phoneNumber: '$_countryCode$_phoneNumber',
+      phoneNumber: formattedPhoneNumber,
       verificationCompleted: (PhoneAuthCredential credential) {
         _authController.verifyOtp(verificationId: '', smsCode: '').then((
           userCredential,
-        ) {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => DiscoverPage()),
+        ) async {
+          // Save session after successful login
+          await SessionManager.saveSession(
+            userId: userCredential.user!.uid,
+            email: userCredential.user!.email!,
+            name: userCredential.user!.displayName ?? 'User',
           );
+
+          // Navigate to home and remove all previous routes
+          Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
         });
       },
       verificationFailed: (FirebaseAuthException e) {
+        print('Verification failed: ${e.message}'); // Debug log
         setState(() {
           _isLoading = false;
           _errorMessage = e.message ?? 'Verification failed';
         });
       },
       codeSent: (String verificationId, int? resendToken) {
+        print('OTP sent successfully'); // Debug log
         setState(() {
           _isLoading = false;
         });
@@ -92,8 +112,8 @@ class _LoginPageState extends State<LoginPage> {
           context,
           MaterialPageRoute(
             builder:
-                (context) => OtpVerificationPageLogin(
-                  phoneNumber: '$_countryCode$_phoneNumber',
+                (context) => LoginOtpPage(
+                  phoneNumber: formattedPhoneNumber,
                   verificationId: verificationId,
                   authController: _authController,
                 ),
@@ -105,44 +125,53 @@ class _LoginPageState extends State<LoginPage> {
 
   Future<void> _signInWithGoogle() async {
     setState(() {
-      _isLoading = true;
-      _errorMessage = null;
+      _isGoogleLoading = true;
+      _googleErrorMessage = null;
     });
 
     try {
-      final GoogleSignIn googleSignIn = GoogleSignIn();
-      await googleSignIn.signOut();
+      print('Starting Google login process...');
+      final userCredential = await _authController.signInWithGoogle();
+      print('Google login successful, saving session...');
 
-      final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
-      if (googleUser == null) {
-        setState(() {
-          _isLoading = false;
-          _errorMessage = 'Login dibatalkan oleh pengguna.';
-        });
-        return;
-      }
-
-      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
-
-      final credential = GoogleAuthProvider.credential(
-        accessToken: googleAuth.accessToken,
-        idToken: googleAuth.idToken,
+      // Save session after successful Google login
+      await SessionManager.saveSession(
+        userId: userCredential.user!.uid,
+        email: userCredential.user!.email!,
+        name: userCredential.user!.displayName ?? 'User',
       );
-
-      await FirebaseAuth.instance.signInWithCredential(credential);
+      print('Session saved successfully');
 
       setState(() {
-        _isLoading = false;
+        _isGoogleLoading = false;
       });
 
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => DiscoverPage()),
-      );
+      // Navigate to home and remove all previous routes
+      Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
     } catch (e) {
+      print('Error during Google login: $e');
       setState(() {
-        _isLoading = false;
-        _errorMessage = 'Login dengan Google gagal: $e';
+        _isGoogleLoading = false;
+        if (e is FirebaseAuthException) {
+          switch (e.code) {
+            case 'google-sign-in-cancelled':
+              _googleErrorMessage = 'Login dibatalkan oleh pengguna.';
+              break;
+            case 'user-not-found':
+              _googleErrorMessage =
+                  'Email belum terdaftar. Silakan sign up terlebih dahulu.';
+              break;
+            case 'firestore-access-denied':
+              _googleErrorMessage =
+                  'Tidak dapat mengakses database. Silakan coba lagi nanti.';
+              break;
+            default:
+              _googleErrorMessage =
+                  e.message ?? 'Login dengan Google gagal. Silakan coba lagi.';
+          }
+        } else {
+          _googleErrorMessage = 'Login dengan Google gagal. Silakan coba lagi.';
+        }
       });
     }
   }
@@ -335,26 +364,65 @@ class _LoginPageState extends State<LoginPage> {
               // Google Login Button
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                child: OutlinedButton(
-                  onPressed: _isLoading ? null : _signInWithGoogle,
-                  style: OutlinedButton.styleFrom(
-                    side: BorderSide(color: Colors.grey),
-                    minimumSize: Size(double.infinity, 50),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(25),
-                    ),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Image.asset('assets/images/google_logo.png', height: 24),
-                      const SizedBox(width: 8),
-                      const Text(
-                        'Login with Google',
-                        style: TextStyle(fontSize: 16, color: Colors.black87),
+                child: Column(
+                  children: [
+                    OutlinedButton(
+                      onPressed: _isGoogleLoading ? null : _signInWithGoogle,
+                      style: OutlinedButton.styleFrom(
+                        side: BorderSide(color: Colors.grey),
+                        minimumSize: Size(double.infinity, 50),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(25),
+                        ),
                       ),
-                    ],
-                  ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Image.asset(
+                            'assets/images/google_logo.png',
+                            height: 24,
+                          ),
+                          const SizedBox(width: 8),
+                          _isGoogleLoading
+                              ? Row(
+                                children: [
+                                  SizedBox(
+                                    height: 20,
+                                    width: 20,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  const Text(
+                                    'Loading...',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      color: Colors.black87,
+                                    ),
+                                  ),
+                                ],
+                              )
+                              : const Text(
+                                'Login with Google',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  color: Colors.black87,
+                                ),
+                              ),
+                        ],
+                      ),
+                    ),
+                    if (_googleErrorMessage != null)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 8.0),
+                        child: Text(
+                          _googleErrorMessage!,
+                          style: TextStyle(color: Colors.red, fontSize: 12),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                  ],
                 ),
               ),
               const SizedBox(height: 32),
@@ -535,12 +603,17 @@ class _OtpVerificationPageLoginState extends State<OtpVerificationPageLogin> {
 
     widget.authController
         .verifyOtp(verificationId: widget.verificationId, smsCode: otp)
-        .then((userCredential) {
-          setState(() => _isLoading = false);
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => DiscoverPage()),
+        .then((userCredential) async {
+          // Save session after successful login
+          await SessionManager.saveSession(
+            userId: userCredential.user!.uid,
+            email: userCredential.user!.email!,
+            name: userCredential.user!.displayName ?? 'User',
           );
+
+          setState(() => _isLoading = false);
+          // Navigate to home and remove all previous routes
+          Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
         })
         .catchError((error) {
           setState(() {

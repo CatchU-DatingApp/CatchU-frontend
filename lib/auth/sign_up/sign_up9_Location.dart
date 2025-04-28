@@ -4,9 +4,10 @@ import 'package:geolocator/geolocator.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:catchu/sign_up_data_holder.dart';
-import 'package:catchu/user_model.dart';
+import 'package:catchu/user_model.dart' as app;
 import 'package:catchu/user_repository.dart';
-import 'package:catchu/home/homepage1.dart';
+import 'package:catchu/services/session_manager.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class SignUpPage9Location extends StatefulWidget {
   final SignUpDataHolder dataHolder;
@@ -197,7 +198,7 @@ class _SignUpPage9LocationState extends State<SignUpPage9Location> {
     });
 
     try {
-      final user = User(
+      final user = app.User(
         id: null,
         nomorTelepon: widget.dataHolder.phoneNumber ?? '',
         nama: widget.dataHolder.nama ?? '',
@@ -207,14 +208,23 @@ class _SignUpPage9LocationState extends State<SignUpPage9Location> {
         interest: widget.dataHolder.interest ?? [],
         kodeOtp: '1234',
         location: widget.dataHolder.location ?? [0.0, 0.0],
+        photos: widget.dataHolder.photos ?? [],
       );
 
       await UserRepository().addUser(user);
 
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => SignUpRulesPage()),
-      );
+      // Get current Firebase user
+      final currentUser = FirebaseAuth.instance.currentUser;
+      if (currentUser != null) {
+        await SessionManager.saveSession(
+          userId: currentUser.uid,
+          email: currentUser.email!,
+          name: currentUser.displayName ?? user.nama,
+        );
+      }
+
+      // Navigate to home and remove all previous routes
+      Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
     } catch (e) {
       setState(() {
         _errorMessage = 'Gagal menyimpan data: $e';

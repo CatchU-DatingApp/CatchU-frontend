@@ -14,7 +14,7 @@ class SignUpPage8 extends StatefulWidget {
 }
 
 class _SignUpPage8State extends State<SignUpPage8> {
-  List<ImageProvider> uploadedImages = [AssetImage('assets/images/jawa.png')];
+  List<ImageProvider> uploadedImages = [];
 
   final ImagePicker _picker = ImagePicker();
 
@@ -80,11 +80,7 @@ class _SignUpPage8State extends State<SignUpPage8> {
                         top: 4,
                         right: 4,
                         child: GestureDetector(
-                          onTap: () {
-                            setState(() {
-                              uploadedImages.removeAt(index);
-                            });
-                          },
+                          onTap: () => _removePhoto(index),
                           child: Container(
                             decoration: BoxDecoration(
                               color: Colors.black54,
@@ -280,7 +276,10 @@ class _SignUpPage8State extends State<SignUpPage8> {
     if (pickedFile != null) {
       setState(() {
         uploadedImages.add(FileImage(File(pickedFile.path)));
-        widget.dataHolder.photoUrl = pickedFile.path;
+        if (widget.dataHolder.photos == null) {
+          widget.dataHolder.photos = [];
+        }
+        widget.dataHolder.photos!.add(pickedFile.path);
       });
     }
   }
@@ -290,8 +289,27 @@ class _SignUpPage8State extends State<SignUpPage8> {
     if (pickedFile != null) {
       setState(() {
         uploadedImages.add(FileImage(File(pickedFile.path)));
-        widget.dataHolder.photoUrl = pickedFile.path;
+        if (widget.dataHolder.photos == null) {
+          widget.dataHolder.photos = [];
+        }
+        widget.dataHolder.photos!.add(pickedFile.path);
       });
+    }
+  }
+
+  void _removePhoto(int index) {
+    if (uploadedImages.length > 1) {
+      setState(() {
+        uploadedImages.removeAt(index);
+        widget.dataHolder.photos!.removeAt(index);
+      });
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('You must have at least one photo'),
+          duration: Duration(seconds: 2),
+        ),
+      );
     }
   }
 }

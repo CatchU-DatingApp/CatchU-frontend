@@ -100,6 +100,7 @@ class _SignUpPage6State extends State<SignUpPage6> {
                           ? null
                           : () {
                             setState(() => _isLoading = true);
+                            widget.dataHolder.gender = selectedGender!;
                             Future.delayed(Duration(seconds: 1), () {
                               setState(() => _isLoading = false);
                               Navigator.push(
