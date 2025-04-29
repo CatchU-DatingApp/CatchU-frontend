@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import '../profile/profile.dart';
-import 'homepage1.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class ChatPage extends StatefulWidget {
@@ -9,7 +7,6 @@ class ChatPage extends StatefulWidget {
 }
 
 class _ChatPageState extends State<ChatPage> {
-  int _currentIndex = 1;
   List<int> expandedIndices = [];
 
   final List<Map<String, String>> messages = [
@@ -60,27 +57,7 @@ class _ChatPageState extends State<ChatPage> {
     },
   ];
 
-  void _onTabTapped(int index) {
-    if (index == 0) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => DiscoverPage()),
-      );
-      return;
-    }
 
-    if (index == 2) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => ProfilePage()),
-      );
-      return;
-    }
-
-    setState(() {
-      _currentIndex = index;
-    });
-  }
 
   void _toggleExpanded(int index) {
     setState(() {
@@ -237,19 +214,6 @@ class _ChatPageState extends State<ChatPage> {
         ],
       ),
 
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _currentIndex,
-        onTap: _onTabTapped,
-        selectedItemColor: Colors.pinkAccent,
-        unselectedItemColor: Colors.grey,
-        showSelectedLabels: false,
-        showUnselectedLabels: false,
-        items: [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-          BottomNavigationBarItem(icon: Icon(Icons.message), label: 'Messages'),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
-        ],
-      ),
     );
   }
 

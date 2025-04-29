@@ -4,6 +4,8 @@ import 'package:catchu/services/session_manager.dart';
 import 'package:catchu/auth/get_started.dart';
 import 'package:catchu/home/homepage1.dart';
 
+import 'home/mainpage.dart';
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
@@ -28,7 +30,7 @@ class MyApp extends StatelessWidget {
           }
 
           if (snapshot.data == true) {
-            return DiscoverPage();
+            return MainPage();
           }
 
           return WelcomeScreen();
@@ -36,7 +38,7 @@ class MyApp extends StatelessWidget {
       ),
       routes: {
         '/get_started': (context) => WelcomeScreen(),
-        '/home': (context) => DiscoverPage(),
+        '/home': (context) => MainPage(),
       },
     );
   }

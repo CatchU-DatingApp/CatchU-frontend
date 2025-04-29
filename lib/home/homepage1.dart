@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import '../profile/profile.dart';
-import 'chat.dart';
+
 
 class ProfileData {
   final String name;
@@ -27,7 +26,6 @@ class DiscoverPage extends StatefulWidget {
 
 class _DiscoverPageState extends State<DiscoverPage>
     with SingleTickerProviderStateMixin {
-  int _currentIndex = 0;
   late AnimationController _swipeController;
   late Animation<Offset> _slideAnimation;
   late Animation<double> _rotationAnimation;
@@ -124,23 +122,6 @@ class _DiscoverPageState extends State<DiscoverPage>
     super.dispose();
   }
 
-  void _onTabTapped(int index) {
-    if (index == 2) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => ProfilePage()),
-      );
-      return;
-    }
-    if (index == 1) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => ChatPage()),
-      );
-      return;
-    }
-    setState(() => _currentIndex = index);
-  }
 
   void _swipeLeft() {
     if (_isAnimating) return;
@@ -328,22 +309,6 @@ class _DiscoverPageState extends State<DiscoverPage>
         ],
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
-      bottomNavigationBar: BottomNavigationBar(
-        items: [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.chat_bubble_outline),
-            label: 'Chat',
-          ),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
-        ],
-        currentIndex: _currentIndex,
-        onTap: _onTabTapped,
-        selectedItemColor: Colors.pinkAccent,
-        unselectedItemColor: Colors.grey,
-        showSelectedLabels: false,
-        showUnselectedLabels: false,
-      ),
     );
   }
 

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../home/homepage1.dart';
+import '../../home/mainpage.dart';
 
 class SignUpRulesPage extends StatelessWidget {
   const SignUpRulesPage({super.key});
@@ -73,7 +74,7 @@ class SignUpRulesPage extends StatelessWidget {
                   onPressed: () {
                     Navigator.pushReplacement(
                       context,
-                      MaterialPageRoute(builder: (context) => DiscoverPage()),
+                      MaterialPageRoute(builder: (context) => MainPage()),
                     );
                   },
                   style: ElevatedButton.styleFrom(

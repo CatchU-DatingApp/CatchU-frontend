@@ -22,7 +22,6 @@ class ProfilePage extends StatefulWidget {
 class _ProfilePageState extends State<ProfilePage> {
   final ImagePicker _picker = ImagePicker();
   List<ImageProvider> uploadedImages = [];
-  int _currentIndex = 2;
   double profileCompletion = 0.0;
   TextEditingController bioController = TextEditingController();
 
@@ -377,27 +376,7 @@ class _ProfilePageState extends State<ProfilePage> {
     }
   }
 
-  void _onTabTapped(int index) {
-    if (index == 0) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => DiscoverPage()),
-      );
-      return;
-    }
 
-    if (index == 1) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => ChatPage()),
-      );
-      return;
-    }
-
-    setState(() {
-      _currentIndex = index;
-    });
-  }
 
   Widget _buildPhotoSlot({ImageProvider<Object>? image, required int index}) {
     final isLastPhoto = uploadedImages.length == 1;
@@ -1042,22 +1021,6 @@ class _ProfilePageState extends State<ProfilePage> {
                       ),
                     ),
                   ),
-        ),
-        bottomNavigationBar: BottomNavigationBar(
-          items: [
-            BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.chat_bubble_outline),
-              label: 'Chat',
-            ),
-            BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
-          ],
-          currentIndex: _currentIndex,
-          onTap: _onTabTapped,
-          selectedItemColor: Colors.pinkAccent,
-          unselectedItemColor: Colors.grey,
-          showSelectedLabels: false,
-          showUnselectedLabels: false,
         ),
       ),
     );
