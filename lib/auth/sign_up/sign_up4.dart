@@ -2,6 +2,8 @@ import 'package:catchu/auth/sign_up/sign_up5_Umur.dart';
 import 'package:flutter/material.dart';
 import 'package:catchu/sign_up_data_holder.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class SignUpPage4 extends StatefulWidget {
   final SignUpDataHolder dataHolder;
@@ -27,6 +29,44 @@ class _SignUpPage4State extends State<SignUpPage4> {
       return 'Email must use @gmail.com domain';
     }
     return null;
+  }
+
+  Future<bool> _linkGoogleWithEmail(String email) async {
+    final GoogleSignIn googleSignIn = GoogleSignIn(
+      scopes: ['email', 'profile'],
+    );
+    final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
+    if (googleUser == null) {
+      // User cancelled Google sign in
+      return false;
+    }
+    if (googleUser.email.toLowerCase() != email.toLowerCase()) {
+      throw Exception('Email Google tidak sama dengan email yang diinput.');
+    }
+    final GoogleSignInAuthentication googleAuth =
+        await googleUser.authentication;
+    final AuthCredential googleCredential = GoogleAuthProvider.credential(
+      accessToken: googleAuth.accessToken,
+      idToken: googleAuth.idToken,
+    );
+    try {
+      // Buat akun sementara (belum lengkap) untuk link
+      final tempUser = await FirebaseAuth.instance
+          .createUserWithEmailAndPassword(
+            email: email,
+            password: 'temporaryPassword123!', // password sementara
+          );
+      await tempUser.user!.linkWithCredential(googleCredential);
+      return true;
+    } on FirebaseAuthException catch (e) {
+      if (e.code == 'provider-already-linked') {
+        return true;
+      } else if (e.code == 'credential-already-in-use') {
+        throw Exception('Akun Google sudah terhubung ke akun lain.');
+      } else {
+        rethrow;
+      }
+    }
   }
 
   @override
@@ -140,17 +180,34 @@ class _SignUpPage4State extends State<SignUpPage4> {
                               return;
                             }
 
-                            // Jika email belum terdaftar, lanjutkan ke halaman berikutnya
-                            widget.dataHolder.email = _emailController.text;
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder:
-                                    (context) => SignUpPage5(
-                                      dataHolder: widget.dataHolder,
-                                    ),
-                              ),
-                            );
+                            // Jika email belum terdaftar, lakukan link ke Google
+                            try {
+                              final linked = await _linkGoogleWithEmail(
+                                _emailController.text,
+                              );
+                              if (linked) {
+                                widget.dataHolder.email = _emailController.text;
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder:
+                                        (context) => SignUpPage5(
+                                          dataHolder: widget.dataHolder,
+                                        ),
+                                  ),
+                                );
+                              } else {
+                                setState(() {
+                                  _isLoading = false;
+                                  _emailError = 'Google Sign-In dibatalkan.';
+                                });
+                              }
+                            } catch (e) {
+                              setState(() {
+                                _isLoading = false;
+                                _emailError = e.toString();
+                              });
+                            }
                           } catch (e) {
                             setState(() {
                               _isLoading = false;

@@ -1,3 +1,4 @@
+import 'package:catchu/auth/auth_controller.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -58,7 +59,11 @@ class _SignUpPage5State extends State<SignUpPage5> {
                 children: [
                   IconButton(
                     icon: Icon(Icons.arrow_back, color: Colors.black),
-                    onPressed: () => Navigator.pop(context),
+                    onPressed: () async {
+                      final authController = AuthController();
+                      await authController.deleteCurrentUserWithReauth();
+                      Navigator.pop(context);
+                    },
                   ),
                   Expanded(
                     child: Container(

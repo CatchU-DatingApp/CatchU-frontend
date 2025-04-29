@@ -12,6 +12,7 @@ import '../services/session_manager.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_keyboard_visibility/flutter_keyboard_visibility.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'dart:async';
 
 class ProfilePage extends StatefulWidget {
@@ -375,8 +376,6 @@ class _ProfilePageState extends State<ProfilePage> {
       }
     }
   }
-
-
 
   Widget _buildPhotoSlot({ImageProvider<Object>? image, required int index}) {
     final isLastPhoto = uploadedImages.length == 1;
@@ -998,6 +997,11 @@ class _ProfilePageState extends State<ProfilePage> {
                                 onPressed: () async {
                                   // Clear session
                                   await SessionManager.clearSession();
+                                  // Sign out from Firebase Auth
+                                  await FirebaseAuth.instance.signOut();
+                                  // Sign out from Google Sign-In
+                                  final googleSignIn = GoogleSignIn();
+                                  await googleSignIn.signOut();
                                   // Navigate to get_started
                                   Navigator.pushNamedAndRemoveUntil(
                                     context,

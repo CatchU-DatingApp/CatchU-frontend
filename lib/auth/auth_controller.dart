@@ -92,20 +92,36 @@ class AuthController {
     }
   }
 
+  Future<void> deleteCurrentUserWithReauth() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      try {
+        await user.delete();
+      } on FirebaseAuthException catch (e) {
+        if (e.code == 'requires-recent-login') {
+          // Re-authenticate dengan Google
+          final googleUser = await GoogleSignIn().signIn();
+          if (googleUser == null) return;
+          final googleAuth = await googleUser.authentication;
+          final credential = GoogleAuthProvider.credential(
+            accessToken: googleAuth.accessToken,
+            idToken: googleAuth.idToken,
+          );
+          await user.reauthenticateWithCredential(credential);
+          await user.delete();
+        }
+      }
+    }
+  }
+
   Future<UserCredential> signInWithGoogle() async {
     try {
       print('Starting Google sign in process...');
-
-      // Trigger the authentication flow
       final GoogleSignIn googleSignIn = GoogleSignIn(
         scopes: ['email', 'profile'],
       );
-
-      // Sign out first to ensure clean state
       await googleSignIn.signOut();
-
       final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
-
       if (googleUser == null) {
         print('Google sign in was cancelled by user');
         throw FirebaseAuthException(
@@ -113,7 +129,6 @@ class AuthController {
           message: 'Google sign in was cancelled',
         );
       }
-
       print('Google user obtained: ${googleUser.email}');
 
       // Cek email di Firestore
@@ -123,55 +138,66 @@ class AuthController {
               .where('email', isEqualTo: googleUser.email)
               .get();
 
-      if (emailCheck.docs.isEmpty) {
-        throw FirebaseAuthException(
-          code: 'user-not-found',
-          message: 'Email belum terdaftar. Silakan sign up terlebih dahulu.',
-        );
-      }
-
-      // Obtain the auth details from the request
       final GoogleSignInAuthentication googleAuth =
           await googleUser.authentication;
       print('Google auth obtained successfully');
-
-      // Create a new credential
       final credential = GoogleAuthProvider.credential(
         accessToken: googleAuth.accessToken,
         idToken: googleAuth.idToken,
       );
       print('Google credential created');
 
-      // Sign in to Firebase with the Google credential
-      final userCredential = await _auth.signInWithCredential(credential);
-      final uid = userCredential.user!.uid;
+      // Cek metode login yang sudah terdaftar untuk email ini
+      List<String> signInMethods = await _auth.fetchSignInMethodsForEmail(
+        googleUser.email,
+      );
 
-      // Cek apakah dokumen user sudah ada
-      final userDoc = await _firestore.collection('Users').doc(uid).get();
-
-      if (!userDoc.exists) {
-        await _firestore.collection('Users').doc(uid).set({
-          'nomorTelepon': userCredential.user!.phoneNumber ?? '',
-          'nama': userCredential.user!.displayName ?? '',
-          'email': userCredential.user!.email ?? '',
-          'umur': 0, // default, bisa diisi user nanti
-          'gender': '', // default, bisa diisi user nanti
-          'interest': <String>[], // default kosong
-          'kodeOtp': '', // default kosong
-          'location': <double>[], // default kosong
-          'photos': <String>[], // default kosong
-          'createdAt': FieldValue.serverTimestamp(),
-        });
+      // Jika sudah pernah daftar/login dengan Google, langsung login
+      if (signInMethods.contains('google.com')) {
+        final googleUserCredential = await _auth.signInWithCredential(
+          credential,
+        );
+        final googleUid = googleUserCredential.user!.uid;
+        // Update lastLogin jika user sudah ada di Firestore
+        if (emailCheck.docs.isNotEmpty) {
+          await _firestore.collection('Users').doc(googleUid).update({
+            'lastLogin': FieldValue.serverTimestamp(),
+          });
+        }
+        print('Google sign in process completed successfully (login Google).');
+        return googleUserCredential;
       }
 
-      // Update last login timestamp
-      await _firestore.collection('Users').doc(uid).update({
-        'lastLogin': FieldValue.serverTimestamp(),
-      });
-      print('User document updated with last login timestamp');
+      // Jika sudah pernah daftar dengan email/password, tampilkan pesan error
+      if (signInMethods.contains('password')) {
+        throw FirebaseAuthException(
+          code: 'account-exists-with-different-credential',
+          message:
+              'Akun sudah terdaftar dengan email & password. Silakan login dengan email & password, lalu tambahkan Google dari menu pengaturan akun.',
+        );
+      }
 
-      print('Google sign in process completed successfully');
-      return userCredential;
+      // Jika belum ada user di Firestore, buat baru
+      final googleUserCredential = await _auth.signInWithCredential(credential);
+      final googleUid = googleUserCredential.user!.uid;
+      if (emailCheck.docs.isEmpty) {
+        // Hapus user yang baru saja dibuat di Auth (dengan re-authenticate jika perlu)
+        await deleteCurrentUserWithReauth();
+        throw FirebaseAuthException(
+          code: 'user-not-found',
+          message:
+              'Akun belum terdaftar. Silakan daftar terlebih dahulu melalui menu sign up.',
+        );
+      } else {
+        // Jika sudah ada user di Firestore tapi belum pernah login Google, update lastLogin
+        await _firestore.collection('Users').doc(googleUid).update({
+          'lastLogin': FieldValue.serverTimestamp(),
+        });
+        print(
+          'Google sign in process completed successfully (update lastLogin).',
+        );
+        return googleUserCredential;
+      }
     } catch (e) {
       print('Google sign in error: $e');
       if (e is FirebaseAuthException) {

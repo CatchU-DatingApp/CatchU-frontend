@@ -37,7 +37,9 @@ class _SignUpPage8State extends State<SignUpPage8> {
             child: LinearProgressIndicator(
               value: 0.850,
               backgroundColor: const Color.fromARGB(255, 255, 233, 241),
-              valueColor: AlwaysStoppedAnimation<Color>(const Color(0xFFEC407A)),
+              valueColor: AlwaysStoppedAnimation<Color>(
+                const Color(0xFFEC407A),
+              ),
             ),
           ),
         ),
@@ -76,25 +78,26 @@ class _SignUpPage8State extends State<SignUpPage8> {
                           fit: BoxFit.cover,
                         ),
                       ),
-                      Positioned(
-                        top: 4,
-                        right: 4,
-                        child: GestureDetector(
-                          onTap: () => _removePhoto(index),
-                          child: Container(
-                            decoration: BoxDecoration(
-                              color: Colors.black54,
-                              shape: BoxShape.circle,
-                            ),
-                            padding: EdgeInsets.all(4),
-                            child: Icon(
-                              Icons.close,
-                              size: 16,
-                              color: Colors.white,
+                      if (uploadedImages.length > 1)
+                        Positioned(
+                          top: 4,
+                          right: 4,
+                          child: GestureDetector(
+                            onTap: () => _removePhoto(index),
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: Colors.black54,
+                                shape: BoxShape.circle,
+                              ),
+                              padding: EdgeInsets.all(4),
+                              child: Icon(
+                                Icons.close,
+                                size: 16,
+                                color: Colors.white,
+                              ),
                             ),
                           ),
                         ),
-                      ),
                     ],
                   );
                 } else {
@@ -121,16 +124,20 @@ class _SignUpPage8State extends State<SignUpPage8> {
 
             Spacer(),
             ElevatedButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder:
-                        (_) =>
-                            SignUpPage9Location(dataHolder: widget.dataHolder),
-                  ),
-                );
-              },
+              onPressed:
+                  uploadedImages.isEmpty
+                      ? null
+                      : () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder:
+                                (_) => SignUpPage9Location(
+                                  dataHolder: widget.dataHolder,
+                                ),
+                          ),
+                        );
+                      },
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.pink[400],
                 foregroundColor: Colors.white,
@@ -303,13 +310,6 @@ class _SignUpPage8State extends State<SignUpPage8> {
         uploadedImages.removeAt(index);
         widget.dataHolder.photos!.removeAt(index);
       });
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('You must have at least one photo'),
-          duration: Duration(seconds: 2),
-        ),
-      );
     }
   }
 }

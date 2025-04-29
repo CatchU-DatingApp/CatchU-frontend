@@ -204,9 +204,14 @@ class _SignUpPhonePageState extends State<SignUpPhonePage> {
                     children: [
                       Icon(Icons.error_outline, size: 16, color: Colors.red),
                       SizedBox(width: 4),
-                      Text(
-                        _errorMessage!,
-                        style: TextStyle(color: Colors.red, fontSize: 12),
+                      Expanded(
+                        child: Text(
+                          _errorMessage!,
+                          style: TextStyle(color: Colors.red, fontSize: 12),
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
+                          textAlign: TextAlign.left,
+                        ),
                       ),
                     ],
                   ),

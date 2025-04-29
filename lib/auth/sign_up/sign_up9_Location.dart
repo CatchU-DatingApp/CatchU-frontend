@@ -9,6 +9,7 @@ import 'package:catchu/user_repository.dart';
 import 'package:catchu/services/session_manager.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:catchu/auth/auth_controller.dart';
 
 class SignUpPage9Location extends StatefulWidget {
   final SignUpDataHolder dataHolder;
@@ -138,7 +139,10 @@ class _SignUpPage9LocationState extends State<SignUpPage9Location> {
                     children: [
                       Expanded(
                         child: ElevatedButton(
-                          onPressed: () {
+                          onPressed: () async {
+                            // Hapus user Auth jika user membatalkan signup
+                            final authController = AuthController();
+                            await authController.deleteCurrentUserWithReauth();
                             Navigator.pop(context);
                           },
                           style: ElevatedButton.styleFrom(
@@ -212,44 +216,97 @@ class _SignUpPage9LocationState extends State<SignUpPage9Location> {
         photos: widget.dataHolder.photos ?? [],
       );
 
-      // Dapatkan instance Firebase Auth
+      // Pastikan email terisi
+      if (widget.dataHolder.email == null || widget.dataHolder.email!.isEmpty) {
+        setState(() {
+          _isLoading = false;
+          _errorMessage = 'Email harus diisi untuk menyelesaikan pendaftaran';
+        });
+        return;
+      }
+
       final FirebaseAuth auth = FirebaseAuth.instance;
+      UserCredential userCredential;
+      String uid;
 
-      // Cek apakah user sudah login
-      final currentUser = auth.currentUser;
-      String userId;
+      try {
+        // Jika sudah login, gunakan UID yang ada
+        if (auth.currentUser != null) {
+          uid = auth.currentUser!.uid;
+        } else {
+          // Generate password otomatis
+          String password =
+              "${widget.dataHolder.nama?.replaceAll(' ', '_').toLowerCase() ?? 'user'}${widget.dataHolder.phoneNumber?.substring(widget.dataHolder.phoneNumber!.length - 4) ?? '1234'}";
 
-      if (currentUser == null) {
-        // User belum login, simpan data tanpa membuat akun Firebase Auth
-        // Kita mengasumsikan authentikasinya akan melalui login Google atau nomor telepon
-        // Generate random ID untuk sementara
-        userId = DateTime.now().millisecondsSinceEpoch.toString();
-      } else {
-        // User sudah login, gunakan ID user yang ada
-        userId = currentUser.uid;
-      }
+          // Buat user baru dengan email dan password
+          userCredential = await auth.createUserWithEmailAndPassword(
+            email: widget.dataHolder.email!,
+            password: password,
+          );
+          uid = userCredential.user!.uid;
 
-      // Simpan data user ke Firestore
-      await UserRepository().addUser(appUser, userId);
+          // Update profile name
+          await userCredential.user!.updateDisplayName(widget.dataHolder.nama);
+        }
 
-      // Jika user sudah login, perbarui sesi
-      if (currentUser != null) {
+        // Simpan data user ke Firestore dengan UID dari Firebase Auth
+        await UserRepository().addUser(appUser, uid);
+
+        // Save session
         await SessionManager.saveSession(
-          userId: currentUser.uid,
-          email: currentUser.email ?? appUser.email,
-          name: currentUser.displayName ?? appUser.nama,
+          userId: uid,
+          email: widget.dataHolder.email!,
+          name: widget.dataHolder.nama ?? '',
         );
-      } else {
-        // Simpan sesi sementara tanpa login Firebase Auth
-        await SessionManager.saveSession(
-          userId: userId,
-          email: appUser.email,
-          name: appUser.nama,
-        );
-      }
 
-      // Navigate to home
-      Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
+        // Navigate to home
+        Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
+      } on FirebaseAuthException catch (e) {
+        if (e.code == 'email-already-in-use') {
+          // Jika email sudah digunakan, coba login
+          try {
+            String password =
+                "${widget.dataHolder.nama?.replaceAll(' ', '_').toLowerCase() ?? 'user'}${widget.dataHolder.phoneNumber?.substring(widget.dataHolder.phoneNumber!.length - 4) ?? '1234'}";
+            userCredential = await auth.signInWithEmailAndPassword(
+              email: widget.dataHolder.email!,
+              password: password,
+            );
+            uid = userCredential.user!.uid;
+
+            // Update data user yang sudah ada
+            await UserRepository().addUser(appUser, uid);
+
+            // Save session
+            await SessionManager.saveSession(
+              userId: uid,
+              email: widget.dataHolder.email!,
+              name: widget.dataHolder.nama ?? '',
+            );
+
+            Navigator.pushNamedAndRemoveUntil(
+              context,
+              '/home',
+              (route) => false,
+            );
+          } catch (loginError) {
+            setState(() {
+              _isLoading = false;
+              _errorMessage =
+                  'Email sudah terdaftar tapi tidak dapat login. Silakan gunakan email lain.';
+            });
+          }
+        } else {
+          setState(() {
+            _isLoading = false;
+            _errorMessage = 'Error saat membuat akun: ${e.message}';
+          });
+        }
+      } catch (e) {
+        setState(() {
+          _errorMessage = 'Gagal menyimpan data: $e';
+          _isLoading = false;
+        });
+      }
     } catch (e) {
       setState(() {
         _errorMessage = 'Gagal menyimpan data: $e';
