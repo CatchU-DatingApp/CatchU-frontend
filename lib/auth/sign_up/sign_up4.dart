@@ -1,6 +1,7 @@
 import 'package:catchu/auth/sign_up/sign_up5_Umur.dart';
 import 'package:flutter/material.dart';
 import 'package:catchu/sign_up_data_holder.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class SignUpPage4 extends StatefulWidget {
   final SignUpDataHolder dataHolder;
@@ -116,10 +117,30 @@ class _SignUpPage4State extends State<SignUpPage4> {
                             _isLoading ||
                             _emailError != null)
                         ? null
-                        : () {
+                        : () async {
                           setState(() => _isLoading = true);
-                          Future.delayed(Duration(seconds: 1), () {
-                            setState(() => _isLoading = false);
+
+                          try {
+                            // Cek apakah email sudah terdaftar
+                            final emailCheckSnapshot =
+                                await FirebaseFirestore.instance
+                                    .collection('Users')
+                                    .where(
+                                      'email',
+                                      isEqualTo: _emailController.text,
+                                    )
+                                    .get();
+
+                            if (emailCheckSnapshot.docs.isNotEmpty) {
+                              setState(() {
+                                _isLoading = false;
+                                _emailError =
+                                    'Email sudah terdaftar. Silakan login atau gunakan email lain.';
+                              });
+                              return;
+                            }
+
+                            // Jika email belum terdaftar, lanjutkan ke halaman berikutnya
                             widget.dataHolder.email = _emailController.text;
                             Navigator.push(
                               context,
@@ -130,7 +151,18 @@ class _SignUpPage4State extends State<SignUpPage4> {
                                     ),
                               ),
                             );
-                          });
+                          } catch (e) {
+                            setState(() {
+                              _isLoading = false;
+                              _emailError = 'Terjadi kesalahan: $e';
+                            });
+                          } finally {
+                            if (mounted) {
+                              setState(() {
+                                _isLoading = false;
+                              });
+                            }
+                          }
                         },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.pink[400],

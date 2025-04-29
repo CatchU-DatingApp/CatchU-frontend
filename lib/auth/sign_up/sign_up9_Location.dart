@@ -8,6 +8,7 @@ import 'package:catchu/user_model.dart' as app;
 import 'package:catchu/user_repository.dart';
 import 'package:catchu/services/session_manager.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class SignUpPage9Location extends StatefulWidget {
   final SignUpDataHolder dataHolder;
@@ -198,7 +199,7 @@ class _SignUpPage9LocationState extends State<SignUpPage9Location> {
     });
 
     try {
-      final user = app.User(
+      final appUser = app.User(
         id: null,
         nomorTelepon: widget.dataHolder.phoneNumber ?? '',
         nama: widget.dataHolder.nama ?? '',
@@ -211,24 +212,47 @@ class _SignUpPage9LocationState extends State<SignUpPage9Location> {
         photos: widget.dataHolder.photos ?? [],
       );
 
-      final currentUser = FirebaseAuth.instance.currentUser;
+      // Dapatkan instance Firebase Auth
+      final FirebaseAuth auth = FirebaseAuth.instance;
+
+      // Cek apakah user sudah login
+      final currentUser = auth.currentUser;
+      String userId;
+
+      if (currentUser == null) {
+        // User belum login, simpan data tanpa membuat akun Firebase Auth
+        // Kita mengasumsikan authentikasinya akan melalui login Google atau nomor telepon
+        // Generate random ID untuk sementara
+        userId = DateTime.now().millisecondsSinceEpoch.toString();
+      } else {
+        // User sudah login, gunakan ID user yang ada
+        userId = currentUser.uid;
+      }
+
+      // Simpan data user ke Firestore
+      await UserRepository().addUser(appUser, userId);
+
+      // Jika user sudah login, perbarui sesi
       if (currentUser != null) {
-        await UserRepository().addUser(user, currentUser.uid);
         await SessionManager.saveSession(
           userId: currentUser.uid,
-          email: currentUser.email!,
-          name: currentUser.displayName ?? user.nama,
+          email: currentUser.email ?? appUser.email,
+          name: currentUser.displayName ?? appUser.nama,
+        );
+      } else {
+        // Simpan sesi sementara tanpa login Firebase Auth
+        await SessionManager.saveSession(
+          userId: userId,
+          email: appUser.email,
+          name: appUser.nama,
         );
       }
 
-      // Navigate to home and remove all previous routes
+      // Navigate to home
       Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
     } catch (e) {
       setState(() {
         _errorMessage = 'Gagal menyimpan data: $e';
-      });
-    } finally {
-      setState(() {
         _isLoading = false;
       });
     }
