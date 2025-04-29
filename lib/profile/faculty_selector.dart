@@ -13,10 +13,12 @@ class FacultySelectorBottomSheet extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  _FacultySelectorBottomSheetState createState() => _FacultySelectorBottomSheetState();
+  _FacultySelectorBottomSheetState createState() =>
+      _FacultySelectorBottomSheetState();
 }
 
-class _FacultySelectorBottomSheetState extends State<FacultySelectorBottomSheet> {
+class _FacultySelectorBottomSheetState
+    extends State<FacultySelectorBottomSheet> {
   String? tempSelectedFaculty;
 
   @override
@@ -40,35 +42,39 @@ class _FacultySelectorBottomSheetState extends State<FacultySelectorBottomSheet>
           Wrap(
             spacing: 8,
             runSpacing: 8,
-            children: widget.faculties.map((faculty) {
-              final isSelected = tempSelectedFaculty == faculty;
-              return GestureDetector(
-                onTap: () {
-                  setState(() {
-                    if (tempSelectedFaculty == faculty) {
-                      tempSelectedFaculty = null;
-                    } else {
-                      tempSelectedFaculty = faculty;
-                    }
-                  });
-                },
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: isSelected ? Colors.pink[400] : Colors.white,
-                    borderRadius: BorderRadius.circular(30),
-                    border: Border.all(color: Colors.pink.shade100),
-                  ),
-                  child: Text(
-                    faculty,
-                    style: TextStyle(
-                      color: isSelected ? Colors.white : Colors.black87,
-                      fontWeight: FontWeight.w600,
+            children:
+                widget.faculties.map((faculty) {
+                  final isSelected = tempSelectedFaculty == faculty;
+                  return GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        if (tempSelectedFaculty == faculty) {
+                          tempSelectedFaculty = null;
+                        } else {
+                          tempSelectedFaculty = faculty;
+                        }
+                      });
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 8,
+                      ),
+                      decoration: BoxDecoration(
+                        color: isSelected ? Colors.pink[400] : Colors.white,
+                        borderRadius: BorderRadius.circular(30),
+                        border: Border.all(color: Colors.pink.shade100),
+                      ),
+                      child: Text(
+                        faculty,
+                        style: TextStyle(
+                          color: isSelected ? Colors.white : Colors.black87,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
                     ),
-                  ),
-                ),
-              );
-            }).toList(),
+                  );
+                }).toList(),
           ),
           const SizedBox(height: 20),
           ElevatedButton(

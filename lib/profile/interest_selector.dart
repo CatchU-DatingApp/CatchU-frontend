@@ -13,10 +13,12 @@ class InterestSelectorBottomSheet extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  _InterestSelectorBottomSheetState createState() => _InterestSelectorBottomSheetState();
+  _InterestSelectorBottomSheetState createState() =>
+      _InterestSelectorBottomSheetState();
 }
 
-class _InterestSelectorBottomSheetState extends State<InterestSelectorBottomSheet> {
+class _InterestSelectorBottomSheetState
+    extends State<InterestSelectorBottomSheet> {
   late List<String> tempSelected;
 
   @override
@@ -40,51 +42,55 @@ class _InterestSelectorBottomSheetState extends State<InterestSelectorBottomShee
           Wrap(
             spacing: 8,
             runSpacing: 8,
-            children: widget.interests.map((interest) {
-              final label = interest['label'];
-              final icon = interest['icon'];
-              final isSelected = tempSelected.contains(label);
+            children:
+                widget.interests.map((interest) {
+                  final label = interest['label'];
+                  final icon = interest['icon'];
+                  final isSelected = tempSelected.contains(label);
 
-              return GestureDetector(
-                onTap: () {
-                  setState(() {
-                    if (isSelected) {
-                      tempSelected.remove(label);
-                    } else {
-                      if (tempSelected.length < 3) {
-                        tempSelected.add(label);
-                      }
-                    }
-                  });
-                },
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: isSelected ? Colors.pink[400] : Colors.white,
-                    borderRadius: BorderRadius.circular(30),
-                    border: Border.all(color: Colors.pink.shade100),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        icon,
-                        size: 18,
-                        color: isSelected ? Colors.white : Colors.pink[400],
+                  return GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        if (isSelected) {
+                          tempSelected.remove(label);
+                        } else {
+                          if (tempSelected.length < 3) {
+                            tempSelected.add(label);
+                          }
+                        }
+                      });
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 8,
                       ),
-                      const SizedBox(width: 6),
-                      Text(
-                        label,
-                        style: TextStyle(
-                          color: isSelected ? Colors.white : Colors.black87,
-                          fontWeight: FontWeight.w600,
-                        ),
+                      decoration: BoxDecoration(
+                        color: isSelected ? Colors.pink[400] : Colors.white,
+                        borderRadius: BorderRadius.circular(30),
+                        border: Border.all(color: Colors.pink.shade100),
                       ),
-                    ],
-                  ),
-                ),
-              );
-            }).toList(),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            icon,
+                            size: 18,
+                            color: isSelected ? Colors.white : Colors.pink[400],
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            label,
+                            style: TextStyle(
+                              color: isSelected ? Colors.white : Colors.black87,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                }).toList(),
           ),
           const SizedBox(height: 20),
           ElevatedButton(
