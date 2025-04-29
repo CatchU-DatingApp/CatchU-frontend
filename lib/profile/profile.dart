@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../home/chat.dart';
+import '../home/match.dart';
 import '../home/homepage1.dart';
 import 'profile_completion_popup.dart';
 import 'interest_selector.dart';

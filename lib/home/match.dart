@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-class ChatPage extends StatefulWidget {
+class MatchPage extends StatefulWidget {
   @override
-  _ChatPageState createState() => _ChatPageState();
+  _MatchPageState createState() => _MatchPageState();
 }
 
-class _ChatPageState extends State<ChatPage> {
+class _MatchPageState extends State<MatchPage> {
   List<int> expandedIndices = [];
 
   final List<Map<String, String>> messages = [

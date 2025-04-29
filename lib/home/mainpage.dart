@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'homepage1.dart';
-import 'chat.dart';
+import 'match.dart';
 import '../profile/profile.dart';
 
 class MainPage extends StatefulWidget {
@@ -13,7 +13,7 @@ class _MainPageState extends State<MainPage> {
 
   final List<Widget> _pages = [
     DiscoverPage(),
-    ChatPage(),
+    MatchPage(),
     ProfilePage(),
   ];
 
