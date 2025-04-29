@@ -11,13 +11,13 @@ class _ChatPageState extends State<ChatPage> {
 
   final List<Map<String, String>> messages = [
     {
-      'name': 'Muhammad Roif Baktiar',
+      'name': 'Valdez',
       'message': 'Aku orangnya baik banget sampai a...',
       'image': 'assets/images/3_1.jpg',
-      'instagram': 'loifu6969',
-      'facebook': 'loifu6969',
-      'twitter': 'loifu6969',
-      'whatsapp': 'loifu6969',
+      'instagram': 'valdezbrz',
+      'facebook': 'valdezb',
+      'twitter': 'deculein',
+      'line': 'vlebnia245',
     },
     {
       'name': 'Muhammad Roif Baktiar',
@@ -26,7 +26,7 @@ class _ChatPageState extends State<ChatPage> {
       'instagram': 'loifu6969',
       'facebook': 'loifu6969',
       'twitter': 'loifu6969',
-      'whatsapp': 'loifu6969',
+      'line': 'loifu6969',
     },
     {
       'name': 'Muhammad Roif Baktiar',
@@ -35,7 +35,7 @@ class _ChatPageState extends State<ChatPage> {
       'instagram': 'loifu6969',
       'facebook': 'loifu6969',
       'twitter': 'loifu6969',
-      'whatsapp': 'loifu6969',
+      'line': 'loifu6969',
     },
     {
       'name': 'Muhammad Roif Baktiar',
@@ -44,7 +44,7 @@ class _ChatPageState extends State<ChatPage> {
       'instagram': 'loifu6969',
       'facebook': 'loifu6969',
       'twitter': 'loifu6969',
-      'whatsapp': 'loifu6969',
+      'line': 'loifu6969',
     },
     {
       'name': 'Muhammad Roif Baktiar',
@@ -53,11 +53,9 @@ class _ChatPageState extends State<ChatPage> {
       'instagram': 'loifu6969',
       'facebook': 'loifu6969',
       'twitter': 'loifu6969',
-      'whatsapp': 'loifu6969',
+      'line': 'loifu6969',
     },
   ];
-
-
 
   void _toggleExpanded(int index) {
     setState(() {
@@ -81,19 +79,25 @@ class _ChatPageState extends State<ChatPage> {
       case 'twitter':
         url = 'https://twitter.com/$username';
         break;
-      case 'whatsapp':
-        url = 'https://wa.me/$username';
+      case 'line':
+        url = 'https://line.me/R/ti/p/~$username';
         break;
       default:
         url = '';
     }
 
-    if (await canLaunch(url)) {
-      await launch(url);
-    } else {
-      print('Could not launch $url');
+    final uri = Uri.parse(url);
+
+    try {
+      final success = await launchUrl(uri, mode: LaunchMode.externalApplication);
+      if (!success) {
+        print('Could not launch $url');
+      }
+    } catch (e) {
+      print('Exception launching $url: $e');
     }
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -126,7 +130,6 @@ class _ChatPageState extends State<ChatPage> {
           ],
         ),
       ),
-
       body: Column(
         children: [
           Expanded(
@@ -199,8 +202,7 @@ class _ChatPageState extends State<ChatPage> {
                       AnimatedCrossFade(
                         firstChild: SizedBox.shrink(),
                         secondChild: _buildSocialMediaSection(msg),
-                        crossFadeState:
-                        isExpanded
+                        crossFadeState: isExpanded
                             ? CrossFadeState.showSecond
                             : CrossFadeState.showFirst,
                         duration: Duration(milliseconds: 300),
@@ -213,7 +215,6 @@ class _ChatPageState extends State<ChatPage> {
           ),
         ],
       ),
-
     );
   }
 
@@ -229,7 +230,8 @@ class _ChatPageState extends State<ChatPage> {
                   icon: Icons.camera_alt,
                   username: '@${profile['instagram']}',
                   backgroundColor: Color(0xFFFF426D),
-                  onTap: () => _launchSocialMedia('instagram', profile['instagram']!),
+                  onTap: () =>
+                      _launchSocialMedia('instagram', profile['instagram']!),
                 ),
               ),
               SizedBox(width: 8),
@@ -238,7 +240,8 @@ class _ChatPageState extends State<ChatPage> {
                   icon: Icons.facebook,
                   username: '@${profile['facebook']}',
                   backgroundColor: Color(0xFFFF426D),
-                  onTap: () => _launchSocialMedia('facebook', profile['facebook']!),
+                  onTap: () =>
+                      _launchSocialMedia('facebook', profile['facebook']!),
                 ),
               ),
             ],
@@ -251,16 +254,17 @@ class _ChatPageState extends State<ChatPage> {
                   icon: Icons.close,
                   username: '@${profile['twitter']}',
                   backgroundColor: Color(0xFFFF426D),
-                  onTap: () => _launchSocialMedia('twitter', profile['twitter']!),
+                  onTap: () =>
+                      _launchSocialMedia('twitter', profile['twitter']!),
                 ),
               ),
               SizedBox(width: 8),
               Expanded(
                 child: _buildSocialButton(
                   icon: Icons.phone_iphone,
-                  username: '@${profile['whatsapp']}',
+                  username: '@${profile['line']}',
                   backgroundColor: Color(0xFFFF426D),
-                  onTap: () => _launchSocialMedia('whatsapp', profile['whatsapp']!),
+                  onTap: () => _launchSocialMedia('line', profile['line']!),
                 ),
               ),
             ],
