@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'sign_up2_otp.dart';
 import 'package:catchu/sign_up_data_holder.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class SignUpPhonePage extends StatefulWidget {
   final SignUpDataHolder dataHolder;
@@ -31,25 +32,52 @@ class _SignUpPhonePageState extends State<SignUpPhonePage> {
     });
   }
 
-  void _submitForm() {
+  void _submitForm() async {
     _validateInput(_phoneNumber);
     if (_errorMessage == null) {
       setState(() {
         _isLoading = true;
       });
 
-      Future.delayed(const Duration(seconds: 1), () {
-        setState(() {
-          _isLoading = false;
-        });
-        widget.dataHolder.phoneNumber = '$_countryCode$_phoneNumber';
+      final formattedPhoneNumber = '$_countryCode$_phoneNumber';
+
+      try {
+        // Cek apakah nomor telepon sudah terdaftar
+        final phoneCheckSnapshot =
+            await FirebaseFirestore.instance
+                .collection('Users')
+                .where('nomorTelepon', isEqualTo: formattedPhoneNumber)
+                .get();
+
+        if (phoneCheckSnapshot.docs.isNotEmpty) {
+          setState(() {
+            _isLoading = false;
+            _errorMessage =
+                'Nomor telepon sudah terdaftar. Silakan login atau gunakan nomor lain.';
+          });
+          return;
+        }
+
+        // Jika nomor belum terdaftar, lanjutkan ke halaman berikutnya
+        widget.dataHolder.phoneNumber = formattedPhoneNumber;
         Navigator.push(
           context,
           MaterialPageRoute(
             builder: (context) => SignUpOtpPage(dataHolder: widget.dataHolder),
           ),
         );
-      });
+      } catch (e) {
+        setState(() {
+          _isLoading = false;
+          _errorMessage = 'Terjadi kesalahan: $e';
+        });
+      } finally {
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+          });
+        }
+      }
     }
   }
 
