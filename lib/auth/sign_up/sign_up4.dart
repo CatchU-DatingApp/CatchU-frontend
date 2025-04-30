@@ -1,3 +1,4 @@
+import 'package:catchu/auth/auth_controller.dart';
 import 'package:catchu/auth/sign_up/sign_up5_Umur.dart';
 import 'package:flutter/material.dart';
 import 'package:catchu/sign_up_data_holder.dart';
@@ -41,6 +42,8 @@ class _SignUpPage4State extends State<SignUpPage4> {
       return false;
     }
     if (googleUser.email.toLowerCase() != email.toLowerCase()) {
+      final authController = AuthController();
+      await authController.deleteCurrentUserWithReauth();
       throw Exception('Email Google tidak sama dengan email yang diinput.');
     }
     final GoogleSignInAuthentication googleAuth =
@@ -78,7 +81,11 @@ class _SignUpPage4State extends State<SignUpPage4> {
         backgroundColor: Colors.transparent,
         leading: IconButton(
           icon: Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () => Navigator.pop(context),
+          onPressed: () async {
+            final authController = AuthController();
+            await authController.deleteCurrentUserWithReauth();
+            Navigator.pop(context);
+          },
         ),
         title: Container(
           margin: EdgeInsets.only(right: 48),
