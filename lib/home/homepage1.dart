@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'dart:ui';
+import 'dart:math' as math;
 
 
 class ProfileData {
@@ -37,6 +38,7 @@ class _DiscoverPageState extends State<DiscoverPage>
   bool _isCancellingSwipe = false;
   ProfileData? _selectedProfile;
   Offset _currentSlide = Offset.zero;
+  final ValueNotifier<int> _currentImageIndex = ValueNotifier<int>(0);
 
   // Track current image index for each profile
   Map<int, int> _currentImageIndices = {};
@@ -86,7 +88,9 @@ class _DiscoverPageState extends State<DiscoverPage>
   ];
 
   double _dragStartX = 0;
+  double _dragStartY = 0;
   double _dragUpdateX = 0;
+  double _dragUpdateY = 0;
   bool _isDragging = false;
 
   @override
@@ -141,6 +145,9 @@ class _DiscoverPageState extends State<DiscoverPage>
   }
 
   void _showProfileDetail(ProfileData profile) {
+    // Initialize the current image index with the stored value
+    _currentImageIndex.value = _currentImageIndices[_currentProfileIndex] ?? 0;
+    
     Navigator.of(context).push(
       PageRouteBuilder(
         pageBuilder: (context, animation, secondaryAnimation) {
@@ -155,6 +162,132 @@ class _DiscoverPageState extends State<DiscoverPage>
         transitionDuration: Duration(milliseconds: 300),
       ),
     );
+  }
+
+  void _onPanStart(DragStartDetails details) {
+    if (_isAnimating) return;
+    setState(() {
+      _isDragging = true;
+      _dragStartX = details.localPosition.dx;
+      _dragStartY = details.localPosition.dy;
+      _dragUpdateX = _dragStartX;
+      _dragUpdateY = _dragStartY;
+      _currentSlide = Offset.zero;
+    });
+  }
+
+  void _onPanUpdate(DragUpdateDetails details) {
+    if (_isAnimating || !_isDragging) return;
+    
+    final deltaX = details.localPosition.dx - _dragStartX;
+    final deltaY = details.localPosition.dy - _dragStartY;
+    final resistance = 0.5;
+    final normalizedDeltaX = deltaX * resistance;
+    final normalizedDeltaY = deltaY * resistance;
+    
+    setState(() {
+      _dragUpdateX = details.localPosition.dx;
+      _dragUpdateY = details.localPosition.dy;
+      _currentSlide = Offset(
+        normalizedDeltaX / MediaQuery.of(context).size.width,
+        normalizedDeltaY / MediaQuery.of(context).size.height
+      );
+    });
+  }
+
+  void _onPanEnd(DragEndDetails details) {
+    if (_isAnimating || !_isDragging) return;
+    
+    final velocityX = details.velocity.pixelsPerSecond.dx;
+    final velocityY = details.velocity.pixelsPerSecond.dy;
+    final deltaX = _dragUpdateX - _dragStartX;
+    final deltaY = _dragUpdateY - _dragStartY;
+    final width = MediaQuery.of(context).size.width;
+    final height = MediaQuery.of(context).size.height;
+    
+    bool shouldCompleteSwipe = false;
+    
+    if (velocityX.abs() > 2000 || velocityY.abs() > 2000) {
+      shouldCompleteSwipe = true;
+    } else if (deltaX.abs() > width * 0.15 || deltaY.abs() > height * 0.15) {
+      shouldCompleteSwipe = true;
+    }
+    
+    if (shouldCompleteSwipe) {
+      _isCancellingSwipe = false;
+      
+      // Calculate the direction of the swipe
+      final angle = math.atan2(deltaY, deltaX);
+      final distance = math.sqrt(deltaX * deltaX + deltaY * deltaY);
+      
+      // Determine the target offset based on the angle
+      final targetOffset = Offset(
+        math.cos(angle) * 1.5,
+        math.sin(angle) * 1.5
+      );
+      
+      setState(() {
+        _isAnimating = true;
+        
+        _slideAnimation = Tween<Offset>(
+          begin: _currentSlide,
+          end: targetOffset,
+        ).animate(CurvedAnimation(
+          parent: _swipeController,
+          curve: Curves.easeOut,
+        ));
+
+        // Add rotation based on the swipe direction
+        _rotationAnimation = Tween<double>(
+          begin: _currentSlide.dx * 0.2,
+          end: targetOffset.dx * 0.2,
+        ).animate(CurvedAnimation(
+          parent: _swipeController,
+          curve: Curves.easeOut,
+        ));
+      });
+
+      _swipeController.forward(from: 0.0);
+    } else {
+      setState(() {
+        _isAnimating = true;
+        _currentSlide = Offset.zero;
+        _isCancellingSwipe = true;
+        
+        _slideAnimation = Tween<Offset>(
+          begin: Offset(
+            (_dragUpdateX - _dragStartX) / width,
+            (_dragUpdateY - _dragStartY) / height
+          ),
+          end: Offset.zero,
+        ).animate(CurvedAnimation(
+          parent: _swipeController,
+          curve: Curves.easeOut,
+        ));
+
+        _rotationAnimation = Tween<double>(
+          begin: (_dragUpdateX - _dragStartX) / width * 0.2,
+          end: 0.0,
+        ).animate(CurvedAnimation(
+          parent: _swipeController,
+          curve: Curves.easeOut,
+        ));
+
+        _swipeController.forward(from: 0.0).then((_) {
+          if (mounted) {
+            setState(() {
+              _isAnimating = false;
+            });
+          }
+        });
+      });
+    }
+    
+    _isDragging = false;
+    _dragStartX = 0;
+    _dragStartY = 0;
+    _dragUpdateX = 0;
+    _dragUpdateY = 0;
   }
 
   void _swipeLeft() {
@@ -207,116 +340,6 @@ class _DiscoverPageState extends State<DiscoverPage>
     });
 
     _swipeController.forward(from: 0.0);
-  }
-
-  // Navigate to next image for the current profile
-  void _nextImage() {
-    final currentProfile = _profiles[_currentProfileIndex];
-    final currentImageIndex = _currentImageIndices[_currentProfileIndex] ?? 0;
-
-    if (currentImageIndex < currentProfile.images.length - 1) {
-      setState(() {
-        _currentImageIndices[_currentProfileIndex] = currentImageIndex + 1;
-      });
-    }
-  }
-
-  // Navigate to previous image for the current profile
-  void _previousImage() {
-    final currentImageIndex = _currentImageIndices[_currentProfileIndex] ?? 0;
-
-    if (currentImageIndex > 0) {
-      setState(() {
-        _currentImageIndices[_currentProfileIndex] = currentImageIndex - 1;
-      });
-    }
-  }
-
-  void _onHorizontalDragStart(DragStartDetails details) {
-    if (_isAnimating) return;
-    setState(() {
-      _isDragging = true;
-      _dragStartX = details.localPosition.dx;
-      _dragUpdateX = _dragStartX;
-      _currentSlide = Offset.zero;
-    });
-  }
-
-  void _onHorizontalDragUpdate(DragUpdateDetails details) {
-    if (_isAnimating || !_isDragging) return;
-    
-    // Add resistance to make the drag feel more natural
-    final delta = details.localPosition.dx - _dragStartX;
-    final resistance = 0.5;
-    final normalizedDelta = delta * resistance;
-    
-    setState(() {
-      _dragUpdateX = details.localPosition.dx;
-      _currentSlide = Offset(normalizedDelta / MediaQuery.of(context).size.width, 0);
-    });
-  }
-
-  void _onHorizontalDragEnd(DragEndDetails details) {
-    if (_isAnimating || !_isDragging) return;
-    
-    final velocity = details.velocity.pixelsPerSecond.dx;
-    final delta = _dragUpdateX - _dragStartX;
-    final width = MediaQuery.of(context).size.width;
-    
-    // Complete swipe if velocity is high enough or dragged far enough
-    bool shouldCompleteSwipe = false;
-    
-    if (velocity.abs() > 2000) {
-      // Complete swipe if velocity is high enough
-      shouldCompleteSwipe = true;
-    } else if (delta.abs() > width * 0.15) {
-      // Complete swipe if dragged more than 15% of screen width
-      shouldCompleteSwipe = true;
-    }
-    
-    if (shouldCompleteSwipe) {
-      _isCancellingSwipe = false;  // This is a real swipe
-      if (delta < 0) {
-        _swipeLeft();
-      } else {
-        _swipeRight();
-      }
-    } else {
-      // Return to center with animation
-      setState(() {
-        _isAnimating = true;
-        _currentSlide = Offset.zero; // Reset slide position immediately
-        _isCancellingSwipe = true;  // This is a cancellation
-        
-        _slideAnimation = Tween<Offset>(
-          begin: Offset(_dragUpdateX - _dragStartX, 0) / width,
-          end: Offset.zero,
-        ).animate(CurvedAnimation(
-          parent: _swipeController,
-          curve: Curves.easeOut,
-        ));
-
-        _rotationAnimation = Tween<double>(
-          begin: (_dragUpdateX - _dragStartX) / width * 0.2,
-          end: 0.0,
-        ).animate(CurvedAnimation(
-          parent: _swipeController,
-          curve: Curves.easeOut,
-        ));
-
-        _swipeController.forward(from: 0.0).then((_) {
-          if (mounted) {
-            setState(() {
-              _isAnimating = false;
-            });
-          }
-        });
-      });
-    }
-    
-    _isDragging = false;
-    _dragStartX = 0;
-    _dragUpdateX = 0;
   }
 
   @override
@@ -453,7 +476,7 @@ class _DiscoverPageState extends State<DiscoverPage>
             backgroundColor: xActive ? Colors.pink : Colors.white,
             shadowColor: Colors.pink,
             scale: xScale,
-            onTap: _swipeLeft,
+            onTap: () => _swipeLeft(),
           ),
           SizedBox(width: 100),
           _actionButton(
@@ -462,7 +485,7 @@ class _DiscoverPageState extends State<DiscoverPage>
             backgroundColor: loveActive ? Colors.pink : Colors.white,
             shadowColor: Colors.pink,
             scale: loveScale,
-            onTap: _swipeRight,
+            onTap: () => _swipeRight(),
           ),
         ],
       ),
@@ -475,9 +498,9 @@ class _DiscoverPageState extends State<DiscoverPage>
       width: double.infinity,
       height: double.infinity,
       child: GestureDetector(
-        onHorizontalDragStart: _onHorizontalDragStart,
-        onHorizontalDragUpdate: _onHorizontalDragUpdate,
-        onHorizontalDragEnd: _onHorizontalDragEnd,
+        onPanStart: _onPanStart,
+        onPanUpdate: _onPanUpdate,
+        onPanEnd: _onPanEnd,
         onTap: () => _showProfileDetail(profile),
         child: Hero(
           tag: 'profile-${profile.name}',
@@ -640,10 +663,14 @@ class _DiscoverPageState extends State<DiscoverPage>
                     PageView.builder(
                       itemCount: profile.images.length,
                       onPageChanged: (index) {
+                        _currentImageIndex.value = index;
                         setState(() {
                           _currentImageIndices[_currentProfileIndex] = index;
                         });
                       },
+                      controller: PageController(
+                        initialPage: _currentImageIndex.value,
+                      ),
                       itemBuilder: (context, index) {
                         return Image.asset(
                           profile.images[index],
@@ -652,28 +679,40 @@ class _DiscoverPageState extends State<DiscoverPage>
                       },
                     ),
                     Positioned(
-                      top: MediaQuery.of(context).padding.top,
+                      top: MediaQuery.of(context).padding.top + 16,
                       left: 0,
                       right: 0,
                       child: Container(
                         height: 56,
                         padding: EdgeInsets.symmetric(horizontal: 16),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: List.generate(
-                            profile.images.length,
-                            (index) => Container(
-                              margin: EdgeInsets.symmetric(horizontal: 3),
-                              width: 8,
-                              height: 8,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: index == _currentImageIndices[_currentProfileIndex]
-                                    ? const Color.fromARGB(255, 250, 60, 60)
-                                    : Colors.white.withOpacity(0.5),
+                        child: ValueListenableBuilder<int>(
+                          valueListenable: _currentImageIndex,
+                          builder: (context, currentIndex, child) {
+                            return Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: List.generate(
+                                profile.images.length,
+                                (index) => Container(
+                                  margin: EdgeInsets.symmetric(horizontal: 3),
+                                  width: 8,
+                                  height: 8,
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    color: index == currentIndex
+                                        ? Colors.white
+                                        : Colors.white.withOpacity(0.5),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black.withOpacity(0.2),
+                                        blurRadius: 2,
+                                        offset: Offset(0, 1),
+                                      ),
+                                    ],
+                                  ),
+                                ),
                               ),
-                            ),
-                          ),
+                            );
+                          },
                         ),
                       ),
                     ),
