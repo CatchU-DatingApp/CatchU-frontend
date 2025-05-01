@@ -270,6 +270,17 @@ class _DiscoverPageState extends State<DiscoverPage>
     final currentProfile = _profiles[_currentProfileIndex];
     final nextProfile = _profiles[(_currentProfileIndex + 1) % _profiles.length];
 
+    // Calculate button scales based on swipe position
+    final swipeProgress = _currentSlide.dx;
+    
+    // For love button (right swipe)
+    final loveScale = 1.0 + (swipeProgress > 0 ? swipeProgress * 0.3 : 0.0);
+    final loveActive = swipeProgress > 0;
+    
+    // For X button (left swipe)
+    final xScale = 1.0 + (swipeProgress < 0 ? swipeProgress.abs() * 0.3 : 0.0);
+    final xActive = swipeProgress < 0;
+
     return Scaffold(
       backgroundColor: Color(0xFFFDF7F6),
       body: Stack(
@@ -349,15 +360,19 @@ class _DiscoverPageState extends State<DiscoverPage>
         children: [
           _actionButton(
             icon: Icons.clear,
-            iconColor: Colors.red,
-            shadowColor: Colors.redAccent.withOpacity(0.4),
+            iconColor: xActive ? Colors.white : Colors.pink,
+            backgroundColor: xActive ? Colors.pink : Colors.white,
+            shadowColor: Colors.pink,
+            scale: xScale,
             onTap: _swipeLeft,
           ),
           SizedBox(width: 100),
           _actionButton(
             icon: Icons.favorite,
-            iconColor: Colors.pink,
-            shadowColor: Colors.pinkAccent.withOpacity(0.4),
+            iconColor: loveActive ? Colors.white : Colors.pink,
+            backgroundColor: loveActive ? Colors.pink : Colors.white,
+            shadowColor: Colors.pink,
+            scale: loveScale,
             onTap: _swipeRight,
           ),
         ],
@@ -403,20 +418,50 @@ class _DiscoverPageState extends State<DiscoverPage>
               Positioned(
                 left: 20,
                 bottom: 30,
-                child: Text(
-                  profile.name,
-                  style: TextStyle(
-                    fontSize: 32,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.white,
-                    shadows: [
-                      Shadow(
-                        offset: Offset(0, 2),
-                        blurRadius: 4,
-                        color: Colors.black.withOpacity(0.3),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      profile.name,
+                      style: TextStyle(
+                        fontSize: 32,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
+                        shadows: [
+                          Shadow(
+                            offset: Offset(0, 2),
+                            blurRadius: 4,
+                            color: Colors.black.withOpacity(0.3),
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
+                    ),
+                    SizedBox(height: 4),
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.location_on,
+                          color: Colors.white,
+                          size: 16,
+                        ),
+                        SizedBox(width: 4),
+                        Text(
+                          profile.distance,
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: Colors.white,
+                            shadows: [
+                              Shadow(
+                                offset: Offset(0, 2),
+                                blurRadius: 4,
+                                color: Colors.black.withOpacity(0.3),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
               ),
             ],
@@ -450,25 +495,30 @@ class _DiscoverPageState extends State<DiscoverPage>
     required Color iconColor,
     required Color shadowColor,
     required VoidCallback onTap,
+    double scale = 1.0,
+    Color? backgroundColor,
   }) {
     return GestureDetector(
       onTap: onTap,
-      child: Container(
-        width: 64,
-        height: 64,
-        decoration: BoxDecoration(
-          color: Colors.white,
-          shape: BoxShape.circle,
-          boxShadow: [
-            BoxShadow(
-              color: shadowColor.withOpacity(0.2),
-              blurRadius: 8,
-              offset: Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Center(
-          child: Icon(icon, color: iconColor, size: 32),
+      child: Transform.scale(
+        scale: scale,
+        child: Container(
+          width: 64,
+          height: 64,
+          decoration: BoxDecoration(
+            color: backgroundColor ?? Colors.white,
+            shape: BoxShape.circle,
+            boxShadow: [
+              BoxShadow(
+                color: shadowColor.withOpacity(0.2),
+                blurRadius: 8,
+                offset: Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Center(
+            child: Icon(icon, color: iconColor, size: 32),
+          ),
         ),
       ),
     );
