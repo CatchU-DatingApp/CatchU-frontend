@@ -32,6 +32,7 @@ class _DiscoverPageState extends State<DiscoverPage>
   int _currentProfileIndex = 0;
   bool _isAnimating = false;
   bool _showDetailView = false;
+  bool _isCancellingSwipe = false;
   ProfileData? _selectedProfile;
   Offset _currentSlide = Offset.zero;
 
@@ -99,7 +100,7 @@ class _DiscoverPageState extends State<DiscoverPage>
       end: Offset(0, 0),
     ).animate(CurvedAnimation(
       parent: _swipeController,
-      curve: Curves.easeOutCubic,
+      curve: Curves.easeOut,
     ));
 
     _rotationAnimation = Tween<double>(
@@ -107,16 +108,20 @@ class _DiscoverPageState extends State<DiscoverPage>
       end: 0.0,
     ).animate(CurvedAnimation(
       parent: _swipeController,
-      curve: Curves.easeOutCubic,
+      curve: Curves.easeOut,
     ));
 
     _swipeController.addStatusListener((status) {
       if (status == AnimationStatus.completed) {
         setState(() {
-          _currentProfileIndex = (_currentProfileIndex + 1) % _profiles.length;
+          if (!_isCancellingSwipe) {
+            // Only change profile if this wasn't a cancellation
+            _currentProfileIndex = (_currentProfileIndex + 1) % _profiles.length;
+          }
           _isAnimating = false;
           _currentSlide = Offset.zero;
           _swipeController.reset();
+          _isCancellingSwipe = false;  // Reset the flag
         });
       }
     });
@@ -134,17 +139,20 @@ class _DiscoverPageState extends State<DiscoverPage>
   }
 
   void _showProfileDetail(ProfileData profile) {
-    setState(() {
-      _selectedProfile = profile;
-      _showDetailView = true;
-    });
-  }
-
-  void _hideProfileDetail() {
-    setState(() {
-      _showDetailView = false;
-      _selectedProfile = null;
-    });
+    Navigator.of(context).push(
+      PageRouteBuilder(
+        pageBuilder: (context, animation, secondaryAnimation) {
+          return _buildDetailView(profile);
+        },
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          return FadeTransition(
+            opacity: animation,
+            child: child,
+          );
+        },
+        transitionDuration: Duration(milliseconds: 300),
+      ),
+    );
   }
 
   void _swipeLeft() {
@@ -152,22 +160,21 @@ class _DiscoverPageState extends State<DiscoverPage>
 
     setState(() {
       _isAnimating = true;
-      _currentSlide = Offset.zero;
       
       _slideAnimation = Tween<Offset>(
         begin: _currentSlide,
         end: Offset(-1.5, 0),
       ).animate(CurvedAnimation(
         parent: _swipeController,
-        curve: Curves.easeOutCubic,
+        curve: Curves.easeOut,
       ));
 
       _rotationAnimation = Tween<double>(
-        begin: 0.0,
+        begin: _currentSlide.dx * 0.2,
         end: -0.2,
       ).animate(CurvedAnimation(
         parent: _swipeController,
-        curve: Curves.easeOutCubic,
+        curve: Curves.easeOut,
       ));
     });
 
@@ -179,22 +186,21 @@ class _DiscoverPageState extends State<DiscoverPage>
 
     setState(() {
       _isAnimating = true;
-      _currentSlide = Offset.zero;
       
       _slideAnimation = Tween<Offset>(
         begin: _currentSlide,
         end: Offset(1.5, 0),
       ).animate(CurvedAnimation(
         parent: _swipeController,
-        curve: Curves.easeOutCubic,
+        curve: Curves.easeOut,
       ));
 
       _rotationAnimation = Tween<double>(
-        begin: 0.0,
+        begin: _currentSlide.dx * 0.2,
         end: 0.2,
       ).animate(CurvedAnimation(
         parent: _swipeController,
-        curve: Curves.easeOutCubic,
+        curve: Curves.easeOut,
       ));
     });
 
@@ -230,35 +236,85 @@ class _DiscoverPageState extends State<DiscoverPage>
       _isDragging = true;
       _dragStartX = details.localPosition.dx;
       _dragUpdateX = _dragStartX;
+      _currentSlide = Offset.zero;
     });
   }
 
   void _onHorizontalDragUpdate(DragUpdateDetails details) {
     if (_isAnimating || !_isDragging) return;
+    
+    // Add resistance to make the drag feel more natural
+    final delta = details.localPosition.dx - _dragStartX;
+    final resistance = 0.5;
+    final normalizedDelta = delta * resistance;
+    
     setState(() {
       _dragUpdateX = details.localPosition.dx;
-      _currentSlide = Offset((_dragUpdateX - _dragStartX) / MediaQuery.of(context).size.width, 0);
+      _currentSlide = Offset(normalizedDelta / MediaQuery.of(context).size.width, 0);
     });
   }
 
   void _onHorizontalDragEnd(DragEndDetails details) {
     if (_isAnimating || !_isDragging) return;
+    
+    final velocity = details.velocity.pixelsPerSecond.dx;
     final delta = _dragUpdateX - _dragStartX;
     final width = MediaQuery.of(context).size.width;
     
-    if (delta.abs() > width * 0.2) { // Swipe threshold 20% of screen width
+    // Complete swipe if velocity is high enough or dragged far enough
+    bool shouldCompleteSwipe = false;
+    
+    if (velocity.abs() > 2000) {
+      // Complete swipe if velocity is high enough
+      shouldCompleteSwipe = true;
+    } else if (delta.abs() > width * 0.15) {
+      // Complete swipe if dragged more than 15% of screen width
+      shouldCompleteSwipe = true;
+    }
+    
+    if (shouldCompleteSwipe) {
+      _isCancellingSwipe = false;  // This is a real swipe
       if (delta < 0) {
         _swipeLeft();
       } else {
         _swipeRight();
       }
     } else {
-      // Reset position if swipe wasn't far enough
+      // Return to center with animation
       setState(() {
-        _currentSlide = Offset.zero;
+        _isAnimating = true;
+        _currentSlide = Offset.zero; // Reset slide position immediately
+        _isCancellingSwipe = true;  // This is a cancellation
+        
+        _slideAnimation = Tween<Offset>(
+          begin: Offset(_dragUpdateX - _dragStartX, 0) / width,
+          end: Offset.zero,
+        ).animate(CurvedAnimation(
+          parent: _swipeController,
+          curve: Curves.easeOut,
+        ));
+
+        _rotationAnimation = Tween<double>(
+          begin: (_dragUpdateX - _dragStartX) / width * 0.2,
+          end: 0.0,
+        ).animate(CurvedAnimation(
+          parent: _swipeController,
+          curve: Curves.easeOut,
+        ));
+
+        _swipeController.forward(from: 0.0).then((_) {
+          if (mounted) {
+            setState(() {
+              _isAnimating = false;
+            });
+          }
+        });
       });
     }
+    
     _isDragging = false;
+    _dragStartX = 0;
+    _dragUpdateX = 0;
   }
 
   @override
@@ -270,16 +326,16 @@ class _DiscoverPageState extends State<DiscoverPage>
     final currentProfile = _profiles[_currentProfileIndex];
     final nextProfile = _profiles[(_currentProfileIndex + 1) % _profiles.length];
 
-    // Calculate button scales based on swipe position
-    final swipeProgress = _currentSlide.dx;
+    // Calculate button states based on swipe position and animation state
+    final swipeProgress = _isDragging ? _currentSlide.dx : 0.0;
     
     // For love button (right swipe)
-    final loveScale = 1.0 + (swipeProgress > 0 ? swipeProgress * 0.3 : 0.0);
-    final loveActive = swipeProgress > 0;
+    final loveScale = 1.0 + (swipeProgress > 0 ? swipeProgress * 0.5 : 0.0);
+    final loveActive = _isDragging && swipeProgress > 0;
     
     // For X button (left swipe)
-    final xScale = 1.0 + (swipeProgress < 0 ? swipeProgress.abs() * 0.3 : 0.0);
-    final xActive = swipeProgress < 0;
+    final xScale = 1.0 + (swipeProgress < 0 ? swipeProgress.abs() * 0.5 : 0.0);
+    final xActive = _isDragging && swipeProgress < 0;
 
     return Scaffold(
       backgroundColor: Color(0xFFFDF7F6),
@@ -390,81 +446,84 @@ class _DiscoverPageState extends State<DiscoverPage>
         onHorizontalDragUpdate: _onHorizontalDragUpdate,
         onHorizontalDragEnd: _onHorizontalDragEnd,
         onTap: () => _showProfileDetail(profile),
-        child: Card(
-          elevation: 3,
-          margin: EdgeInsets.symmetric(horizontal: 16),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          clipBehavior: Clip.antiAlias,
-          child: Stack(
-            fit: StackFit.expand,
-            children: [
-              Image.asset(
-                profile.images[0],
-                fit: BoxFit.cover,
-              ),
-              Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [
-                      Colors.transparent,
-                      Colors.black.withOpacity(0.7),
-                    ],
-                    stops: [0.6, 1.0],
+        child: Hero(
+          tag: 'profile-${profile.name}',
+          child: Card(
+            elevation: 3,
+            margin: EdgeInsets.symmetric(horizontal: 16),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+            clipBehavior: Clip.antiAlias,
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                Image.asset(
+                  profile.images[0],
+                  fit: BoxFit.cover,
+                ),
+                Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        Colors.transparent,
+                        Colors.black.withOpacity(1),
+                      ],
+                      stops: [0.6, 1.0],
+                    ),
                   ),
                 ),
-              ),
-              Positioned(
-                left: 20,
-                bottom: 30,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      profile.name,
-                      style: TextStyle(
-                        fontSize: 32,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.white,
-                        shadows: [
-                          Shadow(
-                            offset: Offset(0, 2),
-                            blurRadius: 4,
-                            color: Colors.black.withOpacity(0.3),
+                Positioned(
+                  left: 20,
+                  bottom: 30,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        profile.name,
+                        style: TextStyle(
+                          fontSize: 32,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white,
+                          shadows: [
+                            Shadow(
+                              offset: Offset(0, 2),
+                              blurRadius: 4,
+                              color: Colors.black.withOpacity(0.3),
+                            ),
+                          ],
+                        ),
+                      ),
+                      SizedBox(height: 4),
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.location_on,
+                            color: Colors.white,
+                            size: 16,
+                          ),
+                          SizedBox(width: 4),
+                          Text(
+                            profile.distance,
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: Colors.white,
+                              shadows: [
+                                Shadow(
+                                  offset: Offset(0, 2),
+                                  blurRadius: 4,
+                                  color: Colors.black.withOpacity(0.3),
+                                ),
+                              ],
+                            ),
                           ),
                         ],
                       ),
-                    ),
-                    SizedBox(height: 4),
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.location_on,
-                          color: Colors.white,
-                          size: 16,
-                        ),
-                        SizedBox(width: 4),
-                        Text(
-                          profile.distance,
-                          style: TextStyle(
-                            fontSize: 16,
-                            color: Colors.white,
-                            shadows: [
-                              Shadow(
-                                offset: Offset(0, 2),
-                                blurRadius: 4,
-                                color: Colors.black.withOpacity(0.3),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -533,63 +592,62 @@ class _DiscoverPageState extends State<DiscoverPage>
         elevation: 0,
         leading: IconButton(
           icon: Icon(Icons.arrow_back, color: Colors.white, size: 28),
-          onPressed: _hideProfileDetail,
+          onPressed: () => Navigator.of(context).pop(),
         ),
       ),
       body: SingleChildScrollView(
         child: Column(
           children: [
-            // Image section with dot indicators
-            Container(
-              height: MediaQuery.of(context).size.height * 0.6,
-              child: Stack(
-                children: [
-                  // PageView for images
-                  PageView.builder(
-                    itemCount: profile.images.length,
-                    onPageChanged: (index) {
-                      setState(() {
-                        _currentImageIndices[_currentProfileIndex] = index;
-                      });
-                    },
-                    itemBuilder: (context, index) {
-                      return Image.asset(
-                        profile.images[index],
-                        fit: BoxFit.cover,
-                      );
-                    },
-                  ),
-                  // Dot indicators aligned with back button
-                  Positioned(
-                    top: MediaQuery.of(context).padding.top,
-                    left: 0,
-                    right: 0,
-                    child: Container(
-                      height: 56, // Same height as AppBar
-                      padding: EdgeInsets.symmetric(horizontal: 16),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: List.generate(
-                          profile.images.length,
-                          (index) => Container(
-                            margin: EdgeInsets.symmetric(horizontal: 3),
-                            width: 8,
-                            height: 8,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: index == _currentImageIndices[_currentProfileIndex]
-                                  ? const Color.fromARGB(255, 250, 60, 60)
-                                  : Colors.white.withOpacity(0.5),
+            Hero(
+              tag: 'profile-${profile.name}',
+              child: Container(
+                height: MediaQuery.of(context).size.height * 0.6,
+                child: Stack(
+                  children: [
+                    PageView.builder(
+                      itemCount: profile.images.length,
+                      onPageChanged: (index) {
+                        setState(() {
+                          _currentImageIndices[_currentProfileIndex] = index;
+                        });
+                      },
+                      itemBuilder: (context, index) {
+                        return Image.asset(
+                          profile.images[index],
+                          fit: BoxFit.cover,
+                        );
+                      },
+                    ),
+                    Positioned(
+                      top: MediaQuery.of(context).padding.top,
+                      left: 0,
+                      right: 0,
+                      child: Container(
+                        height: 56,
+                        padding: EdgeInsets.symmetric(horizontal: 16),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: List.generate(
+                            profile.images.length,
+                            (index) => Container(
+                              margin: EdgeInsets.symmetric(horizontal: 3),
+                              width: 8,
+                              height: 8,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: index == _currentImageIndices[_currentProfileIndex]
+                                    ? const Color.fromARGB(255, 250, 60, 60)
+                                    : Colors.white.withOpacity(0.5),
+                              ),
                             ),
                           ),
                         ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
-            // Profile information in white container
             Container(
               color: Colors.white,
               padding: EdgeInsets.all(16),
