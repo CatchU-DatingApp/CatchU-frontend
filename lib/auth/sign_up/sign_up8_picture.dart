@@ -3,6 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'package:catchu/sign_up_data_holder.dart';
+import 'package:catchu/firebase/firebase_service.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class SignUpPage8 extends StatefulWidget {
   final SignUpDataHolder dataHolder;
@@ -280,36 +283,99 @@ class _SignUpPage8State extends State<SignUpPage8> {
 
   Future<void> _pickImageFromGallery() async {
     final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
-    if (pickedFile != null) {
+    final user = FirebaseAuth.instance.currentUser;
+    if (pickedFile != null && user != null) {
       setState(() {
         uploadedImages.add(FileImage(File(pickedFile.path)));
+      });
+      // Upload ke Firebase Storage dengan path mengandung UID
+      final firebaseService = FirebaseService();
+      final url = await firebaseService.uploadPhotoToStorage(
+        File(pickedFile.path),
+        'user_photos/${user.uid}/${DateTime.now().millisecondsSinceEpoch}_${pickedFile.name}',
+      );
+      setState(() {
         if (widget.dataHolder.photos == null) {
           widget.dataHolder.photos = [];
         }
-        widget.dataHolder.photos!.add(pickedFile.path);
+        widget.dataHolder.photos!.add(url);
       });
+      // Update Firestore agar array photos bertambah, bukan overwrite
+      await FirebaseFirestore.instance.collection('Users').doc(user.uid).update(
+        {
+          'photos': FieldValue.arrayUnion([url]),
+        },
+      );
     }
   }
 
   Future<void> _pickImageFromCamera() async {
     final pickedFile = await _picker.pickImage(source: ImageSource.camera);
-    if (pickedFile != null) {
+    final user = FirebaseAuth.instance.currentUser;
+    if (pickedFile != null && user != null) {
       setState(() {
         uploadedImages.add(FileImage(File(pickedFile.path)));
+      });
+      // Upload ke Firebase Storage dengan path mengandung UID
+      final firebaseService = FirebaseService();
+      final url = await firebaseService.uploadPhotoToStorage(
+        File(pickedFile.path),
+        'user_photos/${user.uid}/${DateTime.now().millisecondsSinceEpoch}_${pickedFile.name}',
+      );
+      setState(() {
         if (widget.dataHolder.photos == null) {
           widget.dataHolder.photos = [];
         }
-        widget.dataHolder.photos!.add(pickedFile.path);
+        widget.dataHolder.photos!.add(url);
       });
+      // Update Firestore agar array photos bertambah, bukan overwrite
+      await FirebaseFirestore.instance.collection('Users').doc(user.uid).update(
+        {
+          'photos': FieldValue.arrayUnion([url]),
+        },
+      );
     }
   }
 
-  void _removePhoto(int index) {
+  void _removePhoto(int index) async {
     if (uploadedImages.length > 1) {
-      setState(() {
-        uploadedImages.removeAt(index);
-        widget.dataHolder.photos!.removeAt(index);
-      });
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) return;
+
+      try {
+        // Ambil data user terbaru dari Firestore
+        final doc =
+            await FirebaseFirestore.instance
+                .collection('Users')
+                .doc(user.uid)
+                .get();
+        List<dynamic> photos = List.from(doc['photos'] ?? []);
+
+        // Hapus foto dari Storage terlebih dahulu
+        if (index < photos.length) {
+          final photoUrl = photos[index];
+          final firebaseService = FirebaseService();
+          await firebaseService.deletePhotoFromStorage(photoUrl);
+
+          // Hapus URL dari array
+          photos.removeAt(index);
+
+          // Update Firestore dengan array baru
+          await FirebaseFirestore.instance
+              .collection('Users')
+              .doc(user.uid)
+              .update({'photos': photos});
+
+          setState(() {
+            uploadedImages.removeAt(index);
+            widget.dataHolder.photos!.removeAt(index);
+          });
+        }
+      } catch (e) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Failed to delete photo: $e')));
+      }
     }
   }
 }

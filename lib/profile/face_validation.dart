@@ -5,6 +5,9 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:path/path.dart' as path;
 import 'package:uuid/uuid.dart';
 import 'face_validation_scan.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 //MASIH DEMO, BELUM BISA KONEK KE FIREBASE, MAKA BISA LANGSUNG NEXT UNTUK DEBUGGING
 class FaceValidationPhotoPage extends StatefulWidget {
   const FaceValidationPhotoPage({Key? key}) : super(key: key);
@@ -15,12 +18,44 @@ class FaceValidationPhotoPage extends StatefulWidget {
 }
 
 class _FaceValidationPhotoPageState extends State<FaceValidationPhotoPage> {
-  File? _imageFile;
   final ImagePicker _picker = ImagePicker();
   bool _isLoading = false;
-  String? _uploadedImageUrl;
+  String? _selectedPhotoUrl;
+  List<String> userPhotos = [];
   final FirebaseStorage _storage = FirebaseStorage.instance;
   final uuid = Uuid();
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserPhotos();
+  }
+
+  Future<void> _loadUserPhotos() async {
+    setState(() => _isLoading = true);
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user != null) {
+        final doc =
+            await FirebaseFirestore.instance
+                .collection('Users')
+                .doc(user.uid)
+                .get();
+
+        if (doc.exists && doc.data()!.containsKey('photos')) {
+          setState(() {
+            userPhotos = List<String>.from(doc.data()!['photos']);
+          });
+        }
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Failed to load photos: $e')));
+    } finally {
+      setState(() => _isLoading = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -46,105 +81,106 @@ class _FaceValidationPhotoPageState extends State<FaceValidationPhotoPage> {
               ),
               const SizedBox(height: 8),
               const Text(
-                'Get verified after choosing\nyour best profile photo',
+                'Select one of your profile photos\nto use as face validation reference',
                 textAlign: TextAlign.center,
                 style: TextStyle(fontSize: 16, color: Colors.black54),
               ),
               const SizedBox(height: 32),
-              GestureDetector(
-                onTap: () => _pickImageFromGallery(),
-                child: Container(
-                  width: double.infinity,
-                  height: 300,
-                  decoration: BoxDecoration(
-                    color: Colors.grey.shade300,
-                    borderRadius: BorderRadius.circular(12),
+              if (_isLoading)
+                const Center(child: CircularProgressIndicator())
+              else if (userPhotos.isEmpty)
+                Center(
+                  child: Text(
+                    'No photos available.\nPlease upload photos in your profile first.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: 16, color: Colors.grey),
                   ),
-                  child:
-                  _isLoading
-                      ? const Center(child: CircularProgressIndicator())
-                      : _imageFile != null
-                      ? ClipRRect(
-                    borderRadius: BorderRadius.circular(12),
-                    child: Image.file(
-                      _imageFile!,
-                      fit: BoxFit.cover,
-                      width: double.infinity,
-                      height: double.infinity,
+                )
+              else
+                Expanded(
+                  child: GridView.builder(
+                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 2,
+                      crossAxisSpacing: 10,
+                      mainAxisSpacing: 10,
                     ),
-                  )
-                      : const Center(
-                    child: Icon(
-                      Icons.add_a_photo,
-                      size: 100,
-                      color: Colors.white,
-                    ),
+                    itemCount: userPhotos.length,
+                    itemBuilder: (context, index) {
+                      return GestureDetector(
+                        onTap: () {
+                          setState(() {
+                            _selectedPhotoUrl = userPhotos[index];
+                          });
+                        },
+                        child: Container(
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(12),
+                            border:
+                                _selectedPhotoUrl == userPhotos[index]
+                                    ? Border.all(color: Colors.pink, width: 3)
+                                    : null,
+                          ),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(12),
+                            child: Image.network(
+                              userPhotos[index],
+                              fit: BoxFit.cover,
+                              loadingBuilder: (
+                                context,
+                                child,
+                                loadingProgress,
+                              ) {
+                                if (loadingProgress == null) return child;
+                                return Center(
+                                  child: CircularProgressIndicator(
+                                    value:
+                                        loadingProgress.expectedTotalBytes !=
+                                                null
+                                            ? loadingProgress
+                                                    .cumulativeBytesLoaded /
+                                                loadingProgress
+                                                    .expectedTotalBytes!
+                                            : null,
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+                        ),
+                      );
+                    },
                   ),
                 ),
-              ),
               const Spacer(),
               ElevatedButton(
-                onPressed: _navigateToScanPage,
+                onPressed:
+                    _selectedPhotoUrl == null
+                        ? null
+                        : () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder:
+                                  (context) => FaceValidationScanPage(
+                                    profilePhotoUrl: _selectedPhotoUrl!,
+                                  ),
+                            ),
+                          );
+                        },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFFFF4D6D),
                   minimumSize: const Size(double.infinity, 56),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
-                child: const Text('Next', style: TextStyle(fontSize: 18)),
+                child: const Text(
+                  'Use Selected Photo',
+                  style: TextStyle(fontSize: 18, color: Colors.white),
+                ),
               ),
               const SizedBox(height: 24),
             ],
           ),
-        ),
-      ),
-    );
-  }
-
-  Future<void> _pickImageFromGallery() async {
-    final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
-    if (image != null) {
-      setState(() {
-        _imageFile = File(image.path);
-      });
-      _uploadImageToFirebase();
-    }
-  }
-
-  Future<void> _uploadImageToFirebase() async {
-    if (_imageFile == null) return;
-    setState(() => _isLoading = true);
-
-    try {
-      String fileName = '${uuid.v4()}${path.extension(_imageFile!.path)}';
-      final storageRef = _storage.ref().child('face_validation/$fileName');
-      final uploadTask = storageRef.putFile(_imageFile!);
-      final TaskSnapshot snapshot = await uploadTask.whenComplete(() => null);
-      final String downloadUrl = await snapshot.ref.getDownloadURL();
-
-      setState(() {
-        _uploadedImageUrl = downloadUrl;
-      });
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Image uploaded successfully')),
-      );
-    } catch (e) {
-      setState(() {
-        _uploadedImageUrl = null;
-      });
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Failed to upload image: $e')));
-      print('Upload error: $e');
-    } finally {
-      setState(() => _isLoading = false);
-    }
-  }
-
-  void _navigateToScanPage() {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => FaceValidationScanPage(
-          profilePhotoUrl: _uploadedImageUrl ?? '',
         ),
       ),
     );

@@ -14,6 +14,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_keyboard_visibility/flutter_keyboard_visibility.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'dart:async';
+import '../firebase/firebase_service.dart';
 
 class ProfilePage extends StatefulWidget {
   @override
@@ -297,7 +298,8 @@ class _ProfilePageState extends State<ProfilePage> {
       return;
     }
     final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
-    if (pickedFile != null) {
+    final user = FirebaseAuth.instance.currentUser;
+    if (pickedFile != null && user != null) {
       setState(() {
         uploadedImages.add(FileImage(File(pickedFile.path)));
         profileItems['Photos']!['completed'] = uploadedImages.length;
@@ -312,17 +314,18 @@ class _ProfilePageState extends State<ProfilePage> {
           profileItems,
         );
       });
-      // TODO: Upload ke Firebase Storage, dapatkan URL download, lalu simpan ke Firestore
       try {
-        await _updateUserProfile({
-          'photos':
-              uploadedImages.map((img) {
-                if (img is NetworkImage) return img.url;
-                if (img is FileImage)
-                  return img.file.path; // Ganti dengan URL Storage
-                return '';
-              }).toList(),
-        });
+        final firebaseService = FirebaseService();
+        final url = await firebaseService.uploadPhotoToStorage(
+          File(pickedFile.path),
+          'user_photos/${user.uid}/${DateTime.now().millisecondsSinceEpoch}_${pickedFile.name}',
+        );
+        await FirebaseFirestore.instance
+            .collection('Users')
+            .doc(user.uid)
+            .update({
+              'photos': FieldValue.arrayUnion([url]),
+            });
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -341,7 +344,8 @@ class _ProfilePageState extends State<ProfilePage> {
       return;
     }
     final pickedFile = await _picker.pickImage(source: ImageSource.camera);
-    if (pickedFile != null) {
+    final user = FirebaseAuth.instance.currentUser;
+    if (pickedFile != null && user != null) {
       setState(() {
         uploadedImages.add(FileImage(File(pickedFile.path)));
         profileItems['Photos']!['completed'] = uploadedImages.length;
@@ -356,17 +360,19 @@ class _ProfilePageState extends State<ProfilePage> {
           profileItems,
         );
       });
-      // TODO: Upload ke Firebase Storage, dapatkan URL download, lalu simpan ke Firestore
+      // Upload ke Firebase Storage, dapatkan URL download, lalu simpan ke Firestore
       try {
-        await _updateUserProfile({
-          'photos':
-              uploadedImages.map((img) {
-                if (img is NetworkImage) return img.url;
-                if (img is FileImage)
-                  return img.file.path; // Ganti dengan URL Storage
-                return '';
-              }).toList(),
-        });
+        final firebaseService = FirebaseService();
+        final url = await firebaseService.uploadPhotoToStorage(
+          File(pickedFile.path),
+          'user_photos/${user.uid}/${DateTime.now().millisecondsSinceEpoch}_${pickedFile.name}',
+        );
+        await FirebaseFirestore.instance
+            .collection('Users')
+            .doc(user.uid)
+            .update({
+              'photos': FieldValue.arrayUnion([url]),
+            });
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -427,28 +433,55 @@ class _ProfilePageState extends State<ProfilePage> {
             right: 14,
             child: GestureDetector(
               onTap: () async {
-                setState(() {
-                  uploadedImages.removeAt(index);
-                  profileItems['Photos']!['completed'] = uploadedImages.length;
-                  profileCompletion =
-                      (profileItems['Photos']!['completed'] +
-                          profileItems['Interest']!['completed'] +
-                          profileItems['Bio']!['completed'] +
-                          profileItems['Faculty']!['completed']) /
-                      11.0;
-                  profileCompletionNotifier.value = profileCompletion;
-                  profileItemsNotifier.value =
-                      Map<String, Map<String, dynamic>>.from(profileItems);
-                });
-                await _updateUserProfile({
-                  'photos':
-                      uploadedImages.map((img) {
-                        if (img is NetworkImage) return img.url;
-                        if (img is FileImage)
-                          return img.file.path; // Ganti dengan URL Storage
-                        return '';
-                      }).toList(),
-                });
+                final user = FirebaseAuth.instance.currentUser;
+                if (user == null) return;
+
+                try {
+                  // Ambil data user terbaru dari Firestore
+                  final doc =
+                      await FirebaseFirestore.instance
+                          .collection('Users')
+                          .doc(user.uid)
+                          .get();
+                  List<dynamic> photos = List.from(doc['photos'] ?? []);
+
+                  // Hapus foto dari Storage terlebih dahulu
+                  if (index < photos.length) {
+                    final photoUrl = photos[index];
+                    final firebaseService = FirebaseService();
+                    await firebaseService.deletePhotoFromStorage(photoUrl);
+
+                    // Hapus URL dari array
+                    photos.removeAt(index);
+
+                    // Update Firestore dengan array baru
+                    await FirebaseFirestore.instance
+                        .collection('Users')
+                        .doc(user.uid)
+                        .update({'photos': photos});
+
+                    setState(() {
+                      uploadedImages.removeAt(index);
+                      profileItems['Photos']!['completed'] =
+                          uploadedImages.length;
+                      profileCompletion =
+                          (profileItems['Photos']!['completed'] +
+                              profileItems['Interest']!['completed'] +
+                              profileItems['Bio']!['completed'] +
+                              profileItems['Faculty']!['completed']) /
+                          11.0;
+                      profileCompletionNotifier.value = profileCompletion;
+                      profileItemsNotifier.value =
+                          Map<String, Map<String, dynamic>>.from(profileItems);
+                    });
+                  }
+                } catch (e) {
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Failed to delete photo: $e')),
+                    );
+                  }
+                }
               },
               child: Container(
                 decoration: BoxDecoration(
@@ -588,97 +621,181 @@ class _ProfilePageState extends State<ProfilePage> {
             ),
           ),
           child: SafeArea(
-            child: _isLoading
-                ? Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        CircularProgressIndicator(
-                          color: const Color(0xFFFF375F),
-                        ),
-                        SizedBox(height: 16),
-                        Text(
-                          'Loading profile...',
-                          style: TextStyle(
-                            color: Colors.grey[700],
-                            fontSize: 16,
+            child:
+                _isLoading
+                    ? Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          CircularProgressIndicator(
+                            color: const Color(0xFFFF375F),
                           ),
-                        ),
-                      ],
-                    ),
-                  )
-                : RefreshIndicator(
-                    onRefresh: _loadUserProfile,
-                    color: const Color(0xFFFF375F),
-                    child: SingleChildScrollView(
-                      physics: const AlwaysScrollableScrollPhysics(),
-                      child: Padding(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: horizontalPadding,
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            SizedBox(height: screenHeight * 0.03),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  'Profile',
-                                  style: TextStyle(
-                                    color: const Color(0xFF333333),
-                                    fontSize: screenWidth * 0.09,
-                                    fontFamily: 'Nunito',
-                                    fontWeight: FontWeight.w800,
-                                  ),
-                                ),
-                                OutlinedButton(
-                                  onPressed: () {
-                                    // Navigate to the FaceValidation page when the button is clicked
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder:
-                                            (context) =>
-                                                FaceValidationPhotoPage(),
-                                      ),
-                                    );
-                                  },
-                                  style: OutlinedButton.styleFrom(
-                                    backgroundColor: Colors.white,
-                                    side: BorderSide(
-                                      color: Colors.blue.shade300,
-                                    ),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(20),
-                                    ),
-                                  ),
-                                  child: Row(
-                                    children: [
-                                      Text(
-                                        'Get Verified',
-                                        style: TextStyle(
-                                          color: Colors.blue.shade600,
-                                          fontWeight: FontWeight.w600,
-                                        ),
-                                      ),
-                                      SizedBox(width: 4),
-                                      Icon(
-                                        Icons.verified,
-                                        color: Colors.blue,
-                                        size: 16,
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
+                          SizedBox(height: 16),
+                          Text(
+                            'Loading profile...',
+                            style: TextStyle(
+                              color: Colors.grey[700],
+                              fontSize: 16,
                             ),
-                            SizedBox(height: screenHeight * 0.03),
-                            GestureDetector(
-                              onTap: _showProfileCompletionPopup,
-                              child: Container(
+                          ),
+                        ],
+                      ),
+                    )
+                    : RefreshIndicator(
+                      onRefresh: _loadUserProfile,
+                      color: const Color(0xFFFF375F),
+                      child: SingleChildScrollView(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        child: Padding(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: horizontalPadding,
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              SizedBox(height: screenHeight * 0.03),
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    'Profile',
+                                    style: TextStyle(
+                                      color: const Color(0xFF333333),
+                                      fontSize: screenWidth * 0.09,
+                                      fontFamily: 'Nunito',
+                                      fontWeight: FontWeight.w800,
+                                    ),
+                                  ),
+                                  OutlinedButton(
+                                    onPressed: () {
+                                      // Navigate to the FaceValidation page when the button is clicked
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder:
+                                              (context) =>
+                                                  FaceValidationPhotoPage(),
+                                        ),
+                                      );
+                                    },
+                                    style: OutlinedButton.styleFrom(
+                                      backgroundColor: Colors.white,
+                                      side: BorderSide(
+                                        color: Colors.blue.shade300,
+                                      ),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(20),
+                                      ),
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        Text(
+                                          'Get Verified',
+                                          style: TextStyle(
+                                            color: Colors.blue.shade600,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
+                                        SizedBox(width: 4),
+                                        Icon(
+                                          Icons.verified,
+                                          color: Colors.blue,
+                                          size: 16,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              SizedBox(height: screenHeight * 0.03),
+                              GestureDetector(
+                                onTap: _showProfileCompletionPopup,
+                                child: Container(
+                                  width: contentWidth,
+                                  height: 56,
+                                  clipBehavior: Clip.antiAlias,
+                                  decoration: ShapeDecoration(
+                                    color: Colors.white,
+                                    shape: RoundedRectangleBorder(
+                                      side: BorderSide(
+                                        width: 2,
+                                        color: const Color(0xFFFF375F),
+                                      ),
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                  ),
+                                  child: Padding(
+                                    padding: EdgeInsets.symmetric(
+                                      horizontal: 12,
+                                    ),
+                                    child: Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Text(
+                                          '${(profileCompletion * 100).toInt()}% complete',
+                                          style: TextStyle(
+                                            color: Colors.black,
+                                            fontSize: 15,
+                                            fontFamily: 'Inter',
+                                            fontWeight: FontWeight.w400,
+                                          ),
+                                        ),
+                                        Icon(
+                                          Icons.arrow_forward_ios,
+                                          color: const Color(0xFFFF375F),
+                                          size: 16,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              SizedBox(height: screenHeight * 0.03),
+                              _buildSectionHeader(
+                                'Photos',
+                                'Pick some that show the true you.',
+                                profileItems['Photos']!['icon'],
+                              ),
+                              SizedBox(height: 12),
+                              // Photo grid
+                              Column(
+                                children: List.generate(2, (rowIndex) {
+                                  return Padding(
+                                    padding: const EdgeInsets.only(bottom: 12),
+                                    child: Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: List.generate(3, (colIndex) {
+                                        int index = rowIndex * 3 + colIndex;
+                                        return SizedBox(
+                                          width: photoSize,
+                                          height: photoSize,
+                                          child: _buildPhotoSlot(
+                                            image:
+                                                index < uploadedImages.length
+                                                    ? uploadedImages[index]
+                                                    : null,
+                                            index: index,
+                                          ),
+                                        );
+                                      }),
+                                    ),
+                                  );
+                                }),
+                              ),
+
+                              SizedBox(height: screenHeight * 0.03),
+                              _buildSectionHeader(
+                                'Bio',
+                                'Write a fun and punchy intro.',
+                                profileItems['Bio']!['icon'],
+                              ),
+                              SizedBox(height: 12),
+                              Container(
                                 width: contentWidth,
-                                height: 56,
+                                height: screenHeight * 0.15,
                                 clipBehavior: Clip.antiAlias,
                                 decoration: ShapeDecoration(
                                   color: Colors.white,
@@ -690,346 +807,269 @@ class _ProfilePageState extends State<ProfilePage> {
                                     borderRadius: BorderRadius.circular(10),
                                   ),
                                 ),
-                                child: Padding(
-                                  padding: EdgeInsets.symmetric(horizontal: 12),
-                                  child: Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Text(
-                                        '${(profileCompletion * 100).toInt()}% complete',
-                                        style: TextStyle(
-                                          color: Colors.black,
-                                          fontSize: 15,
-                                          fontFamily: 'Inter',
-                                          fontWeight: FontWeight.w400,
-                                        ),
-                                      ),
-                                      Icon(
-                                        Icons.arrow_forward_ios,
+                                child: TextField(
+                                  focusNode: bioFocusNode,
+                                  controller: bioController,
+                                  decoration: InputDecoration(
+                                    contentPadding: EdgeInsets.all(18),
+                                    border: InputBorder.none,
+                                    hintText:
+                                        'Write something about yourself...',
+                                  ),
+                                  maxLines: null,
+                                  keyboardType: TextInputType.multiline,
+                                  textInputAction: TextInputAction.newline,
+                                  onChanged: (value) async {
+                                    setState(() {
+                                      profileItems['Bio']!['completed'] =
+                                          value.isNotEmpty ? 1 : 0;
+                                      profileCompletion =
+                                          (profileItems['Photos']!['completed'] +
+                                              profileItems['Interest']!['completed'] +
+                                              profileItems['Bio']!['completed'] +
+                                              profileItems['Faculty']!['completed']) /
+                                          11.0;
+                                      profileCompletionNotifier.value =
+                                          profileCompletion;
+                                      profileItemsNotifier.value = Map<
+                                        String,
+                                        Map<String, dynamic>
+                                      >.from(profileItems);
+                                    });
+                                    await _updateUserProfile({'bio': value});
+                                  },
+                                  autofocus: false,
+                                  enableInteractiveSelection: true,
+                                  onEditingComplete: () {
+                                    // Explicitly unfocus on editing complete
+                                    bioFocusNode.unfocus();
+                                    FocusScope.of(
+                                      context,
+                                    ).requestFocus(FocusNode());
+                                  },
+                                  onTapOutside: (_) {
+                                    // Unfocus when tapped outside
+                                    bioFocusNode.unfocus();
+                                    FocusScope.of(
+                                      context,
+                                    ).requestFocus(FocusNode());
+                                  },
+                                ),
+                              ),
+                              SizedBox(height: screenHeight * 0.03),
+                              _buildSectionHeader(
+                                'Interest',
+                                'Get specific about the things you love.',
+                                profileItems['Interest']!['icon'],
+                              ),
+                              SizedBox(height: 12),
+                              GestureDetector(
+                                onTap: _showInterestSelector,
+                                child: Container(
+                                  width: contentWidth,
+                                  padding: EdgeInsets.all(12),
+                                  decoration: ShapeDecoration(
+                                    color: Colors.white,
+                                    shape: RoundedRectangleBorder(
+                                      side: BorderSide(
+                                        width: 2,
                                         color: const Color(0xFFFF375F),
-                                        size: 16,
                                       ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ),
-                            SizedBox(height: screenHeight * 0.03),
-                            _buildSectionHeader(
-                              'Photos',
-                              'Pick some that show the true you.',
-                              profileItems['Photos']!['icon'],
-                            ),
-                            SizedBox(height: 12),
-                            // Photo grid
-                            Column(
-                              children: List.generate(2, (rowIndex) {
-                                return Padding(
-                                  padding: const EdgeInsets.only(bottom: 12),
-                                  child: Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceBetween,
-                                    children: List.generate(3, (colIndex) {
-                                      int index = rowIndex * 3 + colIndex;
-                                      return SizedBox(
-                                        width: photoSize,
-                                        height: photoSize,
-                                        child: _buildPhotoSlot(
-                                          image:
-                                              index < uploadedImages.length
-                                                  ? uploadedImages[index]
-                                                  : null,
-                                          index: index,
-                                        ),
-                                      );
-                                    }),
-                                  ),
-                                );
-                              }),
-                            ),
-
-                            SizedBox(height: screenHeight * 0.03),
-                            _buildSectionHeader(
-                              'Bio',
-                              'Write a fun and punchy intro.',
-                              profileItems['Bio']!['icon'],
-                            ),
-                            SizedBox(height: 12),
-                            Container(
-                              width: contentWidth,
-                              height: screenHeight * 0.15,
-                              clipBehavior: Clip.antiAlias,
-                              decoration: ShapeDecoration(
-                                color: Colors.white,
-                                shape: RoundedRectangleBorder(
-                                  side: BorderSide(
-                                    width: 2,
-                                    color: const Color(0xFFFF375F),
-                                  ),
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                              ),
-                              child: TextField(
-                                focusNode: bioFocusNode,
-                                controller: bioController,
-                                decoration: InputDecoration(
-                                  contentPadding: EdgeInsets.all(18),
-                                  border: InputBorder.none,
-                                  hintText: 'Write something about yourself...',
-                                ),
-                                maxLines: null,
-                                keyboardType: TextInputType.multiline,
-                                textInputAction: TextInputAction.newline,
-                                onChanged: (value) async {
-                                  setState(() {
-                                    profileItems['Bio']!['completed'] =
-                                        value.isNotEmpty ? 1 : 0;
-                                    profileCompletion =
-                                        (profileItems['Photos']!['completed'] +
-                                            profileItems['Interest']!['completed'] +
-                                            profileItems['Bio']!['completed'] +
-                                            profileItems['Faculty']!['completed']) /
-                                        11.0;
-                                    profileCompletionNotifier.value =
-                                        profileCompletion;
-                                    profileItemsNotifier.value =
-                                        Map<String, Map<String, dynamic>>.from(
-                                          profileItems,
-                                        );
-                                  });
-                                  await _updateUserProfile({'bio': value});
-                                },
-                                autofocus: false,
-                                enableInteractiveSelection: true,
-                                onEditingComplete: () {
-                                  // Explicitly unfocus on editing complete
-                                  bioFocusNode.unfocus();
-                                  FocusScope.of(
-                                    context,
-                                  ).requestFocus(FocusNode());
-                                },
-                                onTapOutside: (_) {
-                                  // Unfocus when tapped outside
-                                  bioFocusNode.unfocus();
-                                  FocusScope.of(
-                                    context,
-                                  ).requestFocus(FocusNode());
-                                },
-                              ),
-                            ),
-                            SizedBox(height: screenHeight * 0.03),
-                            _buildSectionHeader(
-                              'Interest',
-                              'Get specific about the things you love.',
-                              profileItems['Interest']!['icon'],
-                            ),
-                            SizedBox(height: 12),
-                            GestureDetector(
-                              onTap: _showInterestSelector,
-                              child: Container(
-                                width: contentWidth,
-                                padding: EdgeInsets.all(12),
-                                decoration: ShapeDecoration(
-                                  color: Colors.white,
-                                  shape: RoundedRectangleBorder(
-                                    side: BorderSide(
-                                      width: 2,
-                                      color: const Color(0xFFFF375F),
+                                      borderRadius: BorderRadius.circular(10),
                                     ),
-                                    borderRadius: BorderRadius.circular(10),
                                   ),
-                                ),
-                                child:
-                                    selectedInterests.isEmpty
-                                        ? Text(
-                                          'Tap to choose up to 3 interests',
-                                          style: TextStyle(
-                                            color: Colors.grey[600],
-                                          ),
-                                        )
-                                        : Wrap(
-                                          spacing: 8,
-                                          runSpacing: 8,
-                                          children:
-                                              selectedInterests.map((interest) {
-                                                final icon =
-                                                    interests.firstWhere(
-                                                          (e) =>
-                                                              e['label'] ==
-                                                              interest,
-                                                        )['icon']
-                                                        as IconData;
-                                                return Container(
-                                                  padding: EdgeInsets.symmetric(
-                                                    horizontal: 12,
-                                                    vertical: 6,
-                                                  ),
-                                                  decoration: BoxDecoration(
-                                                    color: Colors.pink[300],
-                                                    borderRadius:
-                                                        BorderRadius.circular(
-                                                          10,
-                                                        ),
-                                                  ),
-                                                  child: Row(
-                                                    mainAxisSize:
-                                                        MainAxisSize.min,
-                                                    children: [
-                                                      Icon(
-                                                        icon,
-                                                        size: 16,
-                                                        color: Colors.white,
-                                                      ),
-                                                      SizedBox(width: 6),
-                                                      Text(
-                                                        interest,
-                                                        style: TextStyle(
-                                                          color: Colors.white,
-                                                          fontWeight:
-                                                              FontWeight.w600,
-                                                        ),
-                                                      ),
-                                                    ],
-                                                  ),
-                                                );
-                                              }).toList(),
-                                        ),
-                              ),
-                            ),
-                            SizedBox(height: screenHeight * 0.03),
-                            _buildSectionHeader(
-                              'Faculty',
-                              'Time to flex your faculty with pride.',
-                              profileItems['Faculty']!['icon'],
-                            ),
-                            SizedBox(height: 12),
-                            GestureDetector(
-                              onTap: _showFacultySelector,
-                              child: Container(
-                                width: contentWidth,
-                                padding: EdgeInsets.all(12),
-                                decoration: ShapeDecoration(
-                                  color: Colors.white,
-                                  shape: RoundedRectangleBorder(
-                                    side: BorderSide(
-                                      width: 2,
-                                      color: const Color(0xFFFF375F),
-                                    ),
-                                    borderRadius: BorderRadius.circular(10),
-                                  ),
-                                ),
-                                child:
-                                    selectedFaculty == null
-                                        ? Text(
-                                          'Tap to choose your faculty',
-                                          style: TextStyle(
-                                            color: Colors.grey[600],
-                                          ),
-                                        )
-                                        : Container(
-                                          padding: EdgeInsets.symmetric(
-                                            horizontal: 12,
-                                            vertical: 6,
-                                          ),
-                                          decoration: BoxDecoration(
-                                            color: Colors.pink[300],
-                                            borderRadius: BorderRadius.circular(
-                                              10,
-                                            ),
-                                          ),
-                                          child: Text(
-                                            selectedFaculty!,
+                                  child:
+                                      selectedInterests.isEmpty
+                                          ? Text(
+                                            'Tap to choose up to 3 interests',
                                             style: TextStyle(
-                                              color: Colors.white,
-                                              fontWeight: FontWeight.w600,
+                                              color: Colors.grey[600],
+                                            ),
+                                          )
+                                          : Wrap(
+                                            spacing: 8,
+                                            runSpacing: 8,
+                                            children:
+                                                selectedInterests.map((
+                                                  interest,
+                                                ) {
+                                                  final icon =
+                                                      interests.firstWhere(
+                                                            (e) =>
+                                                                e['label'] ==
+                                                                interest,
+                                                          )['icon']
+                                                          as IconData;
+                                                  return Container(
+                                                    padding:
+                                                        EdgeInsets.symmetric(
+                                                          horizontal: 12,
+                                                          vertical: 6,
+                                                        ),
+                                                    decoration: BoxDecoration(
+                                                      color: Colors.pink[300],
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                            10,
+                                                          ),
+                                                    ),
+                                                    child: Row(
+                                                      mainAxisSize:
+                                                          MainAxisSize.min,
+                                                      children: [
+                                                        Icon(
+                                                          icon,
+                                                          size: 16,
+                                                          color: Colors.white,
+                                                        ),
+                                                        SizedBox(width: 6),
+                                                        Text(
+                                                          interest,
+                                                          style: TextStyle(
+                                                            color: Colors.white,
+                                                            fontWeight:
+                                                                FontWeight.w600,
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  );
+                                                }).toList(),
+                                          ),
+                                ),
+                              ),
+                              SizedBox(height: screenHeight * 0.03),
+                              _buildSectionHeader(
+                                'Faculty',
+                                'Time to flex your faculty with pride.',
+                                profileItems['Faculty']!['icon'],
+                              ),
+                              SizedBox(height: 12),
+                              GestureDetector(
+                                onTap: _showFacultySelector,
+                                child: Container(
+                                  width: contentWidth,
+                                  padding: EdgeInsets.all(12),
+                                  decoration: ShapeDecoration(
+                                    color: Colors.white,
+                                    shape: RoundedRectangleBorder(
+                                      side: BorderSide(
+                                        width: 2,
+                                        color: const Color(0xFFFF375F),
+                                      ),
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                  ),
+                                  child:
+                                      selectedFaculty == null
+                                          ? Text(
+                                            'Tap to choose your faculty',
+                                            style: TextStyle(
+                                              color: Colors.grey[600],
+                                            ),
+                                          )
+                                          : Container(
+                                            padding: EdgeInsets.symmetric(
+                                              horizontal: 12,
+                                              vertical: 6,
+                                            ),
+                                            decoration: BoxDecoration(
+                                              color: Colors.pink[300],
+                                              borderRadius:
+                                                  BorderRadius.circular(10),
+                                            ),
+                                            child: Text(
+                                              selectedFaculty!,
+                                              style: TextStyle(
+                                                color: Colors.white,
+                                                fontWeight: FontWeight.w600,
+                                              ),
                                             ),
                                           ),
-                                        ),
+                                ),
                               ),
-                            ),
 
-                            // Social Media URLs Section
-                            SizedBox(height: screenHeight * 0.03),
-                            _buildSectionHeader(
-                              'Social URLs',
-                              'Show us where you\'re hanging out online!',
-                              Icons.link,
-                            ),
-                            SizedBox(height: 12),
-                            Container(
-                              width: contentWidth,
-                              padding: EdgeInsets.all(12),
-                              decoration: ShapeDecoration(
-                                color: Colors.white,
-                                shape: RoundedRectangleBorder(
-                                  side: BorderSide(
-                                    width: 2,
-                                    color: const Color(0xFFFF375F),
-                                  ),
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
+                              // Social Media URLs Section
+                              SizedBox(height: screenHeight * 0.03),
+                              _buildSectionHeader(
+                                'Social URLs',
+                                'Show us where you\'re hanging out online!',
+                                Icons.link,
                               ),
-                              child: Column(
-                                children: [
-                                  _buildSocialMediaInput(
-                                    platform: 'Facebook',
-                                    controller: facebookController,
-                                    icon: Icons.facebook,
-                                  ),
-                                  _buildSocialMediaInput(
-                                    platform: 'Instagram',
-                                    controller: instagramController,
-                                    icon: Icons.camera_alt,
-                                  ),
-                                  _buildSocialMediaInput(
-                                    platform: 'X',
-                                    controller: xController,
-                                    icon: Icons.alternate_email,
-                                  ),
-                                  _buildSocialMediaInput(
-                                    platform: 'Line',
-                                    controller: lineController,
-                                    icon: Icons.chat,
-                                  ),
-                                ],
-                              ),
-                            ),
-                            SizedBox(height: screenHeight * 0.05),
-                            // Logout Button
-                            Center(
-                              child: TextButton(
-                                onPressed: () async {
-                                  // Clear session
-                                  await SessionManager.clearSession();
-                                  // Sign out from Firebase Auth
-                                  await FirebaseAuth.instance.signOut();
-                                  // Sign out from Google Sign-In
-                                  final googleSignIn = GoogleSignIn();
-                                  await googleSignIn.signOut();
-                                  // Navigate to get_started
-                                  Navigator.pushNamedAndRemoveUntil(
-                                    context,
-                                    '/get_started',
-                                    (route) => false,
-                                  );
-                                },
-                                child: Text(
-                                  'Logout',
-                                  style: TextStyle(
-                                    color: Colors.red,
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w600,
+                              SizedBox(height: 12),
+                              Container(
+                                width: contentWidth,
+                                padding: EdgeInsets.all(12),
+                                decoration: ShapeDecoration(
+                                  color: Colors.white,
+                                  shape: RoundedRectangleBorder(
+                                    side: BorderSide(
+                                      width: 2,
+                                      color: const Color(0xFFFF375F),
+                                    ),
+                                    borderRadius: BorderRadius.circular(10),
                                   ),
                                 ),
+                                child: Column(
+                                  children: [
+                                    _buildSocialMediaInput(
+                                      platform: 'Facebook',
+                                      controller: facebookController,
+                                      icon: Icons.facebook,
+                                    ),
+                                    _buildSocialMediaInput(
+                                      platform: 'Instagram',
+                                      controller: instagramController,
+                                      icon: Icons.camera_alt,
+                                    ),
+                                    _buildSocialMediaInput(
+                                      platform: 'X',
+                                      controller: xController,
+                                      icon: Icons.alternate_email,
+                                    ),
+                                    _buildSocialMediaInput(
+                                      platform: 'Line',
+                                      controller: lineController,
+                                      icon: Icons.chat,
+                                    ),
+                                  ],
+                                ),
                               ),
-                            ),
-                            SizedBox(height: screenHeight * 0.02),
-                          ],
+                              SizedBox(height: screenHeight * 0.05),
+                              // Logout Button
+                              Center(
+                                child: TextButton(
+                                  onPressed: () async {
+                                    // Clear session
+                                    await SessionManager.clearSession();
+                                    // Sign out from Firebase Auth
+                                    await FirebaseAuth.instance.signOut();
+                                    // Sign out from Google Sign-In
+                                    final googleSignIn = GoogleSignIn();
+                                    await googleSignIn.signOut();
+                                    // Navigate to get_started
+                                    Navigator.pushNamedAndRemoveUntil(
+                                      context,
+                                      '/get_started',
+                                      (route) => false,
+                                    );
+                                  },
+                                  child: Text(
+                                    'Logout',
+                                    style: TextStyle(
+                                      color: Colors.red,
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              SizedBox(height: screenHeight * 0.02),
+                            ],
+                          ),
                         ),
                       ),
                     ),
-                  ),
           ),
         ),
       ),

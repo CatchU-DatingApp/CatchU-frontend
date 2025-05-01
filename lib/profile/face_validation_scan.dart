@@ -1,6 +1,10 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
+import '../services/face_recognition_service.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:http/http.dart' as http;
+import 'package:path/path.dart' as path;
 
 class FaceValidationScanPage extends StatefulWidget {
   final String profilePhotoUrl;
@@ -13,228 +17,180 @@ class FaceValidationScanPage extends StatefulWidget {
 }
 
 class _FaceValidationScanPageState extends State<FaceValidationScanPage> {
-  CameraController? _cameraController;
-  List<CameraDescription>? _cameras;
-  bool _isCameraInitialized = false;
-  File? _capturedImage;
+  CameraController? _controller;
+  late FaceRecognitionService _faceRecognitionService;
   bool _isProcessing = false;
+  String? _validationMessage;
+  bool? _isValidated;
 
   @override
   void initState() {
     super.initState();
     _initializeCamera();
+    _faceRecognitionService = FaceRecognitionService();
   }
 
   Future<void> _initializeCamera() async {
-    try {
-      _cameras = await availableCameras();
-      if (_cameras!.isNotEmpty) {
-        // Use front camera for face scanning
-        final frontCamera = _cameras!.firstWhere(
-          (camera) => camera.lensDirection == CameraLensDirection.front,
-          orElse: () => _cameras!.first,
-        );
+    final cameras = await availableCameras();
+    final frontCamera = cameras.firstWhere(
+      (camera) => camera.lensDirection == CameraLensDirection.front,
+      orElse: () => cameras.first,
+    );
 
-        _cameraController = CameraController(
-          frontCamera,
-          ResolutionPreset.high,
-          enableAudio: false,
-        );
+    _controller = CameraController(
+      frontCamera,
+      ResolutionPreset.medium,
+      enableAudio: false,
+    );
 
-        await _cameraController!.initialize();
-
-        if (mounted) {
-          setState(() {
-            _isCameraInitialized = true;
-          });
-        }
-      }
-    } catch (e) {
-      print('Error initializing camera: $e');
-    }
+    await _controller!.initialize();
+    if (mounted) setState(() {});
   }
 
-  Future<void> _captureImage() async {
-    if (_cameraController == null || !_cameraController!.value.isInitialized) {
-      return;
-    }
+  Future<String> _downloadAndSaveProfilePhoto() async {
+    final response = await http.get(Uri.parse(widget.profilePhotoUrl));
+    final tempDir = await getTemporaryDirectory();
+    final tempPath = path.join(tempDir.path, 'profile_photo.jpg');
+    await File(tempPath).writeAsBytes(response.bodyBytes);
+    return tempPath;
+  }
+
+  Future<void> _validateFace() async {
+    if (_controller == null || _isProcessing) return;
 
     setState(() {
       _isProcessing = true;
+      _validationMessage = 'Processing...';
+      _isValidated = null;
     });
 
     try {
-      final XFile image = await _cameraController!.takePicture();
+      // Ambil foto dari kamera
+      final XFile photo = await _controller!.takePicture();
+
+      // Download dan simpan foto profil
+      final String profilePhotoPath = await _downloadAndSaveProfilePhoto();
+
+      // Dapatkan embedding untuk kedua foto
+      final List<double> profileEmbedding = await _faceRecognitionService
+          .getFaceEmbedding(profilePhotoPath);
+      final List<double> capturedEmbedding = await _faceRecognitionService
+          .getFaceEmbedding(photo.path);
+
+      // Bandingkan wajah
+      final bool isMatch = _faceRecognitionService.areFacesMatching(
+        profileEmbedding,
+        capturedEmbedding,
+      );
+
       setState(() {
-        _capturedImage = File(image.path);
-        _isProcessing = false;
+        _isValidated = isMatch;
+        _validationMessage =
+            isMatch
+                ? 'Face validation successful!'
+                : 'Face validation failed. Please try again.';
       });
+
+      // Hapus file temporary
+      await File(profilePhotoPath).delete();
+      await File(photo.path).delete();
     } catch (e) {
-      print('Error capturing image: $e');
+      setState(() {
+        _isValidated = false;
+        _validationMessage = 'Error: ${e.toString()}';
+      });
+    } finally {
       setState(() {
         _isProcessing = false;
       });
     }
-  }
-
-  void _retakePhoto() {
-    setState(() {
-      _capturedImage = null;
-    });
-  }
-
-  void _confirmPhoto() {
-    // Here you would typically process the photo and validate the face
-    // For now, we'll just show a success message and navigate back
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text('Face validation successful!')));
-
-    // Navigate back to the previous screen or to the next step in your flow
-    Navigator.of(context).pop();
-  }
-
-  @override
-  void dispose() {
-    _cameraController?.dispose();
-    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    if (_controller == null || !_controller!.value.isInitialized) {
+      return Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+
     return Scaffold(
-      backgroundColor: Color(0xFFF8F8F8),
+      backgroundColor: Colors.black,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () => Navigator.of(context).pop(),
+          icon: Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () => Navigator.pop(context),
         ),
-        title: Text(''),
       ),
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              const SizedBox(height: 16),
-              Text(
-                'Scan Your Face',
-                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Position your face within the frame\nand take a clear photo',
-                style: TextStyle(fontSize: 16, color: Colors.black54),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 32),
-              Expanded(
-                child: Container(
-                  width: double.infinity,
+      body: Column(
+        children: [
+          Expanded(
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                CameraPreview(_controller!),
+                Container(
                   decoration: BoxDecoration(
-                    color: Colors.grey.shade300,
-                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color:
+                          _isValidated == null
+                              ? Colors.white
+                              : _isValidated!
+                              ? Colors.green
+                              : Colors.red,
+                      width: 2,
+                    ),
+                    shape: BoxShape.circle,
                   ),
-                  child:
-                      _capturedImage != null
-                          ? ClipRRect(
-                            borderRadius: BorderRadius.circular(12),
-                            child: Image.file(
-                              _capturedImage!,
-                              fit: BoxFit.cover,
-                            ),
-                          )
-                          : _isCameraInitialized
-                          ? ClipRRect(
-                            borderRadius: BorderRadius.circular(12),
-                            child: Stack(
-                              alignment: Alignment.center,
-                              children: [
-                                CameraPreview(_cameraController!),
-                                // Face outline guide
-                                Container(
-                                  width: 200,
-                                  height: 200,
-                                  decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    border: Border.all(
-                                      color: Colors.white,
-                                      width: 3,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          )
-                          : Center(child: CircularProgressIndicator()),
+                  width: 250,
+                  height: 250,
+                ),
+                if (_validationMessage != null)
+                  Positioned(
+                    bottom: 20,
+                    child: Container(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withOpacity(0.7),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Text(
+                        _validationMessage!,
+                        style: TextStyle(color: Colors.white),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          Container(
+            padding: EdgeInsets.all(20),
+            child: ElevatedButton(
+              onPressed: _isProcessing ? null : _validateFace,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFFF4D6D),
+                minimumSize: Size(double.infinity, 50),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(25),
                 ),
               ),
-              const SizedBox(height: 24),
-              if (_capturedImage == null)
-                ElevatedButton(
-                  onPressed: _isProcessing ? null : _captureImage,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.white,
-                    foregroundColor: Colors.black,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      side: BorderSide(color: Colors.grey.shade300),
-                    ),
-                    minimumSize: Size(double.infinity, 50),
-                  ),
-                  child:
-                      _isProcessing
-                          ? CircularProgressIndicator(
-                            valueColor: AlwaysStoppedAnimation<Color>(
-                              Colors.black,
-                            ),
-                          )
-                          : Text('Take Photo'),
-                )
-              else
-                Row(
-                  children: [
-                    Expanded(
-                      child: ElevatedButton(
-                        onPressed: _retakePhoto,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.white,
-                          foregroundColor: Colors.black,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                            side: BorderSide(color: Colors.grey.shade300),
-                          ),
-                          minimumSize: Size(0, 50),
-                        ),
-                        child: Text('Retake'),
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: ElevatedButton(
-                        onPressed: _confirmPhoto,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Color(0xFFFF4D6D),
-                          foregroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          minimumSize: Size(0, 50),
-                        ),
-                        child: Text('Confirm'),
-                      ),
-                    ),
-                  ],
-                ),
-              const SizedBox(height: 24),
-            ],
+              child:
+                  _isProcessing
+                      ? CircularProgressIndicator(color: Colors.white)
+                      : Text('Validate Face'),
+            ),
           ),
-        ),
+        ],
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    _controller?.dispose();
+    super.dispose();
   }
 }

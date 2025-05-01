@@ -28,7 +28,7 @@ class PhotoSelectionBottomSheet extends StatelessWidget {
           // Pink header section
           Container(
             padding: EdgeInsets.all(16),
-            height: screenHeight * 0.10, // Pink header is taller
+            height: screenHeight * 0.121,
             width: double.infinity,
             decoration: BoxDecoration(
               color: Colors.pinkAccent,
@@ -53,7 +53,9 @@ class PhotoSelectionBottomSheet extends StatelessWidget {
                     ),
                     GestureDetector(
                       onTap: () {
-                        Navigator.pop(context); // Keep the close icon functionality
+                        Navigator.pop(
+                          context,
+                        ); // Keep the close icon functionality
                       },
                       child: const Icon(Icons.close, color: Colors.white),
                     ),
@@ -63,7 +65,7 @@ class PhotoSelectionBottomSheet extends StatelessWidget {
                 const Text(
                   'Try To Find Ones That Show Off Your Smile',
                   style: TextStyle(color: Colors.white, fontSize: 13),
-                  textAlign: TextAlign.center,
+                  textAlign: TextAlign.left,
                 ),
               ],
             ),
