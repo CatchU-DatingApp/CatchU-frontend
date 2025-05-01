@@ -396,7 +396,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     ? ShapeDecoration(
                       image: DecorationImage(image: image, fit: BoxFit.cover),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
+                        borderRadius: BorderRadius.circular(10),
                       ),
                     )
                     : ShapeDecoration(
@@ -406,7 +406,7 @@ class _ProfilePageState extends State<ProfilePage> {
                           width: 1,
                           color: const Color(0xFFFF375F),
                         ),
-                        borderRadius: BorderRadius.circular(16),
+                        borderRadius: BorderRadius.circular(10),
                       ),
                     ),
             child:
@@ -455,7 +455,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   color: Colors.black.withOpacity(0.5),
                   shape: BoxShape.circle,
                 ),
-                padding: EdgeInsets.all(4),
+                padding: EdgeInsets.all(12),
                 child: Icon(Icons.close, size: 16, color: Colors.white),
               ),
             ),
@@ -474,7 +474,7 @@ class _ProfilePageState extends State<ProfilePage> {
       margin: EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(10),
         border: Border.all(color: const Color(0xFFFF375F), width: 1),
       ),
       child: Row(
@@ -494,7 +494,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 border: InputBorder.none,
                 enabledBorder: InputBorder.none,
                 focusedBorder: InputBorder.none,
-                contentPadding: EdgeInsets.symmetric(vertical: 15),
+                contentPadding: EdgeInsets.symmetric(vertical: 12),
               ),
               onChanged: (value) async {
                 try {
@@ -580,11 +580,16 @@ class _ProfilePageState extends State<ProfilePage> {
         FocusScope.of(context).unfocus();
       },
       child: Scaffold(
-        backgroundColor: const Color(0xFFFDFAF6),
-        body: SafeArea(
-          child:
-              _isLoading
-                  ? Center(
+        body: Container(
+          decoration: BoxDecoration(
+            image: DecorationImage(
+              image: AssetImage('assets/images/backgroundHomepageCatchU.png'),
+              fit: BoxFit.cover,
+            ),
+          ),
+          child: SafeArea(
+            child: _isLoading
+                ? Center(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
@@ -602,7 +607,7 @@ class _ProfilePageState extends State<ProfilePage> {
                       ],
                     ),
                   )
-                  : RefreshIndicator(
+                : RefreshIndicator(
                     onRefresh: _loadUserProfile,
                     color: const Color(0xFFFF375F),
                     child: SingleChildScrollView(
@@ -686,7 +691,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                   ),
                                 ),
                                 child: Padding(
-                                  padding: EdgeInsets.symmetric(horizontal: 15),
+                                  padding: EdgeInsets.symmetric(horizontal: 12),
                                   child: Row(
                                     mainAxisAlignment:
                                         MainAxisAlignment.spaceBetween,
@@ -864,7 +869,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                                     color: Colors.pink[300],
                                                     borderRadius:
                                                         BorderRadius.circular(
-                                                          20,
+                                                          10,
                                                         ),
                                                   ),
                                                   child: Row(
@@ -930,7 +935,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                           decoration: BoxDecoration(
                                             color: Colors.pink[300],
                                             borderRadius: BorderRadius.circular(
-                                              20,
+                                              10,
                                             ),
                                           ),
                                           child: Text(
@@ -1025,6 +1030,7 @@ class _ProfilePageState extends State<ProfilePage> {
                       ),
                     ),
                   ),
+          ),
         ),
       ),
     );

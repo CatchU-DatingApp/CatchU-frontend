@@ -21,8 +21,8 @@ class _MatchPageState extends State<MatchPage> {
       'line': 'vlebnia245',
     },
     {
-      'name': 'Muhammad Roif Baktiar',
-      'message': 'Aku orangnya baik banget sampai a...',
+      'name': 'Keilaa',
+      'message': 'janda anak 10',
       'image': 'assets/images/3_2.jpg',
       'instagram': 'loifu6969',
       'facebook': 'loifu6969',
@@ -30,8 +30,8 @@ class _MatchPageState extends State<MatchPage> {
       'line': 'loifu6969',
     },
     {
-      'name': 'Muhammad Roif Baktiar',
-      'message': 'Aku orangnya baik banget sampai a...',
+      'name': 'Mikaela',
+      'message': 'aku pacarnya kuv',
       'image': 'assets/images/3_3.jpg',
       'instagram': 'loifu6969',
       'facebook': 'loifu6969',
@@ -39,8 +39,8 @@ class _MatchPageState extends State<MatchPage> {
       'line': 'loifu6969',
     },
     {
-      'name': 'Muhammad Roif Baktiar',
-      'message': 'Aku orangnya baik banget sampai a...',
+      'name': 'kuvukiland',
+      'message': 'Asli kendal 😂',
       'image': 'assets/images/jawa.png',
       'instagram': 'loifu6969',
       'facebook': 'loifu6969',
@@ -155,7 +155,7 @@ class _MatchPageState extends State<MatchPage> {
                         margin: EdgeInsets.only(bottom: 8),
                         decoration: BoxDecoration(
                           color: Colors.white.withOpacity(0.3),
-                          borderRadius: BorderRadius.circular(10),
+                          borderRadius: BorderRadius.circular(22),
                           // border: Border.all(color: const Color.fromARGB(255, 255, 255, 255)),
                           // boxShadow: [
                           //   BoxShadow(
@@ -308,7 +308,7 @@ class _MatchPageState extends State<MatchPage> {
         padding: EdgeInsets.symmetric(vertical: 12),
         decoration: BoxDecoration(
           color: backgroundColor,
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(10),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
