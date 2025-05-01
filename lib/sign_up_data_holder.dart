@@ -1,3 +1,5 @@
+import 'package:firebase_auth/firebase_auth.dart';
+
 class SignUpDataHolder {
   String? phoneNumber;
   String? nama;
@@ -8,6 +10,8 @@ class SignUpDataHolder {
   String? photoUrl;
   List<double>? location;
   List<String>? photos;
+  PhoneAuthCredential? phoneAuthCredential;
+  String? verificationId;
 
   SignUpDataHolder({
     this.phoneNumber,
@@ -19,5 +23,7 @@ class SignUpDataHolder {
     this.photoUrl,
     this.location,
     this.photos,
+    this.phoneAuthCredential,
+    this.verificationId,
   });
 }

@@ -8,6 +8,7 @@ import 'package:catchu/sign_up_data_holder.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:catchu/services/session_manager.dart';
 import 'login_otp.dart';
+import 'package:flutter/services.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({Key? key}) : super(key: key);
@@ -259,7 +260,9 @@ class _LoginPageState extends State<LoginPage> {
                         // Phone Number Field (tanpa validator)
                         Expanded(
                           child: Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8.0,
+                            ),
                             child: TextField(
                               decoration: const InputDecoration(
                                 hintText: "Enter phone number",
@@ -270,11 +273,17 @@ class _LoginPageState extends State<LoginPage> {
                                 ),
                               ),
                               keyboardType: TextInputType.phone,
+                              inputFormatters: [
+                                FilteringTextInputFormatter.digitsOnly,
+                                LengthLimitingTextInputFormatter(15),
+                              ],
                               onChanged: (value) {
-                                setState(() {
-                                  _phoneNumber = value;
-                                });
-                                _validateInput(value);
+                                if (_phoneNumber != value) {
+                                  setState(() {
+                                    _phoneNumber = value;
+                                  });
+                                  _validateInput(value);
+                                }
                               },
                             ),
                           ),
@@ -330,21 +339,21 @@ class _LoginPageState extends State<LoginPage> {
                       child:
                           _isLoading
                               ? const SizedBox(
-                                  height: 20,
-                                  width: 20,
-                                  child: CircularProgressIndicator(
-                                    color: Colors.white,
-                                    strokeWidth: 2,
-                                  ),
-                                )
-                              : const Text(
-                                  'Continue',
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold,
-                                  ),
+                                height: 20,
+                                width: 20,
+                                child: CircularProgressIndicator(
+                                  color: Colors.white,
+                                  strokeWidth: 2,
                                 ),
+                              )
+                              : const Text(
+                                'Continue',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
                     ),
                   ),
                 ),
@@ -390,31 +399,31 @@ class _LoginPageState extends State<LoginPage> {
                             const SizedBox(width: 8),
                             _isGoogleLoading
                                 ? Row(
-                                    children: [
-                                      SizedBox(
-                                        height: 20,
-                                        width: 20,
-                                        child: CircularProgressIndicator(
-                                          strokeWidth: 2,
-                                        ),
+                                  children: [
+                                    SizedBox(
+                                      height: 20,
+                                      width: 20,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
                                       ),
-                                      const SizedBox(width: 8),
-                                      const Text(
-                                        'Loading...',
-                                        style: TextStyle(
-                                          fontSize: 16,
-                                          color: Colors.black87,
-                                        ),
-                                      ),
-                                    ],
-                                  )
-                                : const Text(
-                                    'Login with Google',
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      color: Colors.black87,
                                     ),
+                                    const SizedBox(width: 8),
+                                    const Text(
+                                      'Loading...',
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        color: Colors.black87,
+                                      ),
+                                    ),
+                                  ],
+                                )
+                                : const Text(
+                                  'Login with Google',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    color: Colors.black87,
                                   ),
+                                ),
                           ],
                         ),
                       ),

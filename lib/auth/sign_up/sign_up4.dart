@@ -32,46 +32,6 @@ class _SignUpPage4State extends State<SignUpPage4> {
     return null;
   }
 
-  Future<bool> _linkGoogleWithEmail(String email) async {
-    final GoogleSignIn googleSignIn = GoogleSignIn(
-      scopes: ['email', 'profile'],
-    );
-    final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
-    if (googleUser == null) {
-      // User cancelled Google sign in
-      return false;
-    }
-    if (googleUser.email.toLowerCase() != email.toLowerCase()) {
-      final authController = AuthController();
-      await authController.deleteCurrentUserWithReauth();
-      throw Exception('Email Google tidak sama dengan email yang diinput.');
-    }
-    final GoogleSignInAuthentication googleAuth =
-        await googleUser.authentication;
-    final AuthCredential googleCredential = GoogleAuthProvider.credential(
-      accessToken: googleAuth.accessToken,
-      idToken: googleAuth.idToken,
-    );
-    try {
-      // Buat akun sementara (belum lengkap) untuk link
-      final tempUser = await FirebaseAuth.instance
-          .createUserWithEmailAndPassword(
-            email: email,
-            password: 'temporaryPassword123!', // password sementara
-          );
-      await tempUser.user!.linkWithCredential(googleCredential);
-      return true;
-    } on FirebaseAuthException catch (e) {
-      if (e.code == 'provider-already-linked') {
-        return true;
-      } else if (e.code == 'credential-already-in-use') {
-        throw Exception('Akun Google sudah terhubung ke akun lain.');
-      } else {
-        rethrow;
-      }
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -187,34 +147,77 @@ class _SignUpPage4State extends State<SignUpPage4> {
                               return;
                             }
 
-                            // Jika email belum terdaftar, lakukan link ke Google
-                            try {
-                              final linked = await _linkGoogleWithEmail(
-                                _emailController.text,
-                              );
-                              if (linked) {
-                                widget.dataHolder.email = _emailController.text;
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder:
-                                        (context) => SignUpPage5(
-                                          dataHolder: widget.dataHolder,
-                                        ),
-                                  ),
-                                );
-                              } else {
-                                setState(() {
-                                  _isLoading = false;
-                                  _emailError = 'Google Sign-In dibatalkan.';
-                                });
-                              }
-                            } catch (e) {
+                            // Google Sign-In wajib
+                            final GoogleSignIn googleSignIn = GoogleSignIn(
+                              scopes: ['email', 'profile'],
+                            );
+                            await googleSignIn.signOut();
+                            final GoogleSignInAccount? googleUser =
+                                await googleSignIn.signIn();
+                            if (googleUser == null) {
                               setState(() {
                                 _isLoading = false;
-                                _emailError = e.toString();
+                                _emailError = 'Google Sign-In dibatalkan.';
                               });
+                              return;
                             }
+                            if (googleUser.email.toLowerCase() !=
+                                _emailController.text.toLowerCase()) {
+                              setState(() {
+                                _isLoading = false;
+                                _emailError =
+                                    'Email Google tidak sama dengan email yang diinput.';
+                              });
+                              return;
+                            }
+                            final GoogleSignInAuthentication googleAuth =
+                                await googleUser.authentication;
+                            final AuthCredential googleCredential =
+                                GoogleAuthProvider.credential(
+                                  accessToken: googleAuth.accessToken,
+                                  idToken: googleAuth.idToken,
+                                );
+                            // Sign in with Google
+                            final userCredential = await FirebaseAuth.instance
+                                .signInWithCredential(googleCredential);
+
+                            // Link nomor telepon ke akun Google
+                            if (widget.dataHolder.phoneAuthCredential != null) {
+                              try {
+                                await userCredential.user!.linkWithCredential(
+                                  widget.dataHolder.phoneAuthCredential!,
+                                );
+                              } on FirebaseAuthException catch (e) {
+                                if (e.code == 'provider-already-linked') {
+                                  // Sudah terhubung, lanjut
+                                } else if (e.code ==
+                                    'credential-already-in-use') {
+                                  setState(() {
+                                    _isLoading = false;
+                                    _emailError =
+                                        'Nomor telepon sudah terdaftar di akun lain.';
+                                  });
+                                  return;
+                                } else {
+                                  setState(() {
+                                    _isLoading = false;
+                                    _emailError =
+                                        'Gagal menghubungkan nomor telepon: \\${e.message}';
+                                  });
+                                  return;
+                                }
+                              }
+                            }
+                            widget.dataHolder.email = _emailController.text;
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder:
+                                    (context) => SignUpPage5(
+                                      dataHolder: widget.dataHolder,
+                                    ),
+                              ),
+                            );
                           } catch (e) {
                             setState(() {
                               _isLoading = false;

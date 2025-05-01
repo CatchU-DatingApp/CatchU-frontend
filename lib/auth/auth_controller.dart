@@ -249,4 +249,22 @@ class AuthController {
   User? getCurrentUser() {
     return _firebaseService.auth.currentUser;
   }
+
+  Future<void> linkPhoneCredentialToCurrentUser(
+    PhoneAuthCredential credential,
+  ) async {
+    final user = _auth.currentUser;
+    if (user == null) throw Exception('No user is currently signed in');
+    try {
+      await user.linkWithCredential(credential);
+    } on FirebaseAuthException catch (e) {
+      if (e.code == 'provider-already-linked') {
+        // Sudah terhubung, tidak masalah
+      } else if (e.code == 'credential-already-in-use') {
+        throw Exception('Nomor telepon sudah terdaftar di akun lain.');
+      } else {
+        rethrow;
+      }
+    }
+  }
 }

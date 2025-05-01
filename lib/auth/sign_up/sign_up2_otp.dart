@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'sign_up3.dart';
 import 'package:catchu/sign_up_data_holder.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class SignUpOtpPage extends StatefulWidget {
   final SignUpDataHolder dataHolder;
@@ -14,20 +15,22 @@ class SignUpOtpPage extends StatefulWidget {
 
 class _SignUpOtpPageState extends State<SignUpOtpPage> {
   final List<TextEditingController> _otpControllers = List.generate(
-    4,
+    6,
     (_) => TextEditingController(),
   );
-  final List<FocusNode> _focusNodes = List.generate(4, (_) => FocusNode());
+  final List<FocusNode> _focusNodes = List.generate(6, (_) => FocusNode());
   bool _isLoading = false;
   String? _errorMessage;
   int _resendCountdown = 30;
   bool _isResending = false;
   Timer? _resendTimer;
+  bool _isSendingOtp = false;
 
   @override
   void initState() {
     super.initState();
     _startResendTimer();
+    _sendOtpOnInit();
   }
 
   @override
@@ -58,11 +61,51 @@ class _SignUpOtpPageState extends State<SignUpOtpPage> {
     });
   }
 
-  void _verifyOtp() {
+  void _sendOtpOnInit() async {
+    setState(() {
+      _isSendingOtp = true;
+      _errorMessage = null;
+    });
+    final phoneNumber = widget.dataHolder.phoneNumber;
+    if (phoneNumber == null) {
+      setState(() {
+        _isSendingOtp = false;
+        _errorMessage = 'Nomor telepon tidak ditemukan.';
+      });
+      return;
+    }
+    try {
+      await FirebaseAuth.instance.verifyPhoneNumber(
+        phoneNumber: phoneNumber,
+        timeout: const Duration(seconds: 60),
+        verificationCompleted: (PhoneAuthCredential credential) {},
+        verificationFailed: (FirebaseAuthException e) {
+          setState(() {
+            _isSendingOtp = false;
+            _errorMessage = e.message ?? 'Gagal mengirim OTP';
+          });
+        },
+        codeSent: (String verificationId, int? resendToken) {
+          widget.dataHolder.verificationId = verificationId;
+          setState(() {
+            _isSendingOtp = false;
+          });
+        },
+        codeAutoRetrievalTimeout: (String verificationId) {},
+      );
+    } catch (e) {
+      setState(() {
+        _isSendingOtp = false;
+        _errorMessage = 'Terjadi kesalahan saat mengirim OTP: $e';
+      });
+    }
+  }
+
+  void _verifyOtp() async {
     final otp = _otpControllers.map((c) => c.text).join();
 
-    if (otp.length < 4) {
-      setState(() => _errorMessage = 'Masukkan 4 digit kode OTP');
+    if (otp.length < 6) {
+      setState(() => _errorMessage = 'Masukkan 6 digit kode OTP');
       return;
     }
 
@@ -71,26 +114,34 @@ class _SignUpOtpPageState extends State<SignUpOtpPage> {
       _errorMessage = null;
     });
 
-    Future.delayed(Duration(seconds: 1), () {
-      setState(() => _isLoading = false);
-
-      if (otp == '1234') {
-        final dataHolder = SignUpDataHolder(
-          phoneNumber: widget.dataHolder.phoneNumber,
-        );
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => SignUpPage3(dataHolder: dataHolder),
-          ),
-        );
-      } else {
+    try {
+      final verificationId = widget.dataHolder.verificationId;
+      if (verificationId == null) {
         setState(() {
-          _errorMessage = 'Kode OTP salah. Coba lagi.';
+          _isLoading = false;
+          _errorMessage = 'Verification ID tidak ditemukan.';
         });
-        _clearOtpFields();
+        return;
       }
-    });
+      final credential = PhoneAuthProvider.credential(
+        verificationId: verificationId,
+        smsCode: otp,
+      );
+      widget.dataHolder.phoneAuthCredential = credential;
+      setState(() => _isLoading = false);
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => SignUpPage3(dataHolder: widget.dataHolder),
+        ),
+      );
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+        _errorMessage = 'Kode OTP salah atau sudah expired. Coba lagi.';
+      });
+      _clearOtpFields();
+    }
   }
 
   void _clearOtpFields() {
@@ -100,7 +151,7 @@ class _SignUpOtpPageState extends State<SignUpOtpPage> {
     FocusScope.of(context).requestFocus(_focusNodes[0]);
   }
 
-  void _resendOtp() {
+  void _resendOtp() async {
     if (_isResending || _resendCountdown > 0) return;
 
     setState(() {
@@ -109,20 +160,65 @@ class _SignUpOtpPageState extends State<SignUpOtpPage> {
       _errorMessage = null;
     });
 
-    // Simulate OTP resend
-    Future.delayed(Duration(seconds: 1), () {
+    final phoneNumber = widget.dataHolder.phoneNumber;
+    if (phoneNumber == null) {
       setState(() {
         _isResending = false;
+        _errorMessage = 'Nomor telepon tidak ditemukan.';
       });
-      _startResendTimer();
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Kode OTP baru telah dikirim')));
-    });
+      return;
+    }
+
+    try {
+      await FirebaseAuth.instance.verifyPhoneNumber(
+        phoneNumber: phoneNumber,
+        timeout: const Duration(seconds: 60),
+        verificationCompleted: (PhoneAuthCredential credential) {},
+        verificationFailed: (FirebaseAuthException e) {
+          setState(() {
+            _isResending = false;
+            _errorMessage = e.message ?? 'Gagal mengirim ulang OTP';
+          });
+        },
+        codeSent: (String verificationId, int? resendToken) {
+          widget.dataHolder.verificationId = verificationId;
+          setState(() {
+            _isResending = false;
+          });
+          _startResendTimer();
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Kode OTP baru telah dikirim')),
+          );
+        },
+        codeAutoRetrievalTimeout: (String verificationId) {},
+      );
+    } catch (e) {
+      setState(() {
+        _isResending = false;
+        _errorMessage = 'Gagal mengirim ulang OTP: $e';
+      });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    if (_isSendingOtp)
+      return Scaffold(
+        backgroundColor: const Color.fromARGB(255, 253, 250, 246),
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              CircularProgressIndicator(color: Colors.pink[400]),
+              SizedBox(height: 16),
+              Text(
+                'Mengirim OTP...',
+                style: TextStyle(color: Colors.pink[400], fontSize: 16),
+              ),
+            ],
+          ),
+        ),
+      );
     return Scaffold(
       backgroundColor: const Color.fromARGB(255, 253, 250, 246),
       appBar: AppBar(
@@ -179,9 +275,9 @@ class _SignUpOtpPageState extends State<SignUpOtpPage> {
             SizedBox(height: 40),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: List.generate(4, (index) {
+              children: List.generate(6, (index) {
                 return Container(
-                  width: 60,
+                  width: 40,
                   height: 60,
                   decoration: BoxDecoration(
                     border: Border.all(
@@ -204,7 +300,7 @@ class _SignUpOtpPageState extends State<SignUpOtpPage> {
                       border: InputBorder.none,
                     ),
                     onChanged: (value) {
-                      if (value.length == 1 && index < 3) {
+                      if (value.length == 1 && index < 5) {
                         FocusScope.of(
                           context,
                         ).requestFocus(_focusNodes[index + 1]);
