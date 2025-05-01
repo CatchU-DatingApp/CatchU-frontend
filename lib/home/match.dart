@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'dart:ui';
 
 class MatchPage extends StatefulWidget {
   @override
@@ -102,118 +103,139 @@ class _MatchPageState extends State<MatchPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        automaticallyImplyLeading: false,
-        toolbarHeight: 70,
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            SizedBox(height: 10),
-            Text(
-              'MatchU',
-              style: TextStyle(
-                fontSize: 28,
-                fontWeight: FontWeight.bold,
-                color: Colors.pinkAccent,
-              ),
-            ),
-            Text(
-              'Perfect match with you!',
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey,
-              ),
-            ),
-          ],
+      body: Container(
+        decoration: BoxDecoration(
+          image: DecorationImage(
+            image: AssetImage('assets/images/backgroundHomepageCatchU.png'),
+            fit: BoxFit.cover,
+          ),
         ),
-      ),
-      body: Column(
-        children: [
-          Expanded(
-            child: ListView.builder(
-              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              itemCount: messages.length,
-              itemBuilder: (context, index) {
-                final msg = messages[index];
-                final isExpanded = expandedIndices.contains(index);
-
-                return Container(
-                  margin: EdgeInsets.only(bottom: 8),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: Colors.pinkAccent),
+        child: Column(
+          children: [
+            AppBar(
+              backgroundColor: Colors.transparent,
+              elevation: 0,
+              automaticallyImplyLeading: false,
+              toolbarHeight: 80,
+              title: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  SizedBox(height: 10),
+                  Text(
+                    'MatchU',
+                    style: TextStyle(
+                      fontSize: 28,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
                   ),
-                  child: Column(
-                    children: [
-                      InkWell(
-                        onTap: () => _toggleExpanded(index),
-                        child: Padding(
-                          padding: EdgeInsets.all(12),
-                          child: Row(
-                            children: [
-                              ClipRRect(
-                                borderRadius: BorderRadius.circular(10),
-                                child: Image.asset(
-                                  msg['image']!,
-                                  width: 70,
-                                  height: 70,
-                                  fit: BoxFit.cover,
-                                ),
-                              ),
-                              SizedBox(width: 12),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
+                  Text(
+                    'Perfect match with you!',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.white.withOpacity(0.8),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Expanded(
+              child: ListView.builder(
+                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                itemCount: messages.length,
+                itemBuilder: (context, index) {
+                  final msg = messages[index];
+                  final isExpanded = expandedIndices.contains(index);
+
+                  return ClipRRect(
+                    borderRadius: BorderRadius.circular(10),
+                    child: BackdropFilter(
+                      filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+                      child: Container(
+                        margin: EdgeInsets.only(bottom: 8),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.3),
+                          borderRadius: BorderRadius.circular(10),
+                          // border: Border.all(color: const Color.fromARGB(255, 255, 255, 255)),
+                          // boxShadow: [
+                          //   BoxShadow(
+                          //     color: Colors.black.withOpacity(0.2),
+                          //     blurRadius: 8,
+                          //     offset: Offset(0, 2),
+                          //   ),
+                          // ],
+                        ),
+                        child: Column(
+                          children: [
+                            InkWell(
+                              onTap: () => _toggleExpanded(index),
+                              child: Padding(
+                                padding: EdgeInsets.all(12),
+                                child: Row(
                                   children: [
-                                    Text(
-                                      msg['name']!,
-                                      style: TextStyle(
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.black87,
+                                    ClipRRect(
+                                      borderRadius: BorderRadius.circular(10),
+                                      child: Image.asset(
+                                        msg['image']!,
+                                        width: 70,
+                                        height: 70,
+                                        fit: BoxFit.cover,
                                       ),
                                     ),
-                                    SizedBox(height: 4),
-                                    Text(
-                                      msg['message']!,
-                                      style: TextStyle(
-                                        color: Colors.grey,
-                                        fontSize: 14,
+                                    SizedBox(width: 12),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            msg['name']!,
+                                            style: TextStyle(
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.bold,
+                                              color: Colors.black87,
+                                            ),
+                                          ),
+                                          SizedBox(height: 4),
+                                          Text(
+                                            msg['message']!,
+                                            style: TextStyle(
+                                              color: const Color.fromARGB(255, 86, 86, 86),
+                                              fontSize: 12,
+                                            ),
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ],
                                       ),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                    Icon(
+                                      isExpanded
+                                          ? Icons.keyboard_arrow_up
+                                          : Icons.keyboard_arrow_right,
+                                      color: Colors.grey,
                                     ),
                                   ],
                                 ),
                               ),
-                              Icon(
-                                isExpanded
-                                    ? Icons.keyboard_arrow_up
-                                    : Icons.keyboard_arrow_right,
-                                color: Colors.grey,
-                              ),
-                            ],
-                          ),
+                            ),
+                            AnimatedCrossFade(
+                              firstChild: SizedBox.shrink(),
+                              secondChild: _buildSocialMediaSection(msg),
+                              crossFadeState: isExpanded
+                                  ? CrossFadeState.showSecond
+                                  : CrossFadeState.showFirst,
+                              duration: Duration(milliseconds: 300),
+                            ),
+                          ],
                         ),
                       ),
-                      AnimatedCrossFade(
-                        firstChild: SizedBox.shrink(),
-                        secondChild: _buildSocialMediaSection(msg),
-                        crossFadeState: isExpanded
-                            ? CrossFadeState.showSecond
-                            : CrossFadeState.showFirst,
-                        duration: Duration(milliseconds: 300),
-                      ),
-                    ],
-                  ),
-                );
-              },
+                    ),
+                  );
+                },
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
