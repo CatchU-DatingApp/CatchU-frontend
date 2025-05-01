@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
+import 'dart:ui';
 
 
 class ProfileData {
@@ -339,77 +341,108 @@ class _DiscoverPageState extends State<DiscoverPage>
 
     return Scaffold(
       backgroundColor: Color(0xFFFDF7F6),
-      body: Stack(
-        children: [
-          Container(
-            height: 380,
-            decoration: BoxDecoration(
-              color: Color(0xFFFF375F),
-              borderRadius: BorderRadius.only(
-                bottomLeft: Radius.circular(24),
-                bottomRight: Radius.circular(24),
+      body: Container(
+        decoration: BoxDecoration(
+          image: DecorationImage(
+            image: AssetImage('assets/images/backgroundHomepageCatchU.png'),
+            fit: BoxFit.cover,
+          ),
+        ),
+        child: Stack(
+          children: [
+            // Container(
+            //   height: 380,
+            //   decoration: BoxDecoration(
+            //     color: Color(0xFFFF375F).withOpacity(0.8),
+            //     borderRadius: BorderRadius.only(
+            //       bottomLeft: Radius.circular(24),
+            //       bottomRight: Radius.circular(24),
+            //     ),
+            //     gradient: LinearGradient(
+            //       begin: Alignment.topCenter,
+            //       end: Alignment.bottomCenter,
+            //       colors: [
+            //         Color(0xFFFF375F).withOpacity(0.6),
+            //         Color(0xFFFF375F).withOpacity(0.8),
+            //       ],
+            //     ),
+            //     boxShadow: [
+            //       BoxShadow(
+            //         color: Color(0xFFFF375F).withOpacity(0.3),
+            //         blurRadius: 20,
+            //         spreadRadius: 5,
+            //       ),
+            //     ],
+            //   ),
+            //   child: BackdropFilter(
+            //     filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+            //     child: Container(
+            //       decoration: BoxDecoration(
+            //         color: Colors.transparent,
+            //       ),
+            //     ),
+            //   ),
+            // ),
+            Positioned(
+              top: 50,
+              left: 16,
+              child: Text(
+                'Discover',
+                style: TextStyle(
+                  fontSize: 28,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
               ),
             ),
-          ),
-          Positioned(
-            top: 50,
-            left: 16,
-            child: Text(
-              'Discover',
-              style: TextStyle(
-                fontSize: 28,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-              ),
-            ),
-          ),
-          Padding(
-            padding: EdgeInsets.only(top: 110, bottom: 100),
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                return Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    SizedBox(
-                      width: constraints.maxWidth,
-                      height: constraints.maxHeight,
-                      child: _buildMainProfileCard(nextProfile),
-                    ),
-                    if (!_isAnimating && !_isDragging)
+            Padding(
+              padding: EdgeInsets.only(top: 110, bottom: 100),
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  return Stack(
+                    alignment: Alignment.center,
+                    children: [
                       SizedBox(
                         width: constraints.maxWidth,
                         height: constraints.maxHeight,
-                        child: _buildMainProfileCard(currentProfile),
-                      )
-                    else
-                      AnimatedBuilder(
-                        animation: _swipeController,
-                        builder: (context, child) {
-                          final offset = _isDragging ? _currentSlide : _slideAnimation.value;
-                          final rotation = _isDragging 
-                              ? (_currentSlide.dx * 0.2) 
-                              : _rotationAnimation.value;
-                          
-                          return Transform.translate(
-                            offset: offset * MediaQuery.of(context).size.width,
-                            child: Transform.rotate(
-                              angle: rotation,
-                              child: SizedBox(
-                                width: constraints.maxWidth,
-                                height: constraints.maxHeight,
-                                child: child,
-                              ),
-                            ),
-                          );
-                        },
-                        child: _buildMainProfileCard(currentProfile),
+                        child: _buildMainProfileCard(nextProfile),
                       ),
-                  ],
-                );
-              },
+                      if (!_isAnimating && !_isDragging)
+                        SizedBox(
+                          width: constraints.maxWidth,
+                          height: constraints.maxHeight,
+                          child: _buildMainProfileCard(currentProfile),
+                        )
+                      else
+                        AnimatedBuilder(
+                          animation: _swipeController,
+                          builder: (context, child) {
+                            final offset = _isDragging ? _currentSlide : _slideAnimation.value;
+                            final rotation = _isDragging 
+                                ? (_currentSlide.dx * 0.2) 
+                                : _rotationAnimation.value;
+                            
+                            return Transform.translate(
+                              offset: offset * MediaQuery.of(context).size.width,
+                              child: Transform.rotate(
+                                angle: rotation,
+                                child: SizedBox(
+                                  width: constraints.maxWidth,
+                                  height: constraints.maxHeight,
+                                  child: child,
+                                ),
+                              ),
+                            );
+                          },
+                          child: _buildMainProfileCard(currentProfile),
+                        ),
+                    ],
+                  );
+                },
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
       floatingActionButton: Row(
         mainAxisAlignment: MainAxisAlignment.center,
