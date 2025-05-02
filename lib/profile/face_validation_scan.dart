@@ -383,9 +383,9 @@ class _FaceValidationScanPageState extends State<FaceValidationScanPage> {
                       _isValidated == true
                           ? Colors.green
                           : const Color(0xFFFF4D6D),
-                  minimumSize: const Size(double.infinity, 50),
+                  minimumSize: const Size(double.infinity, 56),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(25),
+                    borderRadius: BorderRadius.circular(12),
                   ),
                 ),
                 child:
@@ -403,6 +403,7 @@ class _FaceValidationScanPageState extends State<FaceValidationScanPage> {
                           style: const TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
+                            color: Colors.white,
                           ),
                         ),
               ),

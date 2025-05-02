@@ -485,11 +485,11 @@ class _ProfilePageState extends State<ProfilePage> {
               },
               child: Container(
                 decoration: BoxDecoration(
-                  color: Colors.black.withOpacity(0.5),
+                  color: Colors.black.withOpacity(0.4),
                   shape: BoxShape.circle,
                 ),
-                padding: EdgeInsets.all(12),
-                child: Icon(Icons.close, size: 16, color: Colors.white),
+                padding: EdgeInsets.all(2),
+                child: Icon(Icons.close, size: 18, color: const Color.fromARGB(255, 255, 255, 255)),
               ),
             ),
           ),
