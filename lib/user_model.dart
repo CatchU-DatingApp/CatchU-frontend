@@ -8,7 +8,7 @@ class User {
   final int umur;
   final String gender;
   final List<String> interest;
-  final String kodeOtp;
+  final bool verified;
   final List<double> location;
   final List<String> photos; // List of photo URLs
 
@@ -20,7 +20,7 @@ class User {
     required this.umur,
     required this.gender,
     required this.interest,
-    required this.kodeOtp,
+    required this.verified,
     required this.location,
     required this.photos,
   });
@@ -33,7 +33,7 @@ class User {
       'umur': umur,
       'gender': gender,
       'interest': interest,
-      'kodeOtp': kodeOtp,
+      'verified': verified,
       'location': location,
       'photos': photos,
     };

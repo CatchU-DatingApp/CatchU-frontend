@@ -211,7 +211,7 @@ class _SignUpPage9LocationState extends State<SignUpPage9Location> {
         umur: widget.dataHolder.umur ?? 0,
         gender: widget.dataHolder.gender ?? '',
         interest: widget.dataHolder.interest ?? [],
-        kodeOtp: '1234',
+        verified: false,
         location: widget.dataHolder.location ?? [0.0, 0.0],
         photos: widget.dataHolder.photos ?? [],
       );
