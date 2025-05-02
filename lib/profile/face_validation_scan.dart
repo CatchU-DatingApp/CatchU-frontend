@@ -1,10 +1,11 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
-import '../services/face_recognition_service.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:http/http.dart' as http;
 import 'package:path/path.dart' as path;
+import 'package:google_ml_kit/google_ml_kit.dart';
+import '../services/ml.dart';
 
 class FaceValidationScanPage extends StatefulWidget {
   final String profilePhotoUrl;
@@ -18,7 +19,8 @@ class FaceValidationScanPage extends StatefulWidget {
 
 class _FaceValidationScanPageState extends State<FaceValidationScanPage> {
   CameraController? _controller;
-  late FaceRecognitionService _faceRecognitionService;
+  late FaceEmbeddingModel _faceEmbeddingModel;
+  late FaceDetector _faceDetector;
   bool _isProcessing = false;
   String? _validationMessage;
   bool? _isValidated;
@@ -27,7 +29,21 @@ class _FaceValidationScanPageState extends State<FaceValidationScanPage> {
   void initState() {
     super.initState();
     _initializeCamera();
-    _faceRecognitionService = FaceRecognitionService();
+    _faceEmbeddingModel = FaceEmbeddingModel();
+    _faceDetector = GoogleMlKit.vision.faceDetector(
+      FaceDetectorOptions(
+        enableLandmarks: true,
+        enableClassification: true,
+        minFaceSize: 0.15,
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller?.dispose();
+    _faceDetector.close();
+    super.dispose();
   }
 
   Future<void> _initializeCamera() async {
@@ -39,12 +55,19 @@ class _FaceValidationScanPageState extends State<FaceValidationScanPage> {
 
     _controller = CameraController(
       frontCamera,
-      ResolutionPreset.medium,
+      ResolutionPreset
+          .high, // Menggunakan resolusi tinggi untuk deteksi wajah yang lebih baik
       enableAudio: false,
+      imageFormatGroup:
+          ImageFormatGroup.yuv420, // Format yang kompatibel untuk ML Kit
     );
 
-    await _controller!.initialize();
-    if (mounted) setState(() {});
+    try {
+      await _controller!.initialize();
+      if (mounted) setState(() {});
+    } catch (e) {
+      print('Error initializing camera: $e');
+    }
   }
 
   Future<String> _downloadAndSaveProfilePhoto() async {
@@ -53,6 +76,17 @@ class _FaceValidationScanPageState extends State<FaceValidationScanPage> {
     final tempPath = path.join(tempDir.path, 'profile_photo.jpg');
     await File(tempPath).writeAsBytes(response.bodyBytes);
     return tempPath;
+  }
+
+  Future<bool> _checkForFace(String imagePath) async {
+    try {
+      final inputImage = InputImage.fromFilePath(imagePath);
+      final faces = await _faceDetector.processImage(inputImage);
+      return faces.isNotEmpty;
+    } catch (e) {
+      print('Error checking for face: $e');
+      return false;
+    }
   }
 
   Future<void> _validateFace() async {
@@ -68,36 +102,64 @@ class _FaceValidationScanPageState extends State<FaceValidationScanPage> {
       // Ambil foto dari kamera
       final XFile photo = await _controller!.takePicture();
 
+      // Periksa apakah ada wajah di foto yang diambil
+      final hasFace = await _checkForFace(photo.path);
+      if (!hasFace) {
+        setState(() {
+          _isValidated = false;
+          _validationMessage =
+              'No face detected in the captured image. Please try again.';
+        });
+        await File(photo.path).delete();
+        return;
+      }
+
       // Download dan simpan foto profil
       final String profilePhotoPath = await _downloadAndSaveProfilePhoto();
 
-      // Dapatkan embedding untuk kedua foto
-      final List<double> profileEmbedding = await _faceRecognitionService
-          .getFaceEmbedding(profilePhotoPath);
-      final List<double> capturedEmbedding = await _faceRecognitionService
-          .getFaceEmbedding(photo.path);
+      // Periksa apakah ada wajah di foto profil
+      final hasProfileFace = await _checkForFace(profilePhotoPath);
+      if (!hasProfileFace) {
+        setState(() {
+          _isValidated = false;
+          _validationMessage = 'No face detected in the profile photo.';
+        });
+        await File(profilePhotoPath).delete();
+        await File(photo.path).delete();
+        return;
+      }
 
-      // Bandingkan wajah
-      final bool isMatch = _faceRecognitionService.areFacesMatching(
+      // Dapatkan embedding untuk kedua foto
+      final List<double> profileEmbedding = await _faceEmbeddingModel
+          .getEmbedding(File(profilePhotoPath))
+          .then((value) => value.toList());
+      final List<double> capturedEmbedding = await _faceEmbeddingModel
+          .getEmbedding(File(photo.path))
+          .then((value) => value.toList());
+
+      // Hitung similarity
+      final double similarity = cosineSimilarity(
         profileEmbedding,
         capturedEmbedding,
       );
+      final bool isMatch = similarity >= 0.7; // Threshold untuk kecocokan
 
       setState(() {
         _isValidated = isMatch;
         _validationMessage =
             isMatch
-                ? 'Face validation successful!'
-                : 'Face validation failed. Please try again.';
+                ? 'Face validation successful! (Similarity: ${(similarity * 100).toStringAsFixed(1)}%)'
+                : 'Face validation failed. Please try again. (Similarity: ${(similarity * 100).toStringAsFixed(1)}%)';
       });
 
       // Hapus file temporary
       await File(profilePhotoPath).delete();
       await File(photo.path).delete();
     } catch (e) {
+      print('Error during face validation: $e');
       setState(() {
         _isValidated = false;
-        _validationMessage = 'Error: ${e.toString()}';
+        _validationMessage = 'Error during validation: ${e.toString()}';
       });
     } finally {
       setState(() {
@@ -109,7 +171,7 @@ class _FaceValidationScanPageState extends State<FaceValidationScanPage> {
   @override
   Widget build(BuildContext context) {
     if (_controller == null || !_controller!.value.isInitialized) {
-      return Scaffold(body: Center(child: CircularProgressIndicator()));
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
     return Scaffold(
@@ -118,7 +180,7 @@ class _FaceValidationScanPageState extends State<FaceValidationScanPage> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Colors.white),
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () => Navigator.pop(context),
         ),
       ),
@@ -149,7 +211,7 @@ class _FaceValidationScanPageState extends State<FaceValidationScanPage> {
                   Positioned(
                     bottom: 20,
                     child: Container(
-                      padding: EdgeInsets.symmetric(
+                      padding: const EdgeInsets.symmetric(
                         horizontal: 16,
                         vertical: 8,
                       ),
@@ -159,7 +221,7 @@ class _FaceValidationScanPageState extends State<FaceValidationScanPage> {
                       ),
                       child: Text(
                         _validationMessage!,
-                        style: TextStyle(color: Colors.white),
+                        style: const TextStyle(color: Colors.white),
                       ),
                     ),
                   ),
@@ -167,30 +229,24 @@ class _FaceValidationScanPageState extends State<FaceValidationScanPage> {
             ),
           ),
           Container(
-            padding: EdgeInsets.all(20),
+            padding: const EdgeInsets.all(20),
             child: ElevatedButton(
               onPressed: _isProcessing ? null : _validateFace,
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFFFF4D6D),
-                minimumSize: Size(double.infinity, 50),
+                minimumSize: const Size(double.infinity, 50),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(25),
                 ),
               ),
               child:
                   _isProcessing
-                      ? CircularProgressIndicator(color: Colors.white)
-                      : Text('Validate Face'),
+                      ? const CircularProgressIndicator(color: Colors.white)
+                      : const Text('Validate Face'),
             ),
           ),
         ],
       ),
     );
-  }
-
-  @override
-  void dispose() {
-    _controller?.dispose();
-    super.dispose();
   }
 }

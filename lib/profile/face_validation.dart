@@ -7,6 +7,10 @@ import 'package:uuid/uuid.dart';
 import 'face_validation_scan.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:google_ml_kit/google_ml_kit.dart';
+import 'package:http/http.dart' as http;
+import 'package:path_provider/path_provider.dart';
+import '../services/ml.dart';
 
 //MASIH DEMO, BELUM BISA KONEK KE FIREBASE, MAKA BISA LANGSUNG NEXT UNTUK DEBUGGING
 class FaceValidationPhotoPage extends StatefulWidget {
@@ -22,13 +26,50 @@ class _FaceValidationPhotoPageState extends State<FaceValidationPhotoPage> {
   bool _isLoading = false;
   String? _selectedPhotoUrl;
   List<String> userPhotos = [];
+  Map<String, bool> photoHasFace = {};
   final FirebaseStorage _storage = FirebaseStorage.instance;
   final uuid = Uuid();
+  final FaceDetector _faceDetector = GoogleMlKit.vision.faceDetector(
+    FaceDetectorOptions(
+      enableLandmarks: true,
+      enableClassification: true,
+      minFaceSize: 0.15,
+    ),
+  );
+  final FaceEmbeddingModel _faceEmbeddingModel = FaceEmbeddingModel();
 
   @override
   void initState() {
     super.initState();
     _loadUserPhotos();
+  }
+
+  @override
+  void dispose() {
+    _faceDetector.close();
+    super.dispose();
+  }
+
+  Future<bool> _checkForFace(String imageUrl) async {
+    try {
+      // Download gambar ke file temporary
+      final response = await http.get(Uri.parse(imageUrl));
+      final tempDir = await getTemporaryDirectory();
+      final tempPath = path.join(tempDir.path, '${uuid.v4()}.jpg');
+      await File(tempPath).writeAsBytes(response.bodyBytes);
+
+      // Deteksi wajah menggunakan ML Kit
+      final inputImage = InputImage.fromFilePath(tempPath);
+      final faces = await _faceDetector.processImage(inputImage);
+
+      // Hapus file temporary
+      await File(tempPath).delete();
+
+      return faces.isNotEmpty;
+    } catch (e) {
+      print('Error checking for face: $e');
+      return false;
+    }
   }
 
   Future<void> _loadUserPhotos() async {
@@ -43,8 +84,16 @@ class _FaceValidationPhotoPageState extends State<FaceValidationPhotoPage> {
                 .get();
 
         if (doc.exists && doc.data()!.containsKey('photos')) {
+          final photos = List<String>.from(doc.data()!['photos']);
+
+          // Check each photo for faces
+          for (String photo in photos) {
+            final hasFace = await _checkForFace(photo);
+            photoHasFace[photo] = hasFace;
+          }
+
           setState(() {
-            userPhotos = List<String>.from(doc.data()!['photos']);
+            userPhotos = photos;
           });
         }
       }
@@ -89,7 +138,7 @@ class _FaceValidationPhotoPageState extends State<FaceValidationPhotoPage> {
               if (_isLoading)
                 const Center(child: CircularProgressIndicator())
               else if (userPhotos.isEmpty)
-                Center(
+                const Center(
                   child: Text(
                     'No photos available.\nPlease upload photos in your profile first.',
                     textAlign: TextAlign.center,
@@ -99,53 +148,90 @@ class _FaceValidationPhotoPageState extends State<FaceValidationPhotoPage> {
               else
                 Expanded(
                   child: GridView.builder(
-                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
-                      crossAxisSpacing: 10,
-                      mainAxisSpacing: 10,
-                    ),
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          crossAxisSpacing: 10,
+                          mainAxisSpacing: 10,
+                        ),
                     itemCount: userPhotos.length,
                     itemBuilder: (context, index) {
+                      final photo = userPhotos[index];
+                      final hasFace = photoHasFace[photo] ?? false;
+
                       return GestureDetector(
-                        onTap: () {
-                          setState(() {
-                            _selectedPhotoUrl = userPhotos[index];
-                          });
-                        },
-                        child: Container(
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(12),
-                            border:
-                                _selectedPhotoUrl == userPhotos[index]
-                                    ? Border.all(color: Colors.pink, width: 3)
-                                    : null,
-                          ),
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(12),
-                            child: Image.network(
-                              userPhotos[index],
-                              fit: BoxFit.cover,
-                              loadingBuilder: (
-                                context,
-                                child,
-                                loadingProgress,
-                              ) {
-                                if (loadingProgress == null) return child;
-                                return Center(
-                                  child: CircularProgressIndicator(
-                                    value:
-                                        loadingProgress.expectedTotalBytes !=
-                                                null
-                                            ? loadingProgress
-                                                    .cumulativeBytesLoaded /
-                                                loadingProgress
-                                                    .expectedTotalBytes!
-                                            : null,
-                                  ),
-                                );
-                              },
+                        onTap:
+                            hasFace
+                                ? () {
+                                  setState(() {
+                                    _selectedPhotoUrl = photo;
+                                  });
+                                }
+                                : () {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text(
+                                        'This photo does not contain a clear face. Please choose another photo.',
+                                      ),
+                                    ),
+                                  );
+                                },
+                        child: Stack(
+                          children: [
+                            Container(
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(12),
+                                border:
+                                    _selectedPhotoUrl == photo
+                                        ? Border.all(
+                                          color: Colors.pink,
+                                          width: 3,
+                                        )
+                                        : null,
+                              ),
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(12),
+                                child: Image.network(
+                                  photo,
+                                  fit: BoxFit.cover,
+                                  loadingBuilder: (
+                                    context,
+                                    child,
+                                    loadingProgress,
+                                  ) {
+                                    if (loadingProgress == null) return child;
+                                    return Center(
+                                      child: CircularProgressIndicator(
+                                        value:
+                                            loadingProgress
+                                                        .expectedTotalBytes !=
+                                                    null
+                                                ? loadingProgress
+                                                        .cumulativeBytesLoaded /
+                                                    loadingProgress
+                                                        .expectedTotalBytes!
+                                                : null,
+                                      ),
+                                    );
+                                  },
+                                ),
+                              ),
                             ),
-                          ),
+                            if (!hasFace)
+                              Container(
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(12),
+                                  color: Colors.black.withOpacity(0.5),
+                                ),
+                                child: const Center(
+                                  child: Icon(
+                                    Icons.face_retouching_off,
+                                    color: Colors.white,
+                                    size: 32,
+                                  ),
+                                ),
+                              ),
+                          ],
                         ),
                       );
                     },

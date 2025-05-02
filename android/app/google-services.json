@@ -14,6 +14,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "367797428924-5fscce5n2o6h3robtf3vsud62d173shm.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.catchu",
+            "certificate_hash": "2d0adbad856257f12e34db8ac029f2e837e53609"
+          }
+        },
+        {
           "client_id": "367797428924-b2nrksju9868ojj403o79089cumkc8pv.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
