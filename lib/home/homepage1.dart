@@ -699,7 +699,7 @@ class _DiscoverPageState extends State<DiscoverPage>
                                   decoration: BoxDecoration(
                                     shape: BoxShape.circle,
                                     color: index == currentIndex
-                                        ? Colors.white
+                                        ? const Color(0xFFFF375F)
                                         : Colors.white.withOpacity(0.5),
                                     boxShadow: [
                                       BoxShadow(

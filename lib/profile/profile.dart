@@ -409,8 +409,8 @@ class _ProfilePageState extends State<ProfilePage> {
                       color: Colors.white,
                       shape: RoundedRectangleBorder(
                         side: BorderSide(
-                          width: 1,
-                          color: const Color(0xFFFF375F),
+                          width: 0,
+                          color: const Color.fromARGB(255, 255, 255, 255),
                         ),
                         borderRadius: BorderRadius.circular(10),
                       ),
@@ -634,7 +634,7 @@ class _ProfilePageState extends State<ProfilePage> {
                           Text(
                             'Loading profile...',
                             style: TextStyle(
-                              color: Colors.grey[700],
+                              color: const Color.fromARGB(255, 255, 255, 255),
                               fontSize: 16,
                             ),
                           ),
@@ -661,8 +661,8 @@ class _ProfilePageState extends State<ProfilePage> {
                                   Text(
                                     'Profile',
                                     style: TextStyle(
-                                      color: const Color(0xFF333333),
-                                      fontSize: screenWidth * 0.09,
+                                      color: const Color.fromARGB(255, 255, 255, 255),
+                                      fontSize: screenWidth * 0.08,
                                       fontFamily: 'Nunito',
                                       fontWeight: FontWeight.w800,
                                     ),
@@ -719,11 +719,18 @@ class _ProfilePageState extends State<ProfilePage> {
                                     color: Colors.white,
                                     shape: RoundedRectangleBorder(
                                       side: BorderSide(
-                                        width: 2,
-                                        color: const Color(0xFFFF375F),
+                                        width: 0,
+                                        color: const Color.fromARGB(255, 255, 255, 255),
                                       ),
                                       borderRadius: BorderRadius.circular(10),
                                     ),
+                                    shadows: [
+                                      BoxShadow(
+                                        color: Colors.black.withOpacity(0.2),
+                                        blurRadius: 10,
+                                        offset: Offset(0, 4),
+                                      ),
+                                    ],
                                   ),
                                   child: Padding(
                                     padding: EdgeInsets.symmetric(
@@ -772,12 +779,24 @@ class _ProfilePageState extends State<ProfilePage> {
                                         return SizedBox(
                                           width: photoSize,
                                           height: photoSize,
-                                          child: _buildPhotoSlot(
-                                            image:
-                                                index < uploadedImages.length
-                                                    ? uploadedImages[index]
-                                                    : null,
-                                            index: index,
+                                          child: Container(
+                                            decoration: BoxDecoration(
+                                              borderRadius: BorderRadius.circular(10),
+                                              boxShadow: [
+                                                BoxShadow(
+                                                  color: Colors.black.withOpacity(0.2),
+                                                  blurRadius: 10,
+                                                  offset: Offset(0, 4),
+                                                ),
+                                              ],
+                                            ),
+                                            child: _buildPhotoSlot(
+                                              image:
+                                                  index < uploadedImages.length
+                                                      ? uploadedImages[index]
+                                                      : null,
+                                              index: index,
+                                            ),
                                           ),
                                         );
                                       }),
@@ -801,11 +820,18 @@ class _ProfilePageState extends State<ProfilePage> {
                                   color: Colors.white,
                                   shape: RoundedRectangleBorder(
                                     side: BorderSide(
-                                      width: 2,
-                                      color: const Color(0xFFFF375F),
+                                      width: 0,
+                                      color: const Color.fromARGB(255, 255, 255, 255),
                                     ),
                                     borderRadius: BorderRadius.circular(10),
                                   ),
+                                  shadows: [
+                                    BoxShadow(
+                                      color: Colors.black.withOpacity(0.2),
+                                      blurRadius: 10,
+                                      offset: Offset(0, 4),
+                                    ),
+                                  ],
                                 ),
                                 child: TextField(
                                   focusNode: bioFocusNode,
@@ -872,11 +898,18 @@ class _ProfilePageState extends State<ProfilePage> {
                                     color: Colors.white,
                                     shape: RoundedRectangleBorder(
                                       side: BorderSide(
-                                        width: 2,
-                                        color: const Color(0xFFFF375F),
+                                        width: 0,
+                                        color: const Color.fromARGB(255, 255, 255, 255),
                                       ),
                                       borderRadius: BorderRadius.circular(10),
                                     ),
+                                                                      shadows: [
+                                    BoxShadow(
+                                      color: Colors.black.withOpacity(0.2),
+                                      blurRadius: 10,
+                                      offset: Offset(0, 4),
+                                    ),
+                                  ],
                                   ),
                                   child:
                                       selectedInterests.isEmpty
@@ -907,7 +940,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                                           vertical: 6,
                                                         ),
                                                     decoration: BoxDecoration(
-                                                      color: Colors.pink[300],
+                                                      color: const Color(0xFFFF375F),
                                                       borderRadius:
                                                           BorderRadius.circular(
                                                             10,
@@ -954,11 +987,18 @@ class _ProfilePageState extends State<ProfilePage> {
                                     color: Colors.white,
                                     shape: RoundedRectangleBorder(
                                       side: BorderSide(
-                                        width: 2,
-                                        color: const Color(0xFFFF375F),
+                                        width: 0,
+                                        color: const Color.fromARGB(255, 255, 255, 255),
                                       ),
                                       borderRadius: BorderRadius.circular(10),
                                     ),
+                                                                      shadows: [
+                                    BoxShadow(
+                                      color: Colors.black.withOpacity(0.2),
+                                      blurRadius: 10,
+                                      offset: Offset(0, 4),
+                                    ),
+                                  ],
                                   ),
                                   child:
                                       selectedFaculty == null
@@ -974,7 +1014,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                               vertical: 6,
                                             ),
                                             decoration: BoxDecoration(
-                                              color: Colors.pink[300],
+                                              color: const Color(0xFFFF375F),
                                               borderRadius:
                                                   BorderRadius.circular(10),
                                             ),
@@ -1004,11 +1044,18 @@ class _ProfilePageState extends State<ProfilePage> {
                                   color: Colors.white,
                                   shape: RoundedRectangleBorder(
                                     side: BorderSide(
-                                      width: 2,
-                                      color: const Color(0xFFFF375F),
+                                      width: 0,
+                                      color: const Color.fromARGB(255, 255, 255, 255),
                                     ),
                                     borderRadius: BorderRadius.circular(10),
                                   ),
+                                  shadows: [
+                                    BoxShadow(
+                                      color: Colors.black.withOpacity(0.2),
+                                      blurRadius: 10,
+                                      offset: Offset(0, 4),
+                                    ),
+                                  ],
                                 ),
                                 child: Column(
                                   children: [
