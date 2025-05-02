@@ -10,70 +10,63 @@ class MainPage extends StatefulWidget {
 
 class CurvedPainter extends CustomPainter {
   final double position;
-  
+
   CurvedPainter(this.position);
 
   @override
   void paint(Canvas canvas, Size size) {
-    var paint = Paint()
-      ..color = Colors.white
-      ..style = PaintingStyle.fill;
+    var paint =
+        Paint()
+          ..color = Colors.white
+          ..style = PaintingStyle.fill;
 
-    var shadowPaint = Paint()
-      ..color = Colors.black.withOpacity(0.1)
-      ..maskFilter = MaskFilter.blur(BlurStyle.normal, 8);
+    var shadowPaint =
+        Paint()
+          ..color = Colors.black.withOpacity(0.1)
+          ..maskFilter = MaskFilter.blur(BlurStyle.normal, 8);
 
     var path = Path();
-    
+
     // Calculate curve position
     final curvePosition = size.width * position;
     final curveRadius = 24.0;
-    
+
     // Start from top-left
     path.moveTo(0, curveRadius);
-    
+
     // Top-left corner
     path.quadraticBezierTo(0, 0, curveRadius, 0);
-    
+
     // Top edge before curve
     path.lineTo(curvePosition - 40, 0);
-    
+
     // Left part of curve
-    path.quadraticBezierTo(
-      curvePosition - 30, 0,
-      curvePosition - 20, -5
-    );
-    
+    path.quadraticBezierTo(curvePosition - 30, 0, curvePosition - 20, -5);
+
     // Center of curve
-    path.quadraticBezierTo(
-      curvePosition, -10,
-      curvePosition + 20, -5
-    );
-    
+    path.quadraticBezierTo(curvePosition, -10, curvePosition + 20, -5);
+
     // Right part of curve
-    path.quadraticBezierTo(
-      curvePosition + 30, 0,
-      curvePosition + 40, 0
-    );
-    
+    path.quadraticBezierTo(curvePosition + 30, 0, curvePosition + 40, 0);
+
     // Top edge after curve
     path.lineTo(size.width - curveRadius, 0);
-    
+
     // Top-right corner
     path.quadraticBezierTo(size.width, 0, size.width, curveRadius);
-    
+
     // Right edge
     path.lineTo(size.width, size.height);
-    
+
     // Bottom edge
     path.lineTo(0, size.height);
-    
+
     // Close path
     path.close();
 
     // Draw shadow first
     canvas.drawPath(path, shadowPaint);
-    
+
     // Then draw the main path
     canvas.drawPath(path, paint);
   }
@@ -82,16 +75,13 @@ class CurvedPainter extends CustomPainter {
   bool shouldRepaint(CustomPainter oldDelegate) => true;
 }
 
-class _MainPageState extends State<MainPage> with SingleTickerProviderStateMixin {
+class _MainPageState extends State<MainPage>
+    with SingleTickerProviderStateMixin {
   late AnimationController _animationController;
   late Animation<double> _curveAnimation;
   int _currentIndex = 0;
 
-  final List<Widget> _pages = [
-    DiscoverPage(),
-    MatchPage(),
-    ProfilePage(),
-  ];
+  final List<Widget> _pages = [DiscoverPage(), MatchPage(), ProfilePage()];
 
   @override
   void initState() {
@@ -107,10 +97,7 @@ class _MainPageState extends State<MainPage> with SingleTickerProviderStateMixin
       begin: initialPosition,
       end: initialPosition,
     ).animate(
-      CurvedAnimation(
-        parent: _animationController,
-        curve: Curves.easeInOut,
-      ),
+      CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
     );
   }
 
@@ -128,15 +115,12 @@ class _MainPageState extends State<MainPage> with SingleTickerProviderStateMixin
 
     setState(() {
       _currentIndex = index;
-      
+
       _curveAnimation = Tween<double>(
         begin: currentPosition,
         end: targetPosition,
       ).animate(
-        CurvedAnimation(
-          parent: _animationController,
-          curve: Curves.easeInOut,
-        ),
+        CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
       );
 
       _animationController.reset();
@@ -147,10 +131,7 @@ class _MainPageState extends State<MainPage> with SingleTickerProviderStateMixin
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: IndexedStack(
-        index: _currentIndex,
-        children: _pages,
-      ),
+      body: IndexedStack(index: _currentIndex, children: _pages),
       bottomNavigationBar: Stack(
         children: [
           Container(
