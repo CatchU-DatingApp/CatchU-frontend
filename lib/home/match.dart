@@ -90,7 +90,10 @@ class _MatchPageState extends State<MatchPage> {
     final uri = Uri.parse(url);
 
     try {
-      final success = await launchUrl(uri, mode: LaunchMode.externalApplication);
+      final success = await launchUrl(
+        uri,
+        mode: LaunchMode.externalApplication,
+      );
       if (!success) {
         print('Could not launch $url');
       }
@@ -99,6 +102,13 @@ class _MatchPageState extends State<MatchPage> {
     }
   }
 
+  Future<void> _onRefresh() async {
+    await Future.delayed(Duration(milliseconds: 1000));
+
+    setState(() {
+      // Update your messages list here if needed
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -140,98 +150,101 @@ class _MatchPageState extends State<MatchPage> {
               ),
             ),
             Expanded(
-              child: ListView.builder(
-                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                itemCount: messages.length,
-                itemBuilder: (context, index) {
-                  final msg = messages[index];
-                  final isExpanded = expandedIndices.contains(index);
+              child: RefreshIndicator(
+                onRefresh: _onRefresh,
+                color: const Color(0xFFFF426D),
+                child: ListView.builder(
+                  padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  itemCount: messages.length,
+                  itemBuilder: (context, index) {
+                    final msg = messages[index];
+                    final isExpanded = expandedIndices.contains(index);
 
-                  return ClipRRect(
-                    borderRadius: BorderRadius.circular(10),
-                    child: BackdropFilter(
-                      filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
-                      child: Container(
-                        margin: EdgeInsets.only(bottom: 8),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.3),
-                          borderRadius: BorderRadius.circular(22),
-                          // border: Border.all(color: const Color.fromARGB(255, 255, 255, 255)),
-                          // boxShadow: [
-                          //   BoxShadow(
-                          //     color: Colors.black.withOpacity(0.2),
-                          //     blurRadius: 8,
-                          //     offset: Offset(0, 2),
-                          //   ),
-                          // ],
-                        ),
-                        child: Column(
-                          children: [
-                            InkWell(
-                              onTap: () => _toggleExpanded(index),
-                              child: Padding(
-                                padding: EdgeInsets.all(12),
-                                child: Row(
-                                  children: [
-                                    ClipRRect(
-                                      borderRadius: BorderRadius.circular(10),
-                                      child: Image.asset(
-                                        msg['image']!,
-                                        width: 70,
-                                        height: 70,
-                                        fit: BoxFit.cover,
+                    return ClipRRect(
+                      borderRadius: BorderRadius.circular(10),
+                      child: BackdropFilter(
+                        filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+                        child: Container(
+                          margin: EdgeInsets.only(bottom: 8),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.3),
+                            borderRadius: BorderRadius.circular(22),
+                          ),
+                          child: Column(
+                            children: [
+                              InkWell(
+                                onTap: () => _toggleExpanded(index),
+                                child: Padding(
+                                  padding: EdgeInsets.all(12),
+                                  child: Row(
+                                    children: [
+                                      ClipRRect(
+                                        borderRadius: BorderRadius.circular(10),
+                                        child: Image.asset(
+                                          msg['image']!,
+                                          width: 70,
+                                          height: 70,
+                                          fit: BoxFit.cover,
+                                        ),
                                       ),
-                                    ),
-                                    SizedBox(width: 12),
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            msg['name']!,
-                                            style: TextStyle(
-                                              fontSize: 14,
-                                              fontWeight: FontWeight.bold,
-                                              color: Colors.black87,
+                                      SizedBox(width: 12),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              msg['name']!,
+                                              style: TextStyle(
+                                                fontSize: 14,
+                                                fontWeight: FontWeight.bold,
+                                                color: Colors.black87,
+                                              ),
                                             ),
-                                          ),
-                                          SizedBox(height: 4),
-                                          Text(
-                                            msg['message']!,
-                                            style: TextStyle(
-                                              color: const Color.fromARGB(255, 86, 86, 86),
-                                              fontSize: 12,
+                                            SizedBox(height: 4),
+                                            Text(
+                                              msg['message']!,
+                                              style: TextStyle(
+                                                color: const Color.fromARGB(
+                                                  255,
+                                                  86,
+                                                  86,
+                                                  86,
+                                                ),
+                                                fontSize: 12,
+                                              ),
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
                                             ),
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
-                                          ),
-                                        ],
+                                          ],
+                                        ),
                                       ),
-                                    ),
-                                    Icon(
-                                      isExpanded
-                                          ? Icons.keyboard_arrow_up
-                                          : Icons.keyboard_arrow_right,
-                                      color: Colors.grey,
-                                    ),
-                                  ],
+                                      Icon(
+                                        isExpanded
+                                            ? Icons.keyboard_arrow_up
+                                            : Icons.keyboard_arrow_right,
+                                        color: Colors.grey,
+                                      ),
+                                    ],
+                                  ),
                                 ),
                               ),
-                            ),
-                            AnimatedCrossFade(
-                              firstChild: SizedBox.shrink(),
-                              secondChild: _buildSocialMediaSection(msg),
-                              crossFadeState: isExpanded
-                                  ? CrossFadeState.showSecond
-                                  : CrossFadeState.showFirst,
-                              duration: Duration(milliseconds: 300),
-                            ),
-                          ],
+                              AnimatedCrossFade(
+                                firstChild: SizedBox.shrink(),
+                                secondChild: _buildSocialMediaSection(msg),
+                                crossFadeState:
+                                    isExpanded
+                                        ? CrossFadeState.showSecond
+                                        : CrossFadeState.showFirst,
+                                duration: Duration(milliseconds: 300),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
-                    ),
-                  );
-                },
+                    );
+                  },
+                ),
               ),
             ),
           ],
@@ -252,8 +265,11 @@ class _MatchPageState extends State<MatchPage> {
                   icon: Icons.camera_alt,
                   username: '@${profile['instagram']}',
                   backgroundColor: Color(0xFFFF426D),
-                  onTap: () =>
-                      _launchSocialMedia('instagram', profile['instagram']!),
+                  onTap:
+                      () => _launchSocialMedia(
+                        'instagram',
+                        profile['instagram']!,
+                      ),
                 ),
               ),
               SizedBox(width: 8),
@@ -262,8 +278,9 @@ class _MatchPageState extends State<MatchPage> {
                   icon: Icons.facebook,
                   username: '@${profile['facebook']}',
                   backgroundColor: Color(0xFFFF426D),
-                  onTap: () =>
-                      _launchSocialMedia('facebook', profile['facebook']!),
+                  onTap:
+                      () =>
+                          _launchSocialMedia('facebook', profile['facebook']!),
                 ),
               ),
             ],
@@ -276,8 +293,8 @@ class _MatchPageState extends State<MatchPage> {
                   icon: Icons.close,
                   username: '@${profile['twitter']}',
                   backgroundColor: Color(0xFFFF426D),
-                  onTap: () =>
-                      _launchSocialMedia('twitter', profile['twitter']!),
+                  onTap:
+                      () => _launchSocialMedia('twitter', profile['twitter']!),
                 ),
               ),
               SizedBox(width: 8),

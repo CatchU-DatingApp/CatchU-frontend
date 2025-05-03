@@ -4,6 +4,8 @@ import 'dart:ui';
 import 'dart:math' as math;
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../utils/image_helper.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class ProfileData {
   final String name;
@@ -12,14 +14,18 @@ class ProfileData {
   final String bio;
   final String faculty;
   final List<String> interests;
+  final List<double> location; // Add location field
+  final int matchingInterestsCount;
 
   ProfileData({
     required this.name,
-    required this.images, // Now a list
+    required this.images,
     required this.distance,
     this.bio = 'No bio available',
     this.faculty = 'Unspecified',
     this.interests = const [],
+    this.location = const [0.0, 0.0], // Default location
+    required this.matchingInterestsCount,
   });
 }
 
@@ -101,69 +107,234 @@ class _DiscoverPageState extends State<DiscoverPage>
     });
     try {
       print('Fetching profiles from Firestore...');
-      // Cek inisialisasi Firebase
       if (FirebaseFirestore.instance == null) {
         throw Exception(
           'Firebase belum diinisialisasi. Pastikan Firebase.initializeApp() sudah dipanggil di main.dart',
         );
       }
+
+      // Get current user's data
+      final currentUser = FirebaseAuth.instance.currentUser;
+      if (currentUser == null) {
+        throw Exception('User tidak ditemukan');
+      }
+
+      final currentUserDoc =
+          await FirebaseFirestore.instance
+              .collection('Users')
+              .doc(currentUser.uid)
+              .get();
+
+      if (!currentUserDoc.exists) {
+        throw Exception('Data user tidak ditemukan');
+      }
+
+      final currentUserData = currentUserDoc.data()!;
+      if (!currentUserData.containsKey('location')) {
+        throw Exception('Data lokasi user tidak ditemukan');
+      }
+
+      final currentUserLocation = List<double>.from(
+        currentUserData['location'],
+      );
+      final currentUserGender = currentUserData['gender'] as String?;
+      final currentUserInterests = List<String>.from(
+        currentUserData['interest'] ?? [],
+      );
+
+      if (currentUserGender == null || currentUserGender.isEmpty) {
+        throw Exception('Data gender user tidak ditemukan');
+      }
+
+      // Tentukan gender yang ingin ditampilkan (lawan jenis)
+      final targetGender =
+          currentUserGender.toLowerCase() == 'male' ? 'female' : 'male';
+
+      // Fetch other users
       final snapshot = await FirebaseFirestore.instance
           .collection('Users')
-          .limit(20)
           .get()
           .timeout(
-            Duration(seconds: 7),
+            Duration(seconds: 10),
             onTimeout: () {
               throw Exception(
                 'Timeout: Gagal mengambil data user dari server.',
               );
             },
           );
+
       if (snapshot.docs == null) {
         throw Exception('Gagal mengambil data user: snapshot.docs null');
       }
-      print('Fetched \\${snapshot.docs.length} user(s)');
+      print('Fetched ${snapshot.docs.length} user(s)');
+
       final List<ProfileData> profiles = [];
+      int skippedUsers = 0;
       for (var doc in snapshot.docs) {
         try {
+          // Skip current user
+          if (doc.id == currentUser.uid) {
+            skippedUsers++;
+            print('Skipped current user: ${doc.id}');
+            continue;
+          }
+
+          final userData = doc.data();
+
+          // Skip if gender doesn't match target gender
+          final userGender = (userData['gender'] as String?)?.toLowerCase();
+          if (userGender == null || userGender != targetGender) {
+            skippedUsers++;
+            print('Skipped user ${doc.id}: Gender mismatch or not specified');
+            continue;
+          }
+
+          // Get matching interests (tidak di-skip jika tidak cocok)
+          final userInterests = List<String>.from(userData['interest'] ?? []);
+          final matchingInterests =
+              userInterests
+                  .where((interest) => currentUserInterests.contains(interest))
+                  .toList();
+
+          // Get user location
+          if (!userData.containsKey('location')) {
+            skippedUsers++;
+            print('Skipped user ${doc.id}: No location data');
+            continue;
+          }
+
+          final userLocation = List<double>.from(
+            userData['location'] ?? [0.0, 0.0],
+          );
+
+          // Skip if location is default [0.0, 0.0]
+          if (userLocation[0] == 0.0 && userLocation[1] == 0.0) {
+            skippedUsers++;
+            print('Skipped user ${doc.id}: Default location [0.0, 0.0]');
+            continue;
+          }
+
+          // Calculate distance
+          final distanceInKm = await _calculateDistance(
+            currentUserLocation[0],
+            currentUserLocation[1],
+            userLocation[0],
+            userLocation[1],
+          );
+
+          // Format distance string - one decimal place
+          final distanceStr = '${distanceInKm.toStringAsFixed(1)} km';
+
+          // Hanya tambahkan user yang memiliki nama
+          if (userData['nama'] == null ||
+              userData['nama'].toString().trim().isEmpty) {
+            skippedUsers++;
+            print('Skipped user ${doc.id}: No name');
+            continue;
+          }
+
           profiles.add(
             ProfileData(
-              name: doc.data()['nama'] ?? '',
-              images: List<String>.from(doc.data()['photos'] ?? []),
-              distance: doc.data()['distance'] ?? '',
-              bio: doc.data()['bio'] ?? '',
-              faculty: doc.data()['faculty'] ?? '',
-              interests: List<String>.from(doc.data()['interest'] ?? []),
+              name: userData['nama'],
+              images: List<String>.from(userData['photos'] ?? []),
+              distance: distanceStr,
+              bio: userData['bio'] ?? '',
+              faculty: userData['faculty'] ?? '',
+              interests: userInterests,
+              location: userLocation,
+              matchingInterestsCount: matchingInterests.length,
             ),
           );
+
+          print(
+            'Added user ${doc.id} with ${matchingInterests.length} matching interests: ${matchingInterests.join(", ")}',
+          );
         } catch (e) {
-          print('Error parsing user doc id=\${doc.id}: $e');
+          skippedUsers++;
+          print('Error parsing user doc id=${doc.id}: $e');
         }
       }
-      print('Parsed \\${profiles.length} valid user(s)');
-      if (profiles.isEmpty) {
-        profiles.add(
-          ProfileData(
-            name: 'No User',
-            images: [],
-            distance: '-',
-            bio: 'No user data found.',
-            faculty: '-',
-            interests: [],
-          ),
+      print('Total users fetched: ${snapshot.docs.length}');
+      print('Users skipped: $skippedUsers');
+      print('Users shown: ${profiles.length}');
+
+      // Sort profiles by matching interests count first, then by distance
+      profiles.sort((a, b) {
+        // Sort by matching interests count first (descending)
+        final interestCompare = b.matchingInterestsCount.compareTo(
+          a.matchingInterestsCount,
         );
-      }
-      setState(() {
-        _profiles = profiles;
-        _isLoadingProfiles = false;
+        if (interestCompare != 0) return interestCompare;
+
+        // If matching interests count is same, sort by distance (ascending)
+        final distA = double.parse(a.distance.replaceAll(' km', ''));
+        final distB = double.parse(b.distance.replaceAll(' km', ''));
+        return distA.compareTo(distB);
       });
+
+      if (mounted) {
+        setState(() {
+          _profiles = profiles;
+          _isLoadingProfiles = false;
+        });
+      }
     } catch (e) {
       print('Error fetching profiles: $e');
-      setState(() {
-        _profilesError = 'Gagal mengambil data user: $e';
-        _isLoadingProfiles = false;
-      });
+      if (mounted) {
+        setState(() {
+          _isLoadingProfiles = false;
+          _profilesError = e.toString();
+        });
+      }
     }
+  }
+
+  // Add helper function to calculate distance
+  Future<double> _calculateDistance(
+    double lat1,
+    double lon1,
+    double lat2,
+    double lon2,
+  ) async {
+    try {
+      // Validasi koordinat
+      if (!_isValidCoordinate(lat1, lon1) || !_isValidCoordinate(lat2, lon2)) {
+        print('Invalid coordinates detected');
+        return 0.0;
+      }
+
+      // Gunakan Geolocator dengan pengaturan akurasi tinggi
+      double distanceInMeters = await Geolocator.distanceBetween(
+        lat1,
+        lon1,
+        lat2,
+        lon2,
+      );
+
+      // Konversi ke kilometer dengan pembulatan ke 1 desimal
+      double distanceInKm = distanceInMeters / 1000;
+
+      // Handle kasus khusus
+      if (distanceInKm < 0.1) {
+        return 0.1; // Minimum 100m ditampilkan sebagai 0.1km
+      } else if (distanceInKm > 1000) {
+        return 999.9; // Maximum 999.9km untuk jarak yang terlalu jauh
+      }
+
+      return double.parse(distanceInKm.toStringAsFixed(1));
+    } catch (e) {
+      print('Error calculating distance: $e');
+      return 0.0;
+    }
+  }
+
+  // Helper function untuk validasi koordinat
+  bool _isValidCoordinate(double lat, double lon) {
+    if (lat == null || lon == null) return false;
+    if (lat == 0.0 && lon == 0.0) return false; // Koordinat default/invalid
+    if (lat < -90 || lat > 90) return false; // Latitude valid: -90 to 90
+    if (lon < -180 || lon > 180) return false; // Longitude valid: -180 to 180
+    return true;
   }
 
   @override
@@ -372,14 +543,44 @@ class _DiscoverPageState extends State<DiscoverPage>
       return Scaffold(
         backgroundColor: Color(0xFFFDF7F6),
         body: Center(
-          child: Text('Error: \n' + (_profilesError ?? 'Unknown error')),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text('Error: \n' + (_profilesError ?? 'Unknown error')),
+              SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: _fetchProfilesFromFirebase,
+                child: Text('Retry'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.pink,
+                  foregroundColor: Colors.white,
+                ),
+              ),
+            ],
+          ),
         ),
       );
     }
     if (_profiles.isEmpty) {
       return Scaffold(
         backgroundColor: Color(0xFFFDF7F6),
-        body: Center(child: Text('No users found.')),
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text('No users found.'),
+              SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: _fetchProfilesFromFirebase,
+                child: Text('Refresh'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.pink,
+                  foregroundColor: Colors.white,
+                ),
+              ),
+            ],
+          ),
+        ),
       );
     }
 
