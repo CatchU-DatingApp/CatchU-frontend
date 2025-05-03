@@ -34,6 +34,7 @@ class _ProfilePageState extends State<ProfilePage> {
 
   List<String> selectedInterests = [];
   bool _isLoading = true;
+  bool isVerified = false;
 
   final List<Map<String, dynamic>> interests = [
     {"label": "Reading", "icon": Icons.menu_book},
@@ -117,6 +118,7 @@ class _ProfilePageState extends State<ProfilePage> {
               lineController.text = data['line'] ?? '';
               selectedInterests = List<String>.from(data['interest'] ?? []);
               selectedFaculty = data['faculty'];
+              isVerified = data['verified'] == true;
 
               uploadedImages = [];
               _preloadImages(data['photos'] as List<dynamic>? ?? []);
@@ -667,45 +669,73 @@ class _ProfilePageState extends State<ProfilePage> {
                                       fontWeight: FontWeight.w800,
                                     ),
                                   ),
-                                  OutlinedButton(
-                                    onPressed: () {
-                                      // Navigate to the FaceValidation page when the button is clicked
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder:
-                                              (context) =>
-                                                  FaceValidationPhotoPage(),
-                                        ),
-                                      );
-                                    },
-                                    style: OutlinedButton.styleFrom(
-                                      backgroundColor: Colors.white,
-                                      side: BorderSide(
-                                        color: Colors.blue.shade300,
-                                      ),
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(20),
-                                      ),
-                                    ),
-                                    child: Row(
-                                      children: [
-                                        Text(
-                                          'Get Verified',
-                                          style: TextStyle(
-                                            color: Colors.blue.shade600,
-                                            fontWeight: FontWeight.w600,
+                                  isVerified
+                                      ? OutlinedButton(
+                                          onPressed: null,
+                                          style: OutlinedButton.styleFrom(
+                                            backgroundColor: Colors.blue,
+                                            side: BorderSide(
+                                              color: Colors.blue,
+                                            ),
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius: BorderRadius.circular(20),
+                                            ),
+                                          ),
+                                          child: Row(
+                                            children: [
+                                              Text(
+                                                'Verified',
+                                                style: TextStyle(
+                                                  color: Colors.white,
+                                                  fontWeight: FontWeight.w600,
+                                                ),
+                                              ),
+                                              SizedBox(width: 4),
+                                              Icon(
+                                                Icons.verified,
+                                                color: Colors.white,
+                                                size: 16,
+                                              ),
+                                            ],
+                                          ),
+                                        )
+                                      : OutlinedButton(
+                                          onPressed: () {
+                                            // Navigate to the FaceValidation page when the button is clicked
+                                            Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder: (context) => FaceValidationPhotoPage(),
+                                              ),
+                                            ).then((_) => _loadUserProfile());
+                                          },
+                                          style: OutlinedButton.styleFrom(
+                                            backgroundColor: Colors.white,
+                                            side: BorderSide(
+                                              color: Colors.blue.shade300,
+                                            ),
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius: BorderRadius.circular(20),
+                                            ),
+                                          ),
+                                          child: Row(
+                                            children: [
+                                              Text(
+                                                'Get Verified',
+                                                style: TextStyle(
+                                                  color: Colors.blue.shade600,
+                                                  fontWeight: FontWeight.w600,
+                                                ),
+                                              ),
+                                              SizedBox(width: 4),
+                                              Icon(
+                                                Icons.verified,
+                                                color: Colors.blue,
+                                                size: 16,
+                                              ),
+                                            ],
                                           ),
                                         ),
-                                        SizedBox(width: 4),
-                                        Icon(
-                                          Icons.verified,
-                                          color: Colors.blue,
-                                          size: 16,
-                                        ),
-                                      ],
-                                    ),
-                                  ),
                                 ],
                               ),
                               SizedBox(height: screenHeight * 0.03),
