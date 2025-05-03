@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:catchu/services/session_manager.dart';
 import 'package:catchu/auth/get_started.dart';
-import 'package:catchu/home/homepage1.dart';
-
 import 'home/mainpage.dart';
 
 void main() async {

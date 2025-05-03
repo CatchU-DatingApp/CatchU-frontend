@@ -12,7 +12,6 @@ import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
 import '../services/ml.dart';
 
-//MASIH DEMO, BELUM BISA KONEK KE FIREBASE, MAKA BISA LANGSUNG NEXT UNTUK DEBUGGING
 class FaceValidationPhotoPage extends StatefulWidget {
   const FaceValidationPhotoPage({Key? key}) : super(key: key);
 

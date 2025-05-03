@@ -1,5 +1,3 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-
 class User {
   final String? id;
   final String nomorTelepon;
@@ -10,7 +8,7 @@ class User {
   final List<String> interest;
   final bool verified;
   final List<double> location;
-  final List<String> photos; // List of photo URLs
+  final List<String> photos;
 
   User({
     this.id,
