@@ -6,6 +6,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../utils/image_helper.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import './mainpage.dart'; // Add import for MainPage
 
 class ProfileData {
   final String name;
@@ -16,6 +17,7 @@ class ProfileData {
   final List<String> interests;
   final List<double> location; // Add location field
   final int matchingInterestsCount;
+  final String userId;
 
   ProfileData({
     required this.name,
@@ -26,6 +28,7 @@ class ProfileData {
     this.interests = const [],
     this.location = const [0.0, 0.0], // Default location
     required this.matchingInterestsCount,
+    required this.userId,
   });
 }
 
@@ -243,6 +246,7 @@ class _DiscoverPageState extends State<DiscoverPage>
               interests: userInterests,
               location: userLocation,
               matchingInterestsCount: matchingInterests.length,
+              userId: doc.id,
             ),
           );
 
@@ -479,6 +483,202 @@ class _DiscoverPageState extends State<DiscoverPage>
     _dragUpdateY = 0;
   }
 
+  Future<void> _handleLike(ProfileData likedProfile) async {
+    try {
+      final currentUser = FirebaseAuth.instance.currentUser;
+      if (currentUser == null) return;
+
+      final likesRef = FirebaseFirestore.instance.collection('Likes');
+      final matchesRef = FirebaseFirestore.instance.collection('Matches');
+
+      // Check if already liked
+      final existingLikeQuery =
+          await likesRef
+              .where('likedBy', isEqualTo: currentUser.uid)
+              .where('likedUser', isEqualTo: likedProfile.userId)
+              .get();
+
+      // If already liked, don't add another like
+      if (existingLikeQuery.docs.isNotEmpty) {
+        print('Already liked this profile');
+        return;
+      }
+
+      // Add like to Likes collection
+      await likesRef
+          .add({
+            'likedBy': currentUser.uid,
+            'likedUser': likedProfile.userId,
+            'timestamp': FieldValue.serverTimestamp(),
+          })
+          .then((value) => print('Like added with ID: ${value.id}'))
+          .catchError((error) => print('Error adding like: $error'));
+
+      // Check if the other user has already liked current user
+      final querySnapshot =
+          await likesRef
+              .where('likedBy', isEqualTo: likedProfile.userId)
+              .where('likedUser', isEqualTo: currentUser.uid)
+              .get();
+
+      // If there's a mutual like, create a match
+      if (querySnapshot.docs.isNotEmpty) {
+        print('Found mutual like, creating match');
+
+        // Get current user's name
+        final currentUserDoc =
+            await FirebaseFirestore.instance
+                .collection('Users')
+                .doc(currentUser.uid)
+                .get();
+
+        final currentUserName = currentUserDoc.data()?['nama'] ?? '';
+
+        // Create match document
+        await matchesRef
+            .add({
+              'users': [currentUser.uid, likedProfile.userId],
+              'userNames': [currentUserName, likedProfile.name],
+              'userPhotos': [
+                (await _getCurrentUserPhoto()) ?? '',
+                likedProfile.images.isNotEmpty ? likedProfile.images[0] : '',
+              ],
+              'timestamp': FieldValue.serverTimestamp(),
+              'lastMessage': null,
+              'lastMessageTimestamp': null,
+            })
+            .then((value) => print('Match created with ID: ${value.id}'))
+            .catchError((error) => print('Error creating match: $error'));
+
+        // Show match dialog
+        if (mounted) {
+          _showMatchDialog(likedProfile);
+        }
+      }
+    } catch (e) {
+      print('Error handling like: $e');
+    }
+  }
+
+  Future<String?> _getCurrentUserPhoto() async {
+    try {
+      final currentUser = FirebaseAuth.instance.currentUser;
+      if (currentUser == null) return null;
+
+      final userDoc =
+          await FirebaseFirestore.instance
+              .collection('Users')
+              .doc(currentUser.uid)
+              .get();
+
+      if (userDoc.exists) {
+        final photos = List<String>.from(userDoc.data()?['photos'] ?? []);
+        return photos.isNotEmpty ? photos[0] : null;
+      }
+      return null;
+    } catch (e) {
+      print('Error getting current user photo: $e');
+      return null;
+    }
+  }
+
+  void _showMatchDialog(ProfileData matchedProfile) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          child: Container(
+            padding: EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'It\'s a Match!',
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFFFF426D),
+                  ),
+                ),
+                SizedBox(height: 20),
+                Text(
+                  'You and ${matchedProfile.name} liked each other',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 16, color: Colors.grey[600]),
+                ),
+                SizedBox(height: 20),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    ElevatedButton(
+                      onPressed: () {
+                        Navigator.pop(context); // Close dialog
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.grey[300],
+                        foregroundColor: Colors.black,
+                      ),
+                      child: Text('Keep Swiping'),
+                    ),
+                    ElevatedButton(
+                      onPressed: () {
+                        Navigator.pop(context); // Close dialog
+                        // Navigate to match page using named route
+                        Navigator.pushReplacementNamed(
+                          context,
+                          '/home',
+                          arguments: 1,
+                        );
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Color(0xFFFF426D),
+                        foregroundColor: Colors.white,
+                      ),
+                      child: Text('Send Message'),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  void _swipeRight() {
+    if (_isAnimating) return;
+
+    final currentProfile = _profiles[_currentProfileIndex];
+    _handleLike(currentProfile);
+
+    setState(() {
+      _isAnimating = true;
+
+      _slideAnimation = Tween<Offset>(
+        begin: _currentSlide,
+        end: Offset(1.5, 0),
+      ).animate(
+        CurvedAnimation(parent: _swipeController, curve: Curves.easeOut),
+      );
+
+      _rotationAnimation = Tween<double>(
+        begin: _currentSlide.dx * 0.2,
+        end: 0.2,
+      ).animate(
+        CurvedAnimation(parent: _swipeController, curve: Curves.easeOut),
+      );
+    });
+
+    _swipeController.forward(from: 0.0);
+  }
+
   void _swipeLeft() {
     if (_isAnimating) return;
 
@@ -495,30 +695,6 @@ class _DiscoverPageState extends State<DiscoverPage>
       _rotationAnimation = Tween<double>(
         begin: _currentSlide.dx * 0.2,
         end: -0.2,
-      ).animate(
-        CurvedAnimation(parent: _swipeController, curve: Curves.easeOut),
-      );
-    });
-
-    _swipeController.forward(from: 0.0);
-  }
-
-  void _swipeRight() {
-    if (_isAnimating) return;
-
-    setState(() {
-      _isAnimating = true;
-
-      _slideAnimation = Tween<Offset>(
-        begin: _currentSlide,
-        end: Offset(1.5, 0),
-      ).animate(
-        CurvedAnimation(parent: _swipeController, curve: Curves.easeOut),
-      );
-
-      _rotationAnimation = Tween<double>(
-        begin: _currentSlide.dx * 0.2,
-        end: 0.2,
       ).animate(
         CurvedAnimation(parent: _swipeController, curve: Curves.easeOut),
       );

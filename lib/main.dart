@@ -36,7 +36,10 @@ class MyApp extends StatelessWidget {
       ),
       routes: {
         '/get_started': (context) => WelcomeScreen(),
-        '/home': (context) => MainPage(),
+        '/home': (context) {
+          final args = ModalRoute.of(context)?.settings.arguments as int?;
+          return MainPage(initialIndex: args);
+        },
       },
     );
   }

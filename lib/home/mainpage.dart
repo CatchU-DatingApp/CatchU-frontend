@@ -4,6 +4,10 @@ import 'match.dart';
 import '../profile/profile.dart';
 
 class MainPage extends StatefulWidget {
+  final int? initialIndex;
+
+  const MainPage({Key? key, this.initialIndex}) : super(key: key);
+
   @override
   _MainPageState createState() => _MainPageState();
 }
@@ -79,13 +83,15 @@ class _MainPageState extends State<MainPage>
     with SingleTickerProviderStateMixin {
   late AnimationController _animationController;
   late Animation<double> _curveAnimation;
-  int _currentIndex = 0;
+  late int _currentIndex;
 
   final List<Widget> _pages = [DiscoverPage(), MatchPage(), ProfilePage()];
 
   @override
   void initState() {
     super.initState();
+    _currentIndex = widget.initialIndex ?? 0;
+
     _animationController = AnimationController(
       duration: Duration(milliseconds: 400),
       vsync: this,

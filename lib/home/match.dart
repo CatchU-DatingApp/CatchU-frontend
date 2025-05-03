@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'dart:ui';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class MatchPage extends StatefulWidget {
   @override
@@ -9,54 +11,66 @@ class MatchPage extends StatefulWidget {
 
 class _MatchPageState extends State<MatchPage> {
   List<int> expandedIndices = [];
+  List<Map<String, dynamic>> matches = [];
+  bool _isLoading = true;
 
-  final List<Map<String, String>> messages = [
-    {
-      'name': 'Valdez',
-      'message': 'Aku orangnya baik banget sampai a...',
-      'image': 'assets/images/3_1.jpg',
-      'instagram': 'valdezbrz',
-      'facebook': 'valdezb',
-      'twitter': 'deculein',
-      'line': 'vlebnia245',
-    },
-    {
-      'name': 'Keilaa',
-      'message': 'janda anak 10',
-      'image': 'assets/images/3_2.jpg',
-      'instagram': 'loifu6969',
-      'facebook': 'loifu6969',
-      'twitter': 'loifu6969',
-      'line': 'loifu6969',
-    },
-    {
-      'name': 'Mikaela',
-      'message': 'aku pacarnya kuv',
-      'image': 'assets/images/3_3.jpg',
-      'instagram': 'loifu6969',
-      'facebook': 'loifu6969',
-      'twitter': 'loifu6969',
-      'line': 'loifu6969',
-    },
-    {
-      'name': 'kuvukiland',
-      'message': 'Asli kendal 😂',
-      'image': 'assets/images/jawa.png',
-      'instagram': 'loifu6969',
-      'facebook': 'loifu6969',
-      'twitter': 'loifu6969',
-      'line': 'loifu6969',
-    },
-    {
-      'name': 'Muhammad Roif Baktiar',
-      'message': 'Aku orangnya baik banget sampai a...',
-      'image': 'assets/images/5.jpg',
-      'instagram': 'loifu6969',
-      'facebook': 'loifu6969',
-      'twitter': 'loifu6969',
-      'line': 'loifu6969',
-    },
-  ];
+  @override
+  void initState() {
+    super.initState();
+    _loadMatches();
+  }
+
+  Future<void> _loadMatches() async {
+    try {
+      setState(() {
+        _isLoading = true;
+      });
+
+      final currentUser = FirebaseAuth.instance.currentUser;
+      if (currentUser == null) return;
+
+      final matchesRef = FirebaseFirestore.instance.collection('Matches');
+      final querySnapshot =
+          await matchesRef
+              .where('users', arrayContains: currentUser.uid)
+              .orderBy('timestamp', descending: true)
+              .get();
+
+      final loadedMatches =
+          querySnapshot.docs.map((doc) {
+            final data = doc.data();
+            final users = List<String>.from(data['users'] ?? []);
+            final userNames = List<String>.from(data['userNames'] ?? []);
+            final userPhotos = List<String>.from(data['userPhotos'] ?? []);
+
+            // Get the other user's info (not current user)
+            final otherUserIndex = users.indexOf(currentUser.uid) == 0 ? 1 : 0;
+
+            return {
+              'matchId': doc.id,
+              'name': userNames[otherUserIndex],
+              'image': userPhotos[otherUserIndex],
+              'message': data['lastMessage'] ?? 'Say hi to your new match!',
+              'timestamp': data['timestamp'],
+              'otherUserId': users[otherUserIndex],
+            };
+          }).toList();
+
+      if (mounted) {
+        setState(() {
+          matches = loadedMatches;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      print('Error loading matches: $e');
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
 
   void _toggleExpanded(int index) {
     setState(() {
@@ -103,11 +117,7 @@ class _MatchPageState extends State<MatchPage> {
   }
 
   Future<void> _onRefresh() async {
-    await Future.delayed(Duration(milliseconds: 1000));
-
-    setState(() {
-      // Update your messages list here if needed
-    });
+    await _loadMatches();
   }
 
   @override
@@ -150,102 +160,195 @@ class _MatchPageState extends State<MatchPage> {
               ),
             ),
             Expanded(
-              child: RefreshIndicator(
-                onRefresh: _onRefresh,
-                color: const Color(0xFFFF426D),
-                child: ListView.builder(
-                  padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  itemCount: messages.length,
-                  itemBuilder: (context, index) {
-                    final msg = messages[index];
-                    final isExpanded = expandedIndices.contains(index);
-
-                    return ClipRRect(
-                      borderRadius: BorderRadius.circular(10),
-                      child: BackdropFilter(
-                        filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
-                        child: Container(
-                          margin: EdgeInsets.only(bottom: 8),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.3),
-                            borderRadius: BorderRadius.circular(22),
+              child:
+                  _isLoading
+                      ? Center(
+                        child: CircularProgressIndicator(
+                          color: Color(0xFFFF426D),
+                        ),
+                      )
+                      : matches.isEmpty
+                      ? Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              'No matches yet',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            SizedBox(height: 8),
+                            Text(
+                              'Keep swiping to find your match!',
+                              style: TextStyle(
+                                color: Colors.white.withOpacity(0.8),
+                                fontSize: 14,
+                              ),
+                            ),
+                          ],
+                        ),
+                      )
+                      : RefreshIndicator(
+                        onRefresh: _onRefresh,
+                        color: const Color(0xFFFF426D),
+                        child: ListView.builder(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 8,
                           ),
-                          child: Column(
-                            children: [
-                              InkWell(
-                                onTap: () => _toggleExpanded(index),
-                                child: Padding(
-                                  padding: EdgeInsets.all(12),
-                                  child: Row(
+                          itemCount: matches.length,
+                          itemBuilder: (context, index) {
+                            final match = matches[index];
+                            final isExpanded = expandedIndices.contains(index);
+
+                            return ClipRRect(
+                              borderRadius: BorderRadius.circular(10),
+                              child: BackdropFilter(
+                                filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+                                child: Container(
+                                  margin: EdgeInsets.only(bottom: 8),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white.withOpacity(0.3),
+                                    borderRadius: BorderRadius.circular(22),
+                                  ),
+                                  child: Column(
                                     children: [
-                                      ClipRRect(
-                                        borderRadius: BorderRadius.circular(10),
-                                        child: Image.asset(
-                                          msg['image']!,
-                                          width: 70,
-                                          height: 70,
-                                          fit: BoxFit.cover,
-                                        ),
-                                      ),
-                                      SizedBox(width: 12),
-                                      Expanded(
-                                        child: Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            Text(
-                                              msg['name']!,
-                                              style: TextStyle(
-                                                fontSize: 14,
-                                                fontWeight: FontWeight.bold,
-                                                color: Colors.black87,
+                                      InkWell(
+                                        onTap: () {
+                                          setState(() {
+                                            if (isExpanded) {
+                                              expandedIndices.remove(index);
+                                            } else {
+                                              expandedIndices.add(index);
+                                            }
+                                          });
+                                        },
+                                        child: Padding(
+                                          padding: EdgeInsets.all(12),
+                                          child: Row(
+                                            children: [
+                                              ClipRRect(
+                                                borderRadius:
+                                                    BorderRadius.circular(10),
+                                                child:
+                                                    match['image'] != null &&
+                                                            match['image']
+                                                                .isNotEmpty
+                                                        ? Image.network(
+                                                          match['image'],
+                                                          width: 70,
+                                                          height: 70,
+                                                          fit: BoxFit.cover,
+                                                          errorBuilder: (
+                                                            context,
+                                                            error,
+                                                            stackTrace,
+                                                          ) {
+                                                            return Container(
+                                                              width: 70,
+                                                              height: 70,
+                                                              color:
+                                                                  Colors
+                                                                      .grey[300],
+                                                              child: Icon(
+                                                                Icons.person,
+                                                                color:
+                                                                    Colors.grey,
+                                                              ),
+                                                            );
+                                                          },
+                                                        )
+                                                        : Container(
+                                                          width: 70,
+                                                          height: 70,
+                                                          color:
+                                                              Colors.grey[300],
+                                                          child: Icon(
+                                                            Icons.person,
+                                                            color: Colors.grey,
+                                                          ),
+                                                        ),
                                               ),
-                                            ),
-                                            SizedBox(height: 4),
-                                            Text(
-                                              msg['message']!,
-                                              style: TextStyle(
-                                                color: const Color.fromARGB(
-                                                  255,
-                                                  86,
-                                                  86,
-                                                  86,
+                                              SizedBox(width: 12),
+                                              Expanded(
+                                                child: Column(
+                                                  crossAxisAlignment:
+                                                      CrossAxisAlignment.start,
+                                                  children: [
+                                                    Text(
+                                                      match['name'] ??
+                                                          'Unknown',
+                                                      style: TextStyle(
+                                                        fontSize: 16,
+                                                        fontWeight:
+                                                            FontWeight.bold,
+                                                        color: Colors.black87,
+                                                      ),
+                                                    ),
+                                                    SizedBox(height: 4),
+                                                    Text(
+                                                      match['message'] ??
+                                                          'No message yet',
+                                                      style: TextStyle(
+                                                        color: Colors.grey[700],
+                                                        fontSize: 14,
+                                                      ),
+                                                      maxLines: 1,
+                                                      overflow:
+                                                          TextOverflow.ellipsis,
+                                                    ),
+                                                  ],
                                                 ),
-                                                fontSize: 12,
                                               ),
-                                              maxLines: 1,
-                                              overflow: TextOverflow.ellipsis,
-                                            ),
-                                          ],
+                                              Icon(
+                                                isExpanded
+                                                    ? Icons.keyboard_arrow_up
+                                                    : Icons
+                                                        .keyboard_arrow_right,
+                                                color: Colors.grey,
+                                              ),
+                                            ],
+                                          ),
                                         ),
                                       ),
-                                      Icon(
-                                        isExpanded
-                                            ? Icons.keyboard_arrow_up
-                                            : Icons.keyboard_arrow_right,
-                                        color: Colors.grey,
-                                      ),
+                                      if (isExpanded)
+                                        Padding(
+                                          padding: EdgeInsets.symmetric(
+                                            horizontal: 12,
+                                            vertical: 8,
+                                          ),
+                                          child: Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.spaceEvenly,
+                                            children: [
+                                              _buildActionButton(
+                                                icon: Icons.message,
+                                                label: 'Message',
+                                                onTap: () {
+                                                  // TODO: Implement messaging
+                                                },
+                                              ),
+                                              _buildActionButton(
+                                                icon: Icons.person,
+                                                label: 'Profile',
+                                                onTap: () {
+                                                  // TODO: Show profile
+                                                },
+                                              ),
+                                            ],
+                                          ),
+                                        ),
                                     ],
                                   ),
                                 ),
                               ),
-                              AnimatedCrossFade(
-                                firstChild: SizedBox.shrink(),
-                                secondChild: _buildSocialMediaSection(msg),
-                                crossFadeState:
-                                    isExpanded
-                                        ? CrossFadeState.showSecond
-                                        : CrossFadeState.showFirst,
-                                duration: Duration(milliseconds: 300),
-                              ),
-                            ],
-                          ),
+                            );
+                          },
                         ),
                       ),
-                    );
-                  },
-                ),
-              ),
             ),
           ],
         ),
@@ -253,87 +356,26 @@ class _MatchPageState extends State<MatchPage> {
     );
   }
 
-  Widget _buildSocialMediaSection(Map<String, String> profile) {
-    return Container(
-      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      child: Column(
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: _buildSocialButton(
-                  icon: Icons.camera_alt,
-                  username: '@${profile['instagram']}',
-                  backgroundColor: Color(0xFFFF426D),
-                  onTap:
-                      () => _launchSocialMedia(
-                        'instagram',
-                        profile['instagram']!,
-                      ),
-                ),
-              ),
-              SizedBox(width: 8),
-              Expanded(
-                child: _buildSocialButton(
-                  icon: Icons.facebook,
-                  username: '@${profile['facebook']}',
-                  backgroundColor: Color(0xFFFF426D),
-                  onTap:
-                      () =>
-                          _launchSocialMedia('facebook', profile['facebook']!),
-                ),
-              ),
-            ],
-          ),
-          SizedBox(height: 8),
-          Row(
-            children: [
-              Expanded(
-                child: _buildSocialButton(
-                  icon: Icons.close,
-                  username: '@${profile['twitter']}',
-                  backgroundColor: Color(0xFFFF426D),
-                  onTap:
-                      () => _launchSocialMedia('twitter', profile['twitter']!),
-                ),
-              ),
-              SizedBox(width: 8),
-              Expanded(
-                child: _buildSocialButton(
-                  icon: Icons.phone_iphone,
-                  username: '@${profile['line']}',
-                  backgroundColor: Color(0xFFFF426D),
-                  onTap: () => _launchSocialMedia('line', profile['line']!),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSocialButton({
+  Widget _buildActionButton({
     required IconData icon,
-    required String username,
-    required Color backgroundColor,
-    required Function onTap,
+    required String label,
+    required VoidCallback onTap,
   }) {
     return InkWell(
-      onTap: () => onTap(),
+      onTap: onTap,
       child: Container(
-        padding: EdgeInsets.symmetric(vertical: 12),
+        padding: EdgeInsets.symmetric(vertical: 8, horizontal: 16),
         decoration: BoxDecoration(
-          color: backgroundColor,
-          borderRadius: BorderRadius.circular(10),
+          color: Color(0xFFFF426D),
+          borderRadius: BorderRadius.circular(20),
         ),
         child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, color: Colors.white, size: 22),
+            Icon(icon, color: Colors.white, size: 20),
             SizedBox(width: 8),
             Text(
-              username,
+              label,
               style: TextStyle(
                 color: Colors.white,
                 fontWeight: FontWeight.w500,
