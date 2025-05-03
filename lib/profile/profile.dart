@@ -15,6 +15,7 @@ import 'package:flutter_keyboard_visibility/flutter_keyboard_visibility.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'dart:async';
 import '../firebase/firebase_service.dart';
+import '../utils/image_helper.dart';
 
 class ProfilePage extends StatefulWidget {
   @override
@@ -402,7 +403,6 @@ class _ProfilePageState extends State<ProfilePage> {
             decoration:
                 image != null
                     ? ShapeDecoration(
-                      image: DecorationImage(image: image, fit: BoxFit.cover),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(10),
                       ),
@@ -426,7 +426,19 @@ class _ProfilePageState extends State<ProfilePage> {
                         size: 32,
                       ),
                     )
-                    : null,
+                    : ClipRRect(
+                      borderRadius: BorderRadius.circular(10),
+                      child:
+                          image is FileImage
+                              ? Image(image: image, fit: BoxFit.cover)
+                              : ImageHelper.loadCachedImage(
+                                imageUrl: (image as NetworkImage).url,
+                                width: 100,
+                                height: 100,
+                                fit: BoxFit.cover,
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                    ),
           ),
         ),
         if (image != null && !isLastPhoto)
@@ -491,7 +503,11 @@ class _ProfilePageState extends State<ProfilePage> {
                   shape: BoxShape.circle,
                 ),
                 padding: EdgeInsets.all(2),
-                child: Icon(Icons.close, size: 18, color: const Color.fromARGB(255, 255, 255, 255)),
+                child: Icon(
+                  Icons.close,
+                  size: 18,
+                  color: const Color.fromARGB(255, 255, 255, 255),
+                ),
               ),
             ),
           ),
@@ -663,7 +679,12 @@ class _ProfilePageState extends State<ProfilePage> {
                                   Text(
                                     'Profile',
                                     style: TextStyle(
-                                      color: const Color.fromARGB(255, 255, 255, 255),
+                                      color: const Color.fromARGB(
+                                        255,
+                                        255,
+                                        255,
+                                        255,
+                                      ),
                                       fontSize: screenWidth * 0.08,
                                       fontFamily: 'Nunito',
                                       fontWeight: FontWeight.w800,
@@ -671,71 +692,75 @@ class _ProfilePageState extends State<ProfilePage> {
                                   ),
                                   isVerified
                                       ? OutlinedButton(
-                                          onPressed: null,
-                                          style: OutlinedButton.styleFrom(
-                                            backgroundColor: Colors.blue,
-                                            side: BorderSide(
-                                              color: Colors.blue,
+                                        onPressed: null,
+                                        style: OutlinedButton.styleFrom(
+                                          backgroundColor: Colors.blue,
+                                          side: BorderSide(color: Colors.blue),
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(
+                                              20,
                                             ),
-                                            shape: RoundedRectangleBorder(
-                                              borderRadius: BorderRadius.circular(20),
-                                            ),
-                                          ),
-                                          child: Row(
-                                            children: [
-                                              Text(
-                                                'Verified',
-                                                style: TextStyle(
-                                                  color: Colors.white,
-                                                  fontWeight: FontWeight.w600,
-                                                ),
-                                              ),
-                                              SizedBox(width: 4),
-                                              Icon(
-                                                Icons.verified,
-                                                color: Colors.white,
-                                                size: 16,
-                                              ),
-                                            ],
-                                          ),
-                                        )
-                                      : OutlinedButton(
-                                          onPressed: () {
-                                            // Navigate to the FaceValidation page when the button is clicked
-                                            Navigator.push(
-                                              context,
-                                              MaterialPageRoute(
-                                                builder: (context) => FaceValidationPhotoPage(),
-                                              ),
-                                            ).then((_) => _loadUserProfile());
-                                          },
-                                          style: OutlinedButton.styleFrom(
-                                            backgroundColor: Colors.white,
-                                            side: BorderSide(
-                                              color: Colors.blue.shade300,
-                                            ),
-                                            shape: RoundedRectangleBorder(
-                                              borderRadius: BorderRadius.circular(20),
-                                            ),
-                                          ),
-                                          child: Row(
-                                            children: [
-                                              Text(
-                                                'Get Verified',
-                                                style: TextStyle(
-                                                  color: Colors.blue.shade600,
-                                                  fontWeight: FontWeight.w600,
-                                                ),
-                                              ),
-                                              SizedBox(width: 4),
-                                              Icon(
-                                                Icons.verified,
-                                                color: Colors.blue,
-                                                size: 16,
-                                              ),
-                                            ],
                                           ),
                                         ),
+                                        child: Row(
+                                          children: [
+                                            Text(
+                                              'Verified',
+                                              style: TextStyle(
+                                                color: Colors.white,
+                                                fontWeight: FontWeight.w600,
+                                              ),
+                                            ),
+                                            SizedBox(width: 4),
+                                            Icon(
+                                              Icons.verified,
+                                              color: Colors.white,
+                                              size: 16,
+                                            ),
+                                          ],
+                                        ),
+                                      )
+                                      : OutlinedButton(
+                                        onPressed: () {
+                                          // Navigate to the FaceValidation page when the button is clicked
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder:
+                                                  (context) =>
+                                                      FaceValidationPhotoPage(),
+                                            ),
+                                          ).then((_) => _loadUserProfile());
+                                        },
+                                        style: OutlinedButton.styleFrom(
+                                          backgroundColor: Colors.white,
+                                          side: BorderSide(
+                                            color: Colors.blue.shade300,
+                                          ),
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(
+                                              20,
+                                            ),
+                                          ),
+                                        ),
+                                        child: Row(
+                                          children: [
+                                            Text(
+                                              'Get Verified',
+                                              style: TextStyle(
+                                                color: Colors.blue.shade600,
+                                                fontWeight: FontWeight.w600,
+                                              ),
+                                            ),
+                                            SizedBox(width: 4),
+                                            Icon(
+                                              Icons.verified,
+                                              color: Colors.blue,
+                                              size: 16,
+                                            ),
+                                          ],
+                                        ),
+                                      ),
                                 ],
                               ),
                               SizedBox(height: screenHeight * 0.03),
@@ -750,7 +775,12 @@ class _ProfilePageState extends State<ProfilePage> {
                                     shape: RoundedRectangleBorder(
                                       side: BorderSide(
                                         width: 0,
-                                        color: const Color.fromARGB(255, 255, 255, 255),
+                                        color: const Color.fromARGB(
+                                          255,
+                                          255,
+                                          255,
+                                          255,
+                                        ),
                                       ),
                                       borderRadius: BorderRadius.circular(10),
                                     ),
@@ -811,10 +841,12 @@ class _ProfilePageState extends State<ProfilePage> {
                                           height: photoSize,
                                           child: Container(
                                             decoration: BoxDecoration(
-                                              borderRadius: BorderRadius.circular(10),
+                                              borderRadius:
+                                                  BorderRadius.circular(10),
                                               boxShadow: [
                                                 BoxShadow(
-                                                  color: Colors.black.withOpacity(0.2),
+                                                  color: Colors.black
+                                                      .withOpacity(0.2),
                                                   blurRadius: 10,
                                                   offset: Offset(0, 4),
                                                 ),
@@ -851,7 +883,12 @@ class _ProfilePageState extends State<ProfilePage> {
                                   shape: RoundedRectangleBorder(
                                     side: BorderSide(
                                       width: 0,
-                                      color: const Color.fromARGB(255, 255, 255, 255),
+                                      color: const Color.fromARGB(
+                                        255,
+                                        255,
+                                        255,
+                                        255,
+                                      ),
                                     ),
                                     borderRadius: BorderRadius.circular(10),
                                   ),
@@ -929,17 +966,22 @@ class _ProfilePageState extends State<ProfilePage> {
                                     shape: RoundedRectangleBorder(
                                       side: BorderSide(
                                         width: 0,
-                                        color: const Color.fromARGB(255, 255, 255, 255),
+                                        color: const Color.fromARGB(
+                                          255,
+                                          255,
+                                          255,
+                                          255,
+                                        ),
                                       ),
                                       borderRadius: BorderRadius.circular(10),
                                     ),
-                                                                      shadows: [
-                                    BoxShadow(
-                                      color: Colors.black.withOpacity(0.2),
-                                      blurRadius: 10,
-                                      offset: Offset(0, 4),
-                                    ),
-                                  ],
+                                    shadows: [
+                                      BoxShadow(
+                                        color: Colors.black.withOpacity(0.2),
+                                        blurRadius: 10,
+                                        offset: Offset(0, 4),
+                                      ),
+                                    ],
                                   ),
                                   child:
                                       selectedInterests.isEmpty
@@ -970,7 +1012,9 @@ class _ProfilePageState extends State<ProfilePage> {
                                                           vertical: 6,
                                                         ),
                                                     decoration: BoxDecoration(
-                                                      color: const Color(0xFFFF375F),
+                                                      color: const Color(
+                                                        0xFFFF375F,
+                                                      ),
                                                       borderRadius:
                                                           BorderRadius.circular(
                                                             10,
@@ -1018,17 +1062,22 @@ class _ProfilePageState extends State<ProfilePage> {
                                     shape: RoundedRectangleBorder(
                                       side: BorderSide(
                                         width: 0,
-                                        color: const Color.fromARGB(255, 255, 255, 255),
+                                        color: const Color.fromARGB(
+                                          255,
+                                          255,
+                                          255,
+                                          255,
+                                        ),
                                       ),
                                       borderRadius: BorderRadius.circular(10),
                                     ),
-                                                                      shadows: [
-                                    BoxShadow(
-                                      color: Colors.black.withOpacity(0.2),
-                                      blurRadius: 10,
-                                      offset: Offset(0, 4),
-                                    ),
-                                  ],
+                                    shadows: [
+                                      BoxShadow(
+                                        color: Colors.black.withOpacity(0.2),
+                                        blurRadius: 10,
+                                        offset: Offset(0, 4),
+                                      ),
+                                    ],
                                   ),
                                   child:
                                       selectedFaculty == null
@@ -1075,7 +1124,12 @@ class _ProfilePageState extends State<ProfilePage> {
                                   shape: RoundedRectangleBorder(
                                     side: BorderSide(
                                       width: 0,
-                                      color: const Color.fromARGB(255, 255, 255, 255),
+                                      color: const Color.fromARGB(
+                                        255,
+                                        255,
+                                        255,
+                                        255,
+                                      ),
                                     ),
                                     borderRadius: BorderRadius.circular(10),
                                   ),

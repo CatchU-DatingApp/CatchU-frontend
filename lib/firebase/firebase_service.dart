@@ -27,36 +27,35 @@ class FirebaseService {
 
     // Cek ukuran file dalam bytes
     final fileSize = await file.length();
-    final maxSize = 5 * 1024 * 1024; // 5MB dalam bytes
+    final maxSize = 2 * 1024 * 1024; // Turunkan ke 2MB maksimum
 
     // Baca file
     final image = img.decodeImage(await file.readAsBytes());
     if (image == null) return file;
 
-    // Hitung quality berdasarkan ukuran file
-    int quality = 85;
-    if (fileSize > maxSize) {
-      // Semakin besar file, semakin kecil quality
-      quality = ((maxSize / fileSize) * 100).round();
-      quality = quality.clamp(30, 85); // Minimal 30, maksimal 85
-    }
-
-    // Hitung width berdasarkan ukuran file
+    // Base quality dan width
+    int quality = 80;
     int targetWidth = 800;
+
+    // Jika file lebih besar dari maxSize, kompres lebih agresif
     if (fileSize > maxSize) {
-      // Semakin besar file, semakin kecil width
-      targetWidth = ((maxSize / fileSize) * image.width).round();
-      targetWidth = targetWidth.clamp(400, 1200); // Minimal 400, maksimal 1200
+      // Semakin besar file, semakin agresif kompresi
+      quality = ((maxSize / fileSize) * 85).round().clamp(50, 80);
+      targetWidth = ((maxSize / fileSize) * image.width).round().clamp(
+        600,
+        1000,
+      );
     }
 
-    // Resize dan kompres
+    // Resize dengan mempertahankan aspect ratio
     final compressedImage = img.copyResize(
       image,
       width: targetWidth,
       maintainAspect: true,
+      interpolation: img.Interpolation.linear,
     );
 
-    // Simpan hasil kompresi
+    // Simpan hasil kompresi dengan format JPEG
     final compressedFile = File('$path/$fileName.jpg')
       ..writeAsBytesSync(img.encodeJpg(compressedImage, quality: quality));
 

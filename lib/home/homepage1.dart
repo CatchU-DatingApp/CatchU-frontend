@@ -3,7 +3,7 @@ import 'package:flutter/rendering.dart';
 import 'dart:ui';
 import 'dart:math' as math;
 import 'package:cloud_firestore/cloud_firestore.dart';
-
+import '../utils/image_helper.dart';
 
 class ProfileData {
   final String name;
@@ -69,29 +69,24 @@ class _DiscoverPageState extends State<DiscoverPage>
     _slideAnimation = Tween<Offset>(
       begin: Offset.zero,
       end: Offset(0, 0),
-    ).animate(CurvedAnimation(
-      parent: _swipeController,
-      curve: Curves.easeOut,
-    ));
+    ).animate(CurvedAnimation(parent: _swipeController, curve: Curves.easeOut));
 
     _rotationAnimation = Tween<double>(
       begin: 0.0,
       end: 0.0,
-    ).animate(CurvedAnimation(
-      parent: _swipeController,
-      curve: Curves.easeOut,
-    ));
+    ).animate(CurvedAnimation(parent: _swipeController, curve: Curves.easeOut));
 
     _swipeController.addStatusListener((status) {
       if (status == AnimationStatus.completed) {
         setState(() {
           if (!_isCancellingSwipe && _profiles.isNotEmpty) {
-            _currentProfileIndex = (_currentProfileIndex + 1) % _profiles.length;
+            _currentProfileIndex =
+                (_currentProfileIndex + 1) % _profiles.length;
           }
           _isAnimating = false;
           _currentSlide = Offset.zero;
           _swipeController.reset();
-          _isCancellingSwipe = false;  // Reset the flag
+          _isCancellingSwipe = false; // Reset the flag
         });
       }
     });
@@ -108,11 +103,22 @@ class _DiscoverPageState extends State<DiscoverPage>
       print('Fetching profiles from Firestore...');
       // Cek inisialisasi Firebase
       if (FirebaseFirestore.instance == null) {
-        throw Exception('Firebase belum diinisialisasi. Pastikan Firebase.initializeApp() sudah dipanggil di main.dart');
+        throw Exception(
+          'Firebase belum diinisialisasi. Pastikan Firebase.initializeApp() sudah dipanggil di main.dart',
+        );
       }
-      final snapshot = await FirebaseFirestore.instance.collection('Users').limit(20).get().timeout(Duration(seconds: 7), onTimeout: () {
-        throw Exception('Timeout: Gagal mengambil data user dari server.');
-      });
+      final snapshot = await FirebaseFirestore.instance
+          .collection('Users')
+          .limit(20)
+          .get()
+          .timeout(
+            Duration(seconds: 7),
+            onTimeout: () {
+              throw Exception(
+                'Timeout: Gagal mengambil data user dari server.',
+              );
+            },
+          );
       if (snapshot.docs == null) {
         throw Exception('Gagal mengambil data user: snapshot.docs null');
       }
@@ -120,28 +126,32 @@ class _DiscoverPageState extends State<DiscoverPage>
       final List<ProfileData> profiles = [];
       for (var doc in snapshot.docs) {
         try {
-          profiles.add(ProfileData(
-            name: doc.data()['nama'] ?? '',
-            images: List<String>.from(doc.data()['photos'] ?? []),
-            distance: doc.data()['distance'] ?? '',
-            bio: doc.data()['bio'] ?? '',
-            faculty: doc.data()['faculty'] ?? '',
-            interests: List<String>.from(doc.data()['interest'] ?? []),
-          ));
+          profiles.add(
+            ProfileData(
+              name: doc.data()['nama'] ?? '',
+              images: List<String>.from(doc.data()['photos'] ?? []),
+              distance: doc.data()['distance'] ?? '',
+              bio: doc.data()['bio'] ?? '',
+              faculty: doc.data()['faculty'] ?? '',
+              interests: List<String>.from(doc.data()['interest'] ?? []),
+            ),
+          );
         } catch (e) {
           print('Error parsing user doc id=\${doc.id}: $e');
         }
       }
       print('Parsed \\${profiles.length} valid user(s)');
       if (profiles.isEmpty) {
-        profiles.add(ProfileData(
-          name: 'No User',
-          images: [],
-          distance: '-',
-          bio: 'No user data found.',
-          faculty: '-',
-          interests: [],
-        ));
+        profiles.add(
+          ProfileData(
+            name: 'No User',
+            images: [],
+            distance: '-',
+            bio: 'No user data found.',
+            faculty: '-',
+            interests: [],
+          ),
+        );
       }
       setState(() {
         _profiles = profiles;
@@ -165,17 +175,14 @@ class _DiscoverPageState extends State<DiscoverPage>
   void _showProfileDetail(ProfileData profile) {
     // Selalu mulai dari image pertama saat membuka detail
     _currentImageIndex.value = 0;
-    
+
     Navigator.of(context).push(
       PageRouteBuilder(
         pageBuilder: (context, animation, secondaryAnimation) {
           return _buildDetailView(profile);
         },
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
-          return FadeTransition(
-            opacity: animation,
-            child: child,
-          );
+          return FadeTransition(opacity: animation, child: child);
         },
         transitionDuration: Duration(milliseconds: 300),
       ),
@@ -196,73 +203,68 @@ class _DiscoverPageState extends State<DiscoverPage>
 
   void _onPanUpdate(DragUpdateDetails details) {
     if (_isAnimating || !_isDragging) return;
-    
+
     final deltaX = details.localPosition.dx - _dragStartX;
     final deltaY = details.localPosition.dy - _dragStartY;
     final resistance = 0.5;
     final normalizedDeltaX = deltaX * resistance;
     final normalizedDeltaY = deltaY * resistance;
-    
+
     setState(() {
       _dragUpdateX = details.localPosition.dx;
       _dragUpdateY = details.localPosition.dy;
       _currentSlide = Offset(
         normalizedDeltaX / MediaQuery.of(context).size.width,
-        normalizedDeltaY / MediaQuery.of(context).size.height
+        normalizedDeltaY / MediaQuery.of(context).size.height,
       );
     });
   }
 
   void _onPanEnd(DragEndDetails details) {
     if (_isAnimating || !_isDragging) return;
-    
+
     final velocityX = details.velocity.pixelsPerSecond.dx;
     final velocityY = details.velocity.pixelsPerSecond.dy;
     final deltaX = _dragUpdateX - _dragStartX;
     final deltaY = _dragUpdateY - _dragStartY;
     final width = MediaQuery.of(context).size.width;
     final height = MediaQuery.of(context).size.height;
-    
+
     bool shouldCompleteSwipe = false;
-    
+
     if (velocityX.abs() > 2000 || velocityY.abs() > 2000) {
       shouldCompleteSwipe = true;
     } else if (deltaX.abs() > width * 0.15 || deltaY.abs() > height * 0.15) {
       shouldCompleteSwipe = true;
     }
-    
+
     if (shouldCompleteSwipe) {
       _isCancellingSwipe = false;
-      
+
       // Calculate the direction of the swipe
       final angle = math.atan2(deltaY, deltaX);
       final distance = math.sqrt(deltaX * deltaX + deltaY * deltaY);
-      
+
       // Determine the target offset based on the angle
-      final targetOffset = Offset(
-        math.cos(angle) * 1.5,
-        math.sin(angle) * 1.5
-      );
-      
+      final targetOffset = Offset(math.cos(angle) * 1.5, math.sin(angle) * 1.5);
+
       setState(() {
         _isAnimating = true;
-        
+
         _slideAnimation = Tween<Offset>(
           begin: _currentSlide,
           end: targetOffset,
-        ).animate(CurvedAnimation(
-          parent: _swipeController,
-          curve: Curves.easeOut,
-        ));
+        ).animate(
+          CurvedAnimation(parent: _swipeController, curve: Curves.easeOut),
+        );
 
         // Add rotation based on the swipe direction
         _rotationAnimation = Tween<double>(
           begin: _currentSlide.dx * 0.2,
           end: targetOffset.dx * 0.2,
-        ).animate(CurvedAnimation(
-          parent: _swipeController,
-          curve: Curves.easeOut,
-        ));
+        ).animate(
+          CurvedAnimation(parent: _swipeController, curve: Curves.easeOut),
+        );
       });
 
       _swipeController.forward(from: 0.0);
@@ -271,25 +273,23 @@ class _DiscoverPageState extends State<DiscoverPage>
         _isAnimating = true;
         _currentSlide = Offset.zero;
         _isCancellingSwipe = true;
-        
+
         _slideAnimation = Tween<Offset>(
           begin: Offset(
             (_dragUpdateX - _dragStartX) / width,
-            (_dragUpdateY - _dragStartY) / height
+            (_dragUpdateY - _dragStartY) / height,
           ),
           end: Offset.zero,
-        ).animate(CurvedAnimation(
-          parent: _swipeController,
-          curve: Curves.easeOut,
-        ));
+        ).animate(
+          CurvedAnimation(parent: _swipeController, curve: Curves.easeOut),
+        );
 
         _rotationAnimation = Tween<double>(
           begin: (_dragUpdateX - _dragStartX) / width * 0.2,
           end: 0.0,
-        ).animate(CurvedAnimation(
-          parent: _swipeController,
-          curve: Curves.easeOut,
-        ));
+        ).animate(
+          CurvedAnimation(parent: _swipeController, curve: Curves.easeOut),
+        );
 
         _swipeController.forward(from: 0.0).then((_) {
           if (mounted) {
@@ -300,7 +300,7 @@ class _DiscoverPageState extends State<DiscoverPage>
         });
       });
     }
-    
+
     _isDragging = false;
     _dragStartX = 0;
     _dragStartY = 0;
@@ -313,22 +313,20 @@ class _DiscoverPageState extends State<DiscoverPage>
 
     setState(() {
       _isAnimating = true;
-      
+
       _slideAnimation = Tween<Offset>(
         begin: _currentSlide,
         end: Offset(-1.5, 0),
-      ).animate(CurvedAnimation(
-        parent: _swipeController,
-        curve: Curves.easeOut,
-      ));
+      ).animate(
+        CurvedAnimation(parent: _swipeController, curve: Curves.easeOut),
+      );
 
       _rotationAnimation = Tween<double>(
         begin: _currentSlide.dx * 0.2,
         end: -0.2,
-      ).animate(CurvedAnimation(
-        parent: _swipeController,
-        curve: Curves.easeOut,
-      ));
+      ).animate(
+        CurvedAnimation(parent: _swipeController, curve: Curves.easeOut),
+      );
     });
 
     _swipeController.forward(from: 0.0);
@@ -339,22 +337,20 @@ class _DiscoverPageState extends State<DiscoverPage>
 
     setState(() {
       _isAnimating = true;
-      
+
       _slideAnimation = Tween<Offset>(
         begin: _currentSlide,
         end: Offset(1.5, 0),
-      ).animate(CurvedAnimation(
-        parent: _swipeController,
-        curve: Curves.easeOut,
-      ));
+      ).animate(
+        CurvedAnimation(parent: _swipeController, curve: Curves.easeOut),
+      );
 
       _rotationAnimation = Tween<double>(
         begin: _currentSlide.dx * 0.2,
         end: 0.2,
-      ).animate(CurvedAnimation(
-        parent: _swipeController,
-        curve: Curves.easeOut,
-      ));
+      ).animate(
+        CurvedAnimation(parent: _swipeController, curve: Curves.easeOut),
+      );
     });
 
     _swipeController.forward(from: 0.0);
@@ -375,7 +371,9 @@ class _DiscoverPageState extends State<DiscoverPage>
     if (_profilesError != null) {
       return Scaffold(
         backgroundColor: Color(0xFFFDF7F6),
-        body: Center(child: Text('Error: \n' + (_profilesError ?? 'Unknown error'))),
+        body: Center(
+          child: Text('Error: \n' + (_profilesError ?? 'Unknown error')),
+        ),
       );
     }
     if (_profiles.isEmpty) {
@@ -386,7 +384,8 @@ class _DiscoverPageState extends State<DiscoverPage>
     }
 
     final currentProfile = _profiles[_currentProfileIndex];
-    final nextProfile = _profiles[(_currentProfileIndex + 1) % _profiles.length];
+    final nextProfile =
+        _profiles[(_currentProfileIndex + 1) % _profiles.length];
 
     // Calculate button states based on swipe position and animation state
     final swipeProgress = _isDragging ? _currentSlide.dx : 0.0;
@@ -428,12 +427,17 @@ class _DiscoverPageState extends State<DiscoverPage>
                         AnimatedBuilder(
                           animation: _swipeController,
                           builder: (context, child) {
-                            final offset = _isDragging ? _currentSlide : _slideAnimation.value;
-                            final rotation = _isDragging 
-                                ? (_currentSlide.dx * 0.2) 
-                                : _rotationAnimation.value;
+                            final offset =
+                                _isDragging
+                                    ? _currentSlide
+                                    : _slideAnimation.value;
+                            final rotation =
+                                _isDragging
+                                    ? (_currentSlide.dx * 0.2)
+                                    : _rotationAnimation.value;
                             return Transform.translate(
-                              offset: offset * MediaQuery.of(context).size.width,
+                              offset:
+                                  offset * MediaQuery.of(context).size.width,
                               child: Transform.rotate(
                                 angle: rotation,
                                 child: SizedBox(
@@ -506,27 +510,38 @@ class _DiscoverPageState extends State<DiscoverPage>
           child: Card(
             elevation: 3,
             margin: EdgeInsets.symmetric(horizontal: 16),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+            ),
             clipBehavior: Clip.antiAlias,
             child: Stack(
               fit: StackFit.expand,
               children: [
                 profile.images.isNotEmpty
-                  ? Image.network(
-                      profile.images[0],
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) => Icon(Icons.person, size: 80, color: Colors.grey),
+                    ? PageView.builder(
+                      itemCount: profile.images.length,
+                      onPageChanged: (index) {
+                        _currentImageIndex.value = index;
+                      },
+                      itemBuilder: (context, index) {
+                        return ImageHelper.loadCachedImage(
+                          imageUrl: profile.images[index],
+                          width: double.infinity,
+                          height: double.infinity,
+                          fit: BoxFit.cover,
+                        );
+                      },
                     )
-                  : Container(color: Colors.grey[300], child: Icon(Icons.person, size: 80, color: Colors.grey)),
+                    : Container(
+                      color: Colors.grey[300],
+                      child: Icon(Icons.person, size: 80, color: Colors.grey),
+                    ),
                 Container(
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       begin: Alignment.topCenter,
                       end: Alignment.bottomCenter,
-                      colors: [
-                        Colors.transparent,
-                        Colors.black.withOpacity(1),
-                      ],
+                      colors: [Colors.transparent, Colors.black.withOpacity(1)],
                       stops: [0.6, 1.0],
                     ),
                   ),
@@ -633,9 +648,7 @@ class _DiscoverPageState extends State<DiscoverPage>
               ),
             ],
           ),
-          child: Center(
-            child: Icon(icon, color: iconColor, size: 32),
-          ),
+          child: Center(child: Icon(icon, color: iconColor, size: 32)),
         ),
       ),
     );
@@ -663,23 +676,28 @@ class _DiscoverPageState extends State<DiscoverPage>
                 child: Stack(
                   children: [
                     profile.images.isNotEmpty
-                      ? PageView.builder(
+                        ? PageView.builder(
                           itemCount: profile.images.length,
                           onPageChanged: (index) {
                             _currentImageIndex.value = index;
                           },
-                          controller: PageController(
-                            initialPage: _currentImageIndex.value,
-                          ),
                           itemBuilder: (context, index) {
-                            return Image.network(
-                              profile.images[index],
+                            return ImageHelper.loadCachedImage(
+                              imageUrl: profile.images[index],
+                              width: double.infinity,
+                              height: double.infinity,
                               fit: BoxFit.cover,
-                              errorBuilder: (context, error, stackTrace) => Icon(Icons.person, size: 80, color: Colors.grey),
                             );
                           },
                         )
-                      : Container(color: Colors.grey[300], child: Icon(Icons.person, size: 80, color: Colors.grey)),
+                        : Container(
+                          color: Colors.grey[300],
+                          child: Icon(
+                            Icons.person,
+                            size: 80,
+                            color: Colors.grey,
+                          ),
+                        ),
                     Positioned(
                       top: MediaQuery.of(context).padding.top + 16,
                       left: 0,
@@ -700,9 +718,10 @@ class _DiscoverPageState extends State<DiscoverPage>
                                   height: 8,
                                   decoration: BoxDecoration(
                                     shape: BoxShape.circle,
-                                    color: index == currentIndex
-                                        ? const Color(0xFFFF375F)
-                                        : Colors.white.withOpacity(0.5),
+                                    color:
+                                        index == currentIndex
+                                            ? const Color(0xFFFF375F)
+                                            : Colors.white.withOpacity(0.5),
                                     boxShadow: [
                                       BoxShadow(
                                         color: Colors.black.withOpacity(0.2),
@@ -730,10 +749,7 @@ class _DiscoverPageState extends State<DiscoverPage>
                 children: [
                   Text(
                     profile.name,
-                    style: TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
                   ),
                   SizedBox(height: 8),
                   Row(
@@ -794,9 +810,10 @@ class _DiscoverPageState extends State<DiscoverPage>
                   Wrap(
                     spacing: 8,
                     runSpacing: 8,
-                    children: profile.interests
-                        .map((interest) => _interestTag(interest))
-                        .toList(),
+                    children:
+                        profile.interests
+                            .map((interest) => _interestTag(interest))
+                            .toList(),
                   ),
                 ],
               ),

@@ -11,6 +11,7 @@ import 'package:google_ml_kit/google_ml_kit.dart';
 import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
 import '../services/ml.dart';
+import '../utils/image_helper.dart';
 
 class FaceValidationPhotoPage extends StatefulWidget {
   const FaceValidationPhotoPage({Key? key}) : super(key: key);
@@ -190,29 +191,12 @@ class _FaceValidationPhotoPageState extends State<FaceValidationPhotoPage> {
                               ),
                               child: ClipRRect(
                                 borderRadius: BorderRadius.circular(12),
-                                child: Image.network(
-                                  photo,
+                                child: ImageHelper.loadCachedImage(
+                                  imageUrl: photo,
+                                  width: double.infinity,
+                                  height: double.infinity,
                                   fit: BoxFit.cover,
-                                  loadingBuilder: (
-                                    context,
-                                    child,
-                                    loadingProgress,
-                                  ) {
-                                    if (loadingProgress == null) return child;
-                                    return Center(
-                                      child: CircularProgressIndicator(
-                                        value:
-                                            loadingProgress
-                                                        .expectedTotalBytes !=
-                                                    null
-                                                ? loadingProgress
-                                                        .cumulativeBytesLoaded /
-                                                    loadingProgress
-                                                        .expectedTotalBytes!
-                                                : null,
-                                      ),
-                                    );
-                                  },
+                                  borderRadius: BorderRadius.circular(12),
                                 ),
                               ),
                             ),
