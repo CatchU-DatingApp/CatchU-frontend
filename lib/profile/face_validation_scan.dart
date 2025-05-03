@@ -315,7 +315,17 @@ class _FaceValidationScanPageState extends State<FaceValidationScanPage> {
               child: Stack(
                 alignment: Alignment.center,
                 children: [
-                  CameraPreview(_controller!),
+                  // CameraPreview full screen, tidak gepeng
+                  Positioned.fill(
+                    child: FittedBox(
+                      fit: BoxFit.cover,
+                      child: SizedBox(
+                        width: _controller!.value.previewSize?.height ?? 0,
+                        height: _controller!.value.previewSize?.width ?? 0,
+                        child: CameraPreview(_controller!),
+                      ),
+                    ),
+                  ),
                   // Overlay judul dan subjudul
                   Positioned(
                     top: 32,
@@ -362,50 +372,59 @@ class _FaceValidationScanPageState extends State<FaceValidationScanPage> {
                       onPressed: () => Navigator.pop(context),
                     ),
                   ),
-                ],
-              ),
-            ),
-            // Feedback validasi
-            _buildValidationFeedback(),
-            // Tombol dinamis di bawah
-            Container(
-              padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed:
-                    _isProcessing
-                        ? null
-                        : (_isValidated == true
-                            ? _onValidationSuccess
-                            : _validateFace),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor:
-                      _isValidated == true
-                          ? Colors.green
-                          : const Color(0xFFFF4D6D),
-                  minimumSize: const Size(double.infinity, 56),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                child:
-                    _isProcessing
-                        ? const SizedBox(
-                          width: 24,
-                          height: 24,
-                          child: CircularProgressIndicator(
-                            color: Colors.white,
-                            strokeWidth: 2,
-                          ),
-                        )
-                        : Text(
-                          _isValidated == true ? 'Verified' : 'Scan My Face',
-                          style: const TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
+                  // Feedback dan tombol di dalam kamera, di bawah
+                  Positioned(
+                    left: 0,
+                    right: 0,
+                    bottom: 24,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        _buildValidationFeedback(),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 20),
+                          width: double.infinity,
+                          child: ElevatedButton(
+                            onPressed:
+                                _isProcessing
+                                    ? null
+                                    : (_isValidated == true
+                                        ? _onValidationSuccess
+                                        : _validateFace),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor:
+                                  _isValidated == true
+                                      ? Colors.green
+                                      : const Color(0xFFFF4D6D),
+                              minimumSize: const Size(double.infinity, 56),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                            child:
+                                _isProcessing
+                                    ? const SizedBox(
+                                      width: 24,
+                                      height: 24,
+                                      child: CircularProgressIndicator(
+                                        color: Colors.white,
+                                        strokeWidth: 2,
+                                      ),
+                                    )
+                                    : Text(
+                                      _isValidated == true ? 'Verified' : 'Scan My Face',
+                                      style: const TextStyle(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white,
+                                      ),
+                                    ),
                           ),
                         ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
             ),
           ],
