@@ -518,46 +518,81 @@ class _ProfilePageState extends State<ProfilePage> {
   Widget _buildSocialMediaInput({
     required String platform,
     required TextEditingController controller,
-    required IconData icon,
+    required String icon,
   }) {
+    String hintText = 'Input username';
+    String guideText = 'Enter your username without "@"';
+
+    if (platform == 'WhatsApp') {
+      hintText = 'Input phone number';
+      guideText = 'Start with country code (e.g. 62812345xxxx)';
+    }
+
     return Container(
-      height: 56,
       margin: EdgeInsets.only(bottom: 12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: const Color(0xFFFF375F), width: 1),
-      ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            width: 56,
             height: 56,
-            alignment: Alignment.center,
-            child: Icon(icon, color: const Color(0xFFFF375F), size: 24),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: const Color(0xFFFF375F), width: 1),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 56,
+                  height: 56,
+                  alignment: Alignment.center,
+                  child: Image.asset(
+                    icon,
+                    width: 24,
+                    height: 24,
+                    color: const Color(0xFFFF375F),
+                  ),
+                ),
+                Expanded(
+                  child: TextField(
+                    controller: controller,
+                    decoration: InputDecoration(
+                      hintText: hintText,
+                      hintStyle: TextStyle(color: Colors.grey[400]),
+                      border: InputBorder.none,
+                      enabledBorder: InputBorder.none,
+                      focusedBorder: InputBorder.none,
+                      contentPadding: EdgeInsets.symmetric(vertical: 12),
+                    ),
+                    onChanged: (value) async {
+                      try {
+                        await _updateUserProfile({
+                          platform.toLowerCase(): value,
+                        });
+                      } catch (e) {
+                        if (mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('Failed to update $platform: $e'),
+                            ),
+                          );
+                        }
+                      }
+                    },
+                  ),
+                ),
+              ],
+            ),
           ),
-          Expanded(
-            child: TextField(
-              controller: controller,
-              decoration: InputDecoration(
-                hintText: 'Input $platform URL',
-                hintStyle: TextStyle(color: Colors.grey[400]),
-                border: InputBorder.none,
-                enabledBorder: InputBorder.none,
-                focusedBorder: InputBorder.none,
-                contentPadding: EdgeInsets.symmetric(vertical: 12),
+          Padding(
+            padding: EdgeInsets.only(left: 12, top: 4),
+            child: Text(
+              guideText,
+              style: TextStyle(
+                color: Colors.grey[600],
+                fontSize: 12,
+                fontStyle: FontStyle.italic,
               ),
-              onChanged: (value) async {
-                try {
-                  await _updateUserProfile({platform.toLowerCase(): value});
-                } catch (e) {
-                  if (mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Failed to update $platform: $e')),
-                    );
-                  }
-                }
-              },
             ),
           ),
         ],
@@ -1146,22 +1181,22 @@ class _ProfilePageState extends State<ProfilePage> {
                                     _buildSocialMediaInput(
                                       platform: 'Facebook',
                                       controller: facebookController,
-                                      icon: Icons.facebook,
+                                      icon: 'assets/images/facebook.png',
                                     ),
                                     _buildSocialMediaInput(
                                       platform: 'Instagram',
                                       controller: instagramController,
-                                      icon: Icons.camera_alt,
+                                      icon: 'assets/images/instagram.png',
                                     ),
                                     _buildSocialMediaInput(
                                       platform: 'X',
                                       controller: xController,
-                                      icon: Icons.alternate_email,
+                                      icon: 'assets/images/twitter.png',
                                     ),
                                     _buildSocialMediaInput(
                                       platform: 'WhatsApp',
                                       controller: whatsappController,
-                                      icon: Icons.message,
+                                      icon: 'assets/images/whatsapp.png',
                                     ),
                                   ],
                                 ),

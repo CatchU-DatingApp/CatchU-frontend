@@ -329,16 +329,19 @@ class _ChatPageState extends State<ChatPage> {
                                                   icon:
                                                       'assets/images/instagram.png',
                                                   username:
-                                                      _otherUserProfile?['instagram'] !=
-                                                              null
-                                                          ? '@${_otherUserProfile?['instagram']}'
-                                                          : '',
+                                                      _otherUserProfile?['instagram']
+                                                          ?.toString() ??
+                                                      '',
                                                   isActive:
-                                                      _otherUserProfile?['instagram'] !=
-                                                      null,
+                                                      (_otherUserProfile?['instagram']
+                                                                  ?.toString() ??
+                                                              '')
+                                                          .isNotEmpty,
                                                   onTap:
-                                                      _otherUserProfile?['instagram'] !=
-                                                              null
+                                                      (_otherUserProfile?['instagram']
+                                                                      ?.toString() ??
+                                                                  '')
+                                                              .isNotEmpty
                                                           ? () async {
                                                             final url =
                                                                 'https://www.instagram.com/${_otherUserProfile?['instagram']}';
@@ -356,16 +359,19 @@ class _ChatPageState extends State<ChatPage> {
                                                   icon:
                                                       'assets/images/facebook.png',
                                                   username:
-                                                      _otherUserProfile?['facebook'] !=
-                                                              null
-                                                          ? '@${_otherUserProfile?['facebook']}'
-                                                          : '',
+                                                      _otherUserProfile?['facebook']
+                                                          ?.toString() ??
+                                                      '',
                                                   isActive:
-                                                      _otherUserProfile?['facebook'] !=
-                                                      null,
+                                                      (_otherUserProfile?['facebook']
+                                                                  ?.toString() ??
+                                                              '')
+                                                          .isNotEmpty,
                                                   onTap:
-                                                      _otherUserProfile?['facebook'] !=
-                                                              null
+                                                      (_otherUserProfile?['facebook']
+                                                                      ?.toString() ??
+                                                                  '')
+                                                              .isNotEmpty
                                                           ? () async {
                                                             final url =
                                                                 'https://www.facebook.com/${_otherUserProfile?['facebook']}';
@@ -383,16 +389,19 @@ class _ChatPageState extends State<ChatPage> {
                                                   icon:
                                                       'assets/images/twitter.png',
                                                   username:
-                                                      _otherUserProfile?['x'] !=
-                                                              null
-                                                          ? '@${_otherUserProfile?['x']}'
-                                                          : '',
+                                                      _otherUserProfile?['x']
+                                                          ?.toString() ??
+                                                      '',
                                                   isActive:
-                                                      _otherUserProfile?['x'] !=
-                                                      null,
+                                                      (_otherUserProfile?['x']
+                                                                  ?.toString() ??
+                                                              '')
+                                                          .isNotEmpty,
                                                   onTap:
-                                                      _otherUserProfile?['x'] !=
-                                                              null
+                                                      (_otherUserProfile?['x']
+                                                                      ?.toString() ??
+                                                                  '')
+                                                              .isNotEmpty
                                                           ? () async {
                                                             final url =
                                                                 'https://x.com/${_otherUserProfile?['x']}';
@@ -410,16 +419,19 @@ class _ChatPageState extends State<ChatPage> {
                                                   icon:
                                                       'assets/images/whatsapp.png',
                                                   username:
-                                                      _otherUserProfile?['whatsapp'] !=
-                                                              null
-                                                          ? '@${_otherUserProfile?['whatsapp']}'
-                                                          : '',
+                                                      _otherUserProfile?['whatsapp']
+                                                          ?.toString() ??
+                                                      '',
                                                   isActive:
-                                                      _otherUserProfile?['whatsapp'] !=
-                                                      null,
+                                                      (_otherUserProfile?['whatsapp']
+                                                                  ?.toString() ??
+                                                              '')
+                                                          .isNotEmpty,
                                                   onTap:
-                                                      _otherUserProfile?['whatsapp'] !=
-                                                              null
+                                                      (_otherUserProfile?['whatsapp']
+                                                                      ?.toString() ??
+                                                                  '')
+                                                              .isNotEmpty
                                                           ? () async {
                                                             final url =
                                                                 'https://wa.me/${_otherUserProfile?['whatsapp']}';
