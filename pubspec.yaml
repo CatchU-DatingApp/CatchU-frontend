@@ -50,6 +50,11 @@ flutter:
     - assets/images/LocationImage.png
     - assets/images/LogoCatchURules.png
     - assets/facenet.tflite
+    - assets/images/backgroundHomepageCatchU.png
+    - assets/images/facebook.png
+    - assets/images/twitter.png
+    - assets/images/instagram.png
+    - assets/images/whatsapp.png
 
 flutter_native_splash:
   color: "#FDFAF6"

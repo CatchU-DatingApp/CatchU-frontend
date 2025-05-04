@@ -3,6 +3,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'dart:ui';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import '../chat/chat_page.dart';
 
 class MatchPage extends StatefulWidget {
   @override
@@ -10,7 +11,6 @@ class MatchPage extends StatefulWidget {
 }
 
 class _MatchPageState extends State<MatchPage> {
-  List<int> expandedIndices = [];
   List<Map<String, dynamic>> matches = [];
   bool _isLoading = true;
 
@@ -31,10 +31,7 @@ class _MatchPageState extends State<MatchPage> {
 
       final matchesRef = FirebaseFirestore.instance.collection('Matches');
       final querySnapshot =
-          await matchesRef
-              .where('users', arrayContains: currentUser.uid)
-              .orderBy('timestamp', descending: true)
-              .get();
+          await matchesRef.where('users', arrayContains: currentUser.uid).get();
 
       final loadedMatches =
           querySnapshot.docs.map((doc) {
@@ -69,50 +66,6 @@ class _MatchPageState extends State<MatchPage> {
           _isLoading = false;
         });
       }
-    }
-  }
-
-  void _toggleExpanded(int index) {
-    setState(() {
-      if (expandedIndices.contains(index)) {
-        expandedIndices.remove(index);
-      } else {
-        expandedIndices.add(index);
-      }
-    });
-  }
-
-  void _launchSocialMedia(String platform, String username) async {
-    String url;
-    switch (platform) {
-      case 'instagram':
-        url = 'https://instagram.com/$username';
-        break;
-      case 'facebook':
-        url = 'https://facebook.com/$username';
-        break;
-      case 'twitter':
-        url = 'https://twitter.com/$username';
-        break;
-      case 'line':
-        url = 'https://line.me/R/ti/p/~$username';
-        break;
-      default:
-        url = '';
-    }
-
-    final uri = Uri.parse(url);
-
-    try {
-      final success = await launchUrl(
-        uri,
-        mode: LaunchMode.externalApplication,
-      );
-      if (!success) {
-        print('Could not launch $url');
-      }
-    } catch (e) {
-      print('Exception launching $url: $e');
     }
   }
 
@@ -202,8 +155,6 @@ class _MatchPageState extends State<MatchPage> {
                           itemCount: matches.length,
                           itemBuilder: (context, index) {
                             final match = matches[index];
-                            final isExpanded = expandedIndices.contains(index);
-
                             return ClipRRect(
                               borderRadius: BorderRadius.circular(10),
                               child: BackdropFilter(
@@ -214,54 +165,46 @@ class _MatchPageState extends State<MatchPage> {
                                     color: Colors.white.withOpacity(0.3),
                                     borderRadius: BorderRadius.circular(22),
                                   ),
-                                  child: Column(
-                                    children: [
-                                      InkWell(
-                                        onTap: () {
-                                          setState(() {
-                                            if (isExpanded) {
-                                              expandedIndices.remove(index);
-                                            } else {
-                                              expandedIndices.add(index);
-                                            }
-                                          });
-                                        },
-                                        child: Padding(
-                                          padding: EdgeInsets.all(12),
-                                          child: Row(
-                                            children: [
-                                              ClipRRect(
-                                                borderRadius:
-                                                    BorderRadius.circular(10),
-                                                child:
-                                                    match['image'] != null &&
-                                                            match['image']
-                                                                .isNotEmpty
-                                                        ? Image.network(
-                                                          match['image'],
-                                                          width: 70,
-                                                          height: 70,
-                                                          fit: BoxFit.cover,
-                                                          errorBuilder: (
-                                                            context,
-                                                            error,
-                                                            stackTrace,
-                                                          ) {
-                                                            return Container(
-                                                              width: 70,
-                                                              height: 70,
-                                                              color:
-                                                                  Colors
-                                                                      .grey[300],
-                                                              child: Icon(
-                                                                Icons.person,
-                                                                color:
-                                                                    Colors.grey,
-                                                              ),
-                                                            );
-                                                          },
-                                                        )
-                                                        : Container(
+                                  child: InkWell(
+                                    onTap: () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder:
+                                              (context) => ChatPage(
+                                                matchId: match['matchId'],
+                                                otherUserId:
+                                                    match['otherUserId'],
+                                                otherUserName: match['name'],
+                                                otherUserImage:
+                                                    match['image'] ?? '',
+                                              ),
+                                        ),
+                                      );
+                                    },
+                                    child: Padding(
+                                      padding: EdgeInsets.all(12),
+                                      child: Row(
+                                        children: [
+                                          ClipRRect(
+                                            borderRadius: BorderRadius.circular(
+                                              10,
+                                            ),
+                                            child:
+                                                match['image'] != null &&
+                                                        match['image']
+                                                            .isNotEmpty
+                                                    ? Image.network(
+                                                      match['image'],
+                                                      width: 70,
+                                                      height: 70,
+                                                      fit: BoxFit.cover,
+                                                      errorBuilder: (
+                                                        context,
+                                                        error,
+                                                        stackTrace,
+                                                      ) {
+                                                        return Container(
                                                           width: 70,
                                                           height: 70,
                                                           color:
@@ -270,78 +213,55 @@ class _MatchPageState extends State<MatchPage> {
                                                             Icons.person,
                                                             color: Colors.grey,
                                                           ),
-                                                        ),
-                                              ),
-                                              SizedBox(width: 12),
-                                              Expanded(
-                                                child: Column(
-                                                  crossAxisAlignment:
-                                                      CrossAxisAlignment.start,
-                                                  children: [
-                                                    Text(
-                                                      match['name'] ??
-                                                          'Unknown',
-                                                      style: TextStyle(
-                                                        fontSize: 16,
-                                                        fontWeight:
-                                                            FontWeight.bold,
-                                                        color: Colors.black87,
+                                                        );
+                                                      },
+                                                    )
+                                                    : Container(
+                                                      width: 70,
+                                                      height: 70,
+                                                      color: Colors.grey[300],
+                                                      child: Icon(
+                                                        Icons.person,
+                                                        color: Colors.grey,
                                                       ),
                                                     ),
-                                                    SizedBox(height: 4),
-                                                    Text(
-                                                      match['message'] ??
-                                                          'No message yet',
-                                                      style: TextStyle(
-                                                        color: Colors.grey[700],
-                                                        fontSize: 14,
-                                                      ),
-                                                      maxLines: 1,
-                                                      overflow:
-                                                          TextOverflow.ellipsis,
-                                                    ),
-                                                  ],
+                                          ),
+                                          SizedBox(width: 12),
+                                          Expanded(
+                                            child: Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                Text(
+                                                  match['name'] ?? 'Unknown',
+                                                  style: TextStyle(
+                                                    fontSize: 16,
+                                                    fontWeight: FontWeight.bold,
+                                                    color: Colors.black87,
+                                                  ),
                                                 ),
-                                              ),
-                                              Icon(
-                                                isExpanded
-                                                    ? Icons.keyboard_arrow_up
-                                                    : Icons
-                                                        .keyboard_arrow_right,
-                                                color: Colors.grey,
-                                              ),
-                                            ],
+                                                SizedBox(height: 4),
+                                                Text(
+                                                  match['message'] ??
+                                                      'Say hi to your new match!',
+                                                  style: TextStyle(
+                                                    color: Colors.grey[700],
+                                                    fontSize: 14,
+                                                  ),
+                                                  maxLines: 1,
+                                                  overflow:
+                                                      TextOverflow.ellipsis,
+                                                ),
+                                              ],
+                                            ),
                                           ),
-                                        ),
+                                          Icon(
+                                            Icons.chevron_right,
+                                            color: Colors.grey,
+                                          ),
+                                        ],
                                       ),
-                                      if (isExpanded)
-                                        Padding(
-                                          padding: EdgeInsets.symmetric(
-                                            horizontal: 12,
-                                            vertical: 8,
-                                          ),
-                                          child: Row(
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.spaceEvenly,
-                                            children: [
-                                              _buildActionButton(
-                                                icon: Icons.message,
-                                                label: 'Message',
-                                                onTap: () {
-                                                  // TODO: Implement messaging
-                                                },
-                                              ),
-                                              _buildActionButton(
-                                                icon: Icons.person,
-                                                label: 'Profile',
-                                                onTap: () {
-                                                  // TODO: Show profile
-                                                },
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                    ],
+                                    ),
                                   ),
                                 ),
                               ),

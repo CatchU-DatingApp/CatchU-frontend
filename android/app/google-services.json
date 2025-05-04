@@ -30,6 +30,14 @@
           }
         },
         {
+          "client_id": "367797428924-mdd5advsa1f7u2rbnj4b48pa2mljaghk.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.catchu",
+            "certificate_hash": "38673f27a05bfc138bd42db4773fa50e12182f26"
+          }
+        },
+        {
           "client_id": "367797428924-uavo8detdp9jhscmau076likfbgj76i9.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
