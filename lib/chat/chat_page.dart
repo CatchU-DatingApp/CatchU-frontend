@@ -65,10 +65,11 @@ class _ChatPageState extends State<ChatPage> {
           .doc(widget.matchId)
           .collection('messages');
 
-      final unreadMessages = await messagesRef
-          .where('senderId', isEqualTo: widget.otherUserId)
-          .where('isRead', isEqualTo: false)
-          .get();
+      final unreadMessages =
+          await messagesRef
+              .where('senderId', isEqualTo: widget.otherUserId)
+              .where('isRead', isEqualTo: false)
+              .get();
 
       for (var doc in unreadMessages.docs) {
         await doc.reference.update({'isRead': true});
@@ -108,9 +109,7 @@ class _ChatPageState extends State<ChatPage> {
                           borderRadius: BorderRadius.circular(2),
                         ),
                       ),
-                      SizedBox(
-                        height: 6,
-                      ),
+                      SizedBox(height: 6),
                       // Content
                       Expanded(
                         child:
@@ -330,19 +329,19 @@ class _ChatPageState extends State<ChatPage> {
                                                   icon:
                                                       'assets/images/instagram.png',
                                                   username:
-                                                      _otherUserProfile?['Instagram'] !=
+                                                      _otherUserProfile?['instagram'] !=
                                                               null
-                                                          ? '@${_otherUserProfile?['Instagram']}'
+                                                          ? '@${_otherUserProfile?['instagram']}'
                                                           : '',
                                                   isActive:
-                                                      _otherUserProfile?['Instagram'] !=
+                                                      _otherUserProfile?['instagram'] !=
                                                       null,
                                                   onTap:
-                                                      _otherUserProfile?['Instagram'] !=
+                                                      _otherUserProfile?['instagram'] !=
                                                               null
                                                           ? () async {
                                                             final url =
-                                                                'https://www.instagram.com/${_otherUserProfile?['Instagram']}';
+                                                                'https://www.instagram.com/${_otherUserProfile?['instagram']}';
                                                             if (await canLaunch(
                                                               url,
                                                             )) {
@@ -357,19 +356,19 @@ class _ChatPageState extends State<ChatPage> {
                                                   icon:
                                                       'assets/images/facebook.png',
                                                   username:
-                                                      _otherUserProfile?['Facebook'] !=
+                                                      _otherUserProfile?['facebook'] !=
                                                               null
-                                                          ? '@${_otherUserProfile?['Facebook']}'
+                                                          ? '@${_otherUserProfile?['facebook']}'
                                                           : '',
                                                   isActive:
-                                                      _otherUserProfile?['Facebook'] !=
+                                                      _otherUserProfile?['facebook'] !=
                                                       null,
                                                   onTap:
-                                                      _otherUserProfile?['Facebook'] !=
+                                                      _otherUserProfile?['facebook'] !=
                                                               null
                                                           ? () async {
                                                             final url =
-                                                                'https://www.facebook.com/${_otherUserProfile?['Facebook']}';
+                                                                'https://www.facebook.com/${_otherUserProfile?['facebook']}';
                                                             if (await canLaunch(
                                                               url,
                                                             )) {
@@ -384,19 +383,19 @@ class _ChatPageState extends State<ChatPage> {
                                                   icon:
                                                       'assets/images/twitter.png',
                                                   username:
-                                                      _otherUserProfile?['Twitter'] !=
+                                                      _otherUserProfile?['x'] !=
                                                               null
-                                                          ? '@${_otherUserProfile?['Twitter']}'
+                                                          ? '@${_otherUserProfile?['x']}'
                                                           : '',
                                                   isActive:
-                                                      _otherUserProfile?['Twitter'] !=
+                                                      _otherUserProfile?['x'] !=
                                                       null,
                                                   onTap:
-                                                      _otherUserProfile?['Twitter'] !=
+                                                      _otherUserProfile?['x'] !=
                                                               null
                                                           ? () async {
                                                             final url =
-                                                                'https://x.com/${_otherUserProfile?['Twitter']}';
+                                                                'https://x.com/${_otherUserProfile?['x']}';
                                                             if (await canLaunch(
                                                               url,
                                                             )) {
@@ -411,19 +410,19 @@ class _ChatPageState extends State<ChatPage> {
                                                   icon:
                                                       'assets/images/whatsapp.png',
                                                   username:
-                                                      _otherUserProfile?['WhatsApp'] !=
+                                                      _otherUserProfile?['whatsapp'] !=
                                                               null
-                                                          ? '@${_otherUserProfile?['WhatsApp']}'
+                                                          ? '@${_otherUserProfile?['whatsapp']}'
                                                           : '',
                                                   isActive:
-                                                      _otherUserProfile?['WhatsApp'] !=
+                                                      _otherUserProfile?['whatsapp'] !=
                                                       null,
                                                   onTap:
-                                                      _otherUserProfile?['WhatsApp'] !=
+                                                      _otherUserProfile?['whatsapp'] !=
                                                               null
                                                           ? () async {
                                                             final url =
-                                                                'https://wa.me/${_otherUserProfile?['WhatsApp']}';
+                                                                'https://wa.me/${_otherUserProfile?['whatsapp']}';
                                                             if (await canLaunch(
                                                               url,
                                                             )) {
@@ -537,9 +536,9 @@ class _ChatPageState extends State<ChatPage> {
       _scrollToBottom();
     } catch (e) {
       print('Error sending message: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to send message')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Failed to send message')));
     }
   }
 
@@ -589,12 +588,14 @@ class _ChatPageState extends State<ChatPage> {
                         child: Row(
                           children: [
                             CircleAvatar(
-                              backgroundImage: widget.otherUserImage.isNotEmpty
-                                  ? NetworkImage(widget.otherUserImage)
-                                  : null,
-                              child: widget.otherUserImage.isEmpty
-                                  ? Icon(Icons.person, color: Colors.white)
-                                  : null,
+                              backgroundImage:
+                                  widget.otherUserImage.isNotEmpty
+                                      ? NetworkImage(widget.otherUserImage)
+                                      : null,
+                              child:
+                                  widget.otherUserImage.isEmpty
+                                      ? Icon(Icons.person, color: Colors.white)
+                                      : null,
                             ),
                             SizedBox(width: 8),
                             Expanded(
@@ -612,11 +613,12 @@ class _ChatPageState extends State<ChatPage> {
                                   ),
                                   Text(
                                     'Tap to view profile',
-                                    style: TextStyle(color: Colors.white70, fontSize: 12),
+                                    style: TextStyle(
+                                      color: Colors.white70,
+                                      fontSize: 12,
+                                    ),
                                   ),
-                                  SizedBox(
-                                    height: 4,
-                                  ),
+                                  SizedBox(height: 4),
                                 ],
                               ),
                             ),
@@ -631,12 +633,13 @@ class _ChatPageState extends State<ChatPage> {
           ),
           Expanded(
             child: StreamBuilder<QuerySnapshot>(
-              stream: FirebaseFirestore.instance
-                  .collection('Matches')
-                  .doc(widget.matchId)
-                  .collection('messages')
-                  .orderBy('timestamp', descending: false)
-                  .snapshots(),
+              stream:
+                  FirebaseFirestore.instance
+                      .collection('Matches')
+                      .doc(widget.matchId)
+                      .collection('messages')
+                      .orderBy('timestamp', descending: false)
+                      .snapshots(),
               builder: (context, snapshot) {
                 if (snapshot.hasError) {
                   return Center(child: Text('Error loading messages'));
@@ -653,13 +656,16 @@ class _ChatPageState extends State<ChatPage> {
                   padding: EdgeInsets.all(16),
                   itemCount: messages.length,
                   itemBuilder: (context, index) {
-                    final message = messages[index].data() as Map<String, dynamic>;
+                    final message =
+                        messages[index].data() as Map<String, dynamic>;
                     final isMe = message['senderId'] == currentUser?.uid;
-                    final timestamp = (message['timestamp'] as Timestamp?)?.toDate();
+                    final timestamp =
+                        (message['timestamp'] as Timestamp?)?.toDate();
                     final isRead = message['isRead'] ?? false;
 
                     return Align(
-                      alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
+                      alignment:
+                          isMe ? Alignment.centerRight : Alignment.centerLeft,
                       child: Container(
                         margin: EdgeInsets.only(
                           bottom: 8,
@@ -667,7 +673,10 @@ class _ChatPageState extends State<ChatPage> {
                           right: isMe ? 0 : 64,
                         ),
                         child: Column(
-                          crossAxisAlignment: isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+                          crossAxisAlignment:
+                              isMe
+                                  ? CrossAxisAlignment.end
+                                  : CrossAxisAlignment.start,
                           children: [
                             Container(
                               padding: EdgeInsets.symmetric(
@@ -675,12 +684,19 @@ class _ChatPageState extends State<ChatPage> {
                                 vertical: 10,
                               ),
                               decoration: BoxDecoration(
-                                color: isMe ? Color(0xFFFF426D) : Colors.grey[300],
+                                color:
+                                    isMe ? Color(0xFFFF426D) : Colors.grey[300],
                                 borderRadius: BorderRadius.only(
                                   topLeft: Radius.circular(20),
                                   topRight: Radius.circular(20),
-                                  bottomLeft: isMe ? Radius.circular(20) : Radius.circular(5),
-                                  bottomRight: isMe ? Radius.circular(5) : Radius.circular(20),
+                                  bottomLeft:
+                                      isMe
+                                          ? Radius.circular(20)
+                                          : Radius.circular(5),
+                                  bottomRight:
+                                      isMe
+                                          ? Radius.circular(5)
+                                          : Radius.circular(20),
                                 ),
                               ),
                               child: Text(
@@ -697,7 +713,9 @@ class _ChatPageState extends State<ChatPage> {
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
                                     Text(
-                                      timestamp != null ? _formatTime(timestamp) : '',
+                                      timestamp != null
+                                          ? _formatTime(timestamp)
+                                          : '',
                                       style: TextStyle(
                                         fontSize: 10,
                                         color: Colors.grey[600],
@@ -707,7 +725,10 @@ class _ChatPageState extends State<ChatPage> {
                                     Icon(
                                       isRead ? Icons.done_all : Icons.done,
                                       size: 14,
-                                      color: isRead ? Colors.blue : Colors.grey[600],
+                                      color:
+                                          isRead
+                                              ? Colors.blue
+                                              : Colors.grey[600],
                                     ),
                                   ],
                                 ),

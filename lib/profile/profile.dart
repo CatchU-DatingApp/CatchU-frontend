@@ -31,7 +31,7 @@ class _ProfilePageState extends State<ProfilePage> {
   TextEditingController facebookController = TextEditingController();
   TextEditingController instagramController = TextEditingController();
   TextEditingController xController = TextEditingController();
-  TextEditingController lineController = TextEditingController();
+  TextEditingController whatsappController = TextEditingController();
 
   List<String> selectedInterests = [];
   bool _isLoading = true;
@@ -116,7 +116,7 @@ class _ProfilePageState extends State<ProfilePage> {
               facebookController.text = data['facebook'] ?? '';
               instagramController.text = data['instagram'] ?? '';
               xController.text = data['x'] ?? '';
-              lineController.text = data['line'] ?? '';
+              whatsappController.text = data['whatsapp'] ?? '';
               selectedInterests = List<String>.from(data['interest'] ?? []);
               selectedFaculty = data['faculty'];
               isVerified = data['verified'] == true;
@@ -1159,9 +1159,9 @@ class _ProfilePageState extends State<ProfilePage> {
                                       icon: Icons.alternate_email,
                                     ),
                                     _buildSocialMediaInput(
-                                      platform: 'Line',
-                                      controller: lineController,
-                                      icon: Icons.chat,
+                                      platform: 'WhatsApp',
+                                      controller: whatsappController,
+                                      icon: Icons.message,
                                     ),
                                   ],
                                 ),
@@ -1215,7 +1215,7 @@ class _ProfilePageState extends State<ProfilePage> {
     facebookController.dispose();
     instagramController.dispose();
     xController.dispose();
-    lineController.dispose();
+    whatsappController.dispose();
     profileCompletionNotifier.dispose();
     profileItemsNotifier.dispose();
     super.dispose();
