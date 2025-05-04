@@ -93,7 +93,7 @@ class _ChatPageState extends State<ChatPage> {
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.vertical(
-                      top: Radius.circular(20),
+                      top: Radius.circular(10),
                     ),
                   ),
                   child: Column(
@@ -101,12 +101,15 @@ class _ChatPageState extends State<ChatPage> {
                       // Drag handle
                       Container(
                         margin: EdgeInsets.only(top: 8),
-                        width: 40,
+                        width: 60,
                         height: 4,
                         decoration: BoxDecoration(
                           color: Colors.grey[300],
                           borderRadius: BorderRadius.circular(2),
                         ),
+                      ),
+                      SizedBox(
+                        height: 6,
                       ),
                       // Content
                       Expanded(
@@ -557,52 +560,75 @@ class _ChatPageState extends State<ChatPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Color(0xFFFF426D),
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: InkWell(
-          onTap: () => _showProfile(context),
-          child: Row(
-            children: [
-              CircleAvatar(
-                backgroundImage:
-                    widget.otherUserImage.isNotEmpty
-                        ? NetworkImage(widget.otherUserImage)
-                        : null,
-                child:
-                    widget.otherUserImage.isEmpty
-                        ? Icon(Icons.person, color: Colors.white)
-                        : null,
+      body: Column(
+        children: [
+          PreferredSize(
+            preferredSize: Size.fromHeight(kToolbarHeight),
+            child: Container(
+              decoration: BoxDecoration(
+                color: Color(0xFFFF426D),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black12,
+                    blurRadius: 8,
+                    offset: Offset(0, 2),
+                  ),
+                ],
               ),
-              SizedBox(width: 8),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+              child: SafeArea(
+                bottom: false,
+                child: Row(
                   children: [
-                    Text(
-                      widget.otherUserName,
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
+                    IconButton(
+                      icon: Icon(Icons.arrow_back, color: Colors.white),
+                      onPressed: () => Navigator.pop(context),
                     ),
-                    Text(
-                      'Tap to view profile',
-                      style: TextStyle(color: Colors.white70, fontSize: 12),
+                    Expanded(
+                      child: InkWell(
+                        onTap: () => _showProfile(context),
+                        child: Row(
+                          children: [
+                            CircleAvatar(
+                              backgroundImage: widget.otherUserImage.isNotEmpty
+                                  ? NetworkImage(widget.otherUserImage)
+                                  : null,
+                              child: widget.otherUserImage.isEmpty
+                                  ? Icon(Icons.person, color: Colors.white)
+                                  : null,
+                            ),
+                            SizedBox(width: 8),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Text(
+                                    widget.otherUserName,
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  Text(
+                                    'Tap to view profile',
+                                    style: TextStyle(color: Colors.white70, fontSize: 12),
+                                  ),
+                                  SizedBox(
+                                    height: 4,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
                   ],
                 ),
               ),
-            ],
+            ),
           ),
-        ),
-      ),
-      body: Column(
-        children: [
           Expanded(
             child: StreamBuilder<QuerySnapshot>(
               stream: FirebaseFirestore.instance
@@ -650,7 +676,12 @@ class _ChatPageState extends State<ChatPage> {
                               ),
                               decoration: BoxDecoration(
                                 color: isMe ? Color(0xFFFF426D) : Colors.grey[300],
-                                borderRadius: BorderRadius.circular(20),
+                                borderRadius: BorderRadius.only(
+                                  topLeft: Radius.circular(20),
+                                  topRight: Radius.circular(20),
+                                  bottomLeft: isMe ? Radius.circular(20) : Radius.circular(5),
+                                  bottomRight: isMe ? Radius.circular(5) : Radius.circular(20),
+                                ),
                               ),
                               child: Text(
                                 message['message'] ?? '',
