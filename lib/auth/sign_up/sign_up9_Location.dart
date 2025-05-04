@@ -4,17 +4,11 @@ import 'package:geolocator/geolocator.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:catchu/sign_up_data_holder.dart';
-import 'package:catchu/user_model.dart' as app;
-import 'package:catchu/user_repository.dart';
-import 'package:catchu/services/session_manager.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:catchu/auth/auth_controller.dart';
 
 class SignUpPage9Location extends StatefulWidget {
   final SignUpDataHolder dataHolder;
   const SignUpPage9Location({Key? key, required this.dataHolder})
-    : super(key: key);
+      : super(key: key);
 
   @override
   State<SignUpPage9Location> createState() => _SignUpPage9LocationState();
@@ -100,7 +94,7 @@ class _SignUpPage9LocationState extends State<SignUpPage9Location> {
                       children: [
                         TileLayer(
                           urlTemplate:
-                              'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                          'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
                         ),
                         MarkerLayer(
                           markers: [
@@ -139,10 +133,7 @@ class _SignUpPage9LocationState extends State<SignUpPage9Location> {
                     children: [
                       Expanded(
                         child: ElevatedButton(
-                          onPressed: () async {
-                            // Hapus user Auth jika user membatalkan signup
-                            final authController = AuthController();
-                            await authController.deleteCurrentUserWithReauth();
+                          onPressed: () {
                             Navigator.pop(context);
                           },
                           style: ElevatedButton.styleFrom(
@@ -161,7 +152,7 @@ class _SignUpPage9LocationState extends State<SignUpPage9Location> {
                         child: ElevatedButton(
                           onPressed: () {
                             Navigator.pop(context);
-                            _finishSignUp();
+                            _proceedToRules();
                           },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Color(0xFFFF2E63),
@@ -172,16 +163,16 @@ class _SignUpPage9LocationState extends State<SignUpPage9Location> {
                             ),
                           ),
                           child:
-                              _isLoading
-                                  ? SizedBox(
-                                    height: 20,
-                                    width: 20,
-                                    child: CircularProgressIndicator(
-                                      color: Colors.white,
-                                      strokeWidth: 2,
-                                    ),
-                                  )
-                                  : Text('Confirm'),
+                          _isLoading
+                              ? SizedBox(
+                            height: 20,
+                            width: 20,
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 2,
+                            ),
+                          )
+                              : Text('Confirm'),
                         ),
                       ),
                     ],
@@ -196,123 +187,14 @@ class _SignUpPage9LocationState extends State<SignUpPage9Location> {
     );
   }
 
-  Future<void> _finishSignUp() async {
-    setState(() {
-      _isLoading = true;
-      _errorMessage = null;
-    });
-
-    try {
-      final appUser = app.User(
-        id: null,
-        nomorTelepon: widget.dataHolder.phoneNumber ?? '',
-        nama: widget.dataHolder.nama ?? '',
-        email: widget.dataHolder.email ?? '',
-        umur: widget.dataHolder.umur ?? 0,
-        gender: widget.dataHolder.gender ?? '',
-        interest: widget.dataHolder.interest ?? [],
-        verified: false,
-        location: widget.dataHolder.location ?? [0.0, 0.0],
-        photos: widget.dataHolder.photos ?? [],
-      );
-
-      // Pastikan email terisi
-      if (widget.dataHolder.email == null || widget.dataHolder.email!.isEmpty) {
-        setState(() {
-          _isLoading = false;
-          _errorMessage = 'Email harus diisi untuk menyelesaikan pendaftaran';
-        });
-        return;
-      }
-
-      final FirebaseAuth auth = FirebaseAuth.instance;
-      UserCredential userCredential;
-      String uid;
-
-      try {
-        // Jika sudah login, gunakan UID yang ada
-        if (auth.currentUser != null) {
-          uid = auth.currentUser!.uid;
-        } else {
-          // Generate password otomatis
-          String password =
-              "${widget.dataHolder.nama?.replaceAll(' ', '_').toLowerCase() ?? 'user'}${widget.dataHolder.phoneNumber?.substring(widget.dataHolder.phoneNumber!.length - 4) ?? '1234'}";
-
-          // Buat user baru dengan email dan password
-          userCredential = await auth.createUserWithEmailAndPassword(
-            email: widget.dataHolder.email!,
-            password: password,
-          );
-          uid = userCredential.user!.uid;
-
-          // Update profile name
-          await userCredential.user!.updateDisplayName(widget.dataHolder.nama);
-        }
-
-        // Simpan data user ke Firestore dengan UID dari Firebase Auth
-        await UserRepository().addUser(appUser, uid);
-
-        // Save session
-        await SessionManager.saveSession(
-          userId: uid,
-          email: widget.dataHolder.email!,
-          name: widget.dataHolder.nama ?? '',
-        );
-
-        // Navigate to home
-        Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
-      } on FirebaseAuthException catch (e) {
-        if (e.code == 'email-already-in-use') {
-          // Jika email sudah digunakan, coba login
-          try {
-            String password =
-                "${widget.dataHolder.nama?.replaceAll(' ', '_').toLowerCase() ?? 'user'}${widget.dataHolder.phoneNumber?.substring(widget.dataHolder.phoneNumber!.length - 4) ?? '1234'}";
-            userCredential = await auth.signInWithEmailAndPassword(
-              email: widget.dataHolder.email!,
-              password: password,
-            );
-            uid = userCredential.user!.uid;
-
-            // Update data user yang sudah ada
-            await UserRepository().addUser(appUser, uid);
-
-            // Save session
-            await SessionManager.saveSession(
-              userId: uid,
-              email: widget.dataHolder.email!,
-              name: widget.dataHolder.nama ?? '',
-            );
-
-            Navigator.pushNamedAndRemoveUntil(
-              context,
-              '/home',
-              (route) => false,
-            );
-          } catch (loginError) {
-            setState(() {
-              _isLoading = false;
-              _errorMessage =
-                  'Email sudah terdaftar tapi tidak dapat login. Silakan gunakan email lain.';
-            });
-          }
-        } else {
-          setState(() {
-            _isLoading = false;
-            _errorMessage = 'Error saat membuat akun: ${e.message}';
-          });
-        }
-      } catch (e) {
-        setState(() {
-          _errorMessage = 'Gagal menyimpan data: $e';
-          _isLoading = false;
-        });
-      }
-    } catch (e) {
-      setState(() {
-        _errorMessage = 'Gagal menyimpan data: $e';
-        _isLoading = false;
-      });
-    }
+  void _proceedToRules() {
+    // Navigate to the rules page with the data holder
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => SignUpRulesPage(dataHolder: widget.dataHolder),
+      ),
+    );
   }
 
   @override
@@ -393,19 +275,19 @@ class _SignUpPage9LocationState extends State<SignUpPage9Location> {
                 ),
                 onPressed: _isLoading ? null : _getCurrentLocation,
                 child:
-                    _isLoading
-                        ? SizedBox(
-                          height: 20,
-                          width: 20,
-                          child: CircularProgressIndicator(
-                            color: Colors.white,
-                            strokeWidth: 2,
-                          ),
-                        )
-                        : Text(
-                          'Allow Location Access & Finish',
-                          style: TextStyle(fontSize: 16),
-                        ),
+                _isLoading
+                    ? SizedBox(
+                  height: 20,
+                  width: 20,
+                  child: CircularProgressIndicator(
+                    color: Colors.white,
+                    strokeWidth: 2,
+                  ),
+                )
+                    : Text(
+                  'Allow Location Access',
+                  style: TextStyle(fontSize: 16),
+                ),
               ),
             ),
           ),
