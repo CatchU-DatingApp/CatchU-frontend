@@ -31,6 +31,7 @@ class _ChatPageState extends State<ChatPage> {
   void initState() {
     super.initState();
     _loadOtherUserProfile();
+    _markMessagesAsRead();
   }
 
   Future<void> _loadOtherUserProfile() async {
@@ -54,6 +55,26 @@ class _ChatPageState extends State<ChatPage> {
           _isLoadingProfile = false;
         });
       }
+    }
+  }
+
+  Future<void> _markMessagesAsRead() async {
+    try {
+      final messagesRef = FirebaseFirestore.instance
+          .collection('Matches')
+          .doc(widget.matchId)
+          .collection('messages');
+
+      final unreadMessages = await messagesRef
+          .where('senderId', isEqualTo: widget.otherUserId)
+          .where('isRead', isEqualTo: false)
+          .get();
+
+      for (var doc in unreadMessages.docs) {
+        await doc.reference.update({'isRead': true});
+      }
+    } catch (e) {
+      print('Error marking messages as read: $e');
     }
   }
 
@@ -318,7 +339,7 @@ class _ChatPageState extends State<ChatPage> {
                                                               null
                                                           ? () async {
                                                             final url =
-                                                                'https://instagram.com/${_otherUserProfile?['Instagram']}';
+                                                                'https://www.instagram.com/${_otherUserProfile?['Instagram']}';
                                                             if (await canLaunch(
                                                               url,
                                                             )) {
@@ -345,7 +366,7 @@ class _ChatPageState extends State<ChatPage> {
                                                               null
                                                           ? () async {
                                                             final url =
-                                                                'https://facebook.com/${_otherUserProfile?['Facebook']}';
+                                                                'https://www.facebook.com/${_otherUserProfile?['Facebook']}';
                                                             if (await canLaunch(
                                                               url,
                                                             )) {
@@ -372,7 +393,7 @@ class _ChatPageState extends State<ChatPage> {
                                                               null
                                                           ? () async {
                                                             final url =
-                                                                'https://twitter.com/${_otherUserProfile?['Twitter']}';
+                                                                'https://x.com/${_otherUserProfile?['Twitter']}';
                                                             if (await canLaunch(
                                                               url,
                                                             )) {
@@ -502,6 +523,7 @@ class _ChatPageState extends State<ChatPage> {
         'senderId': currentUser?.uid,
         'message': message,
         'timestamp': FieldValue.serverTimestamp(),
+        'isRead': false,
       });
 
       await matchRef.update({
@@ -512,10 +534,14 @@ class _ChatPageState extends State<ChatPage> {
       _scrollToBottom();
     } catch (e) {
       print('Error sending message: $e');
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Failed to send message')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to send message')),
+      );
     }
+  }
+
+  String _formatTime(DateTime time) {
+    return '${time.hour.toString().padLeft(2, '0')}.${time.minute.toString().padLeft(2, '0')}';
   }
 
   void _scrollToBottom() {
@@ -579,13 +605,12 @@ class _ChatPageState extends State<ChatPage> {
         children: [
           Expanded(
             child: StreamBuilder<QuerySnapshot>(
-              stream:
-                  FirebaseFirestore.instance
-                      .collection('Matches')
-                      .doc(widget.matchId)
-                      .collection('messages')
-                      .orderBy('timestamp', descending: false)
-                      .snapshots(),
+              stream: FirebaseFirestore.instance
+                  .collection('Matches')
+                  .doc(widget.matchId)
+                  .collection('messages')
+                  .orderBy('timestamp', descending: false)
+                  .snapshots(),
               builder: (context, snapshot) {
                 if (snapshot.hasError) {
                   return Center(child: Text('Error loading messages'));
@@ -602,32 +627,61 @@ class _ChatPageState extends State<ChatPage> {
                   padding: EdgeInsets.all(16),
                   itemCount: messages.length,
                   itemBuilder: (context, index) {
-                    final message =
-                        messages[index].data() as Map<String, dynamic>;
+                    final message = messages[index].data() as Map<String, dynamic>;
                     final isMe = message['senderId'] == currentUser?.uid;
+                    final timestamp = (message['timestamp'] as Timestamp?)?.toDate();
+                    final isRead = message['isRead'] ?? false;
 
                     return Align(
-                      alignment:
-                          isMe ? Alignment.centerRight : Alignment.centerLeft,
+                      alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
                       child: Container(
                         margin: EdgeInsets.only(
                           bottom: 8,
                           left: isMe ? 64 : 0,
                           right: isMe ? 0 : 64,
                         ),
-                        padding: EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 10,
-                        ),
-                        decoration: BoxDecoration(
-                          color: isMe ? Color(0xFFFF426D) : Colors.grey[300],
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Text(
-                          message['message'] ?? '',
-                          style: TextStyle(
-                            color: isMe ? Colors.white : Colors.black87,
-                          ),
+                        child: Column(
+                          crossAxisAlignment: isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+                          children: [
+                            Container(
+                              padding: EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 10,
+                              ),
+                              decoration: BoxDecoration(
+                                color: isMe ? Color(0xFFFF426D) : Colors.grey[300],
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: Text(
+                                message['message'] ?? '',
+                                style: TextStyle(
+                                  color: isMe ? Colors.white : Colors.black87,
+                                ),
+                              ),
+                            ),
+                            if (isMe)
+                              Padding(
+                                padding: EdgeInsets.only(top: 4, right: 8),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Text(
+                                      timestamp != null ? _formatTime(timestamp) : '',
+                                      style: TextStyle(
+                                        fontSize: 10,
+                                        color: Colors.grey[600],
+                                      ),
+                                    ),
+                                    SizedBox(width: 4),
+                                    Icon(
+                                      isRead ? Icons.done_all : Icons.done,
+                                      size: 14,
+                                      color: isRead ? Colors.blue : Colors.grey[600],
+                                    ),
+                                  ],
+                                ),
+                              ),
+                          ],
                         ),
                       ),
                     );
