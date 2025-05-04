@@ -78,10 +78,10 @@ class _FaceValidationPhotoPageState extends State<FaceValidationPhotoPage> {
       final user = FirebaseAuth.instance.currentUser;
       if (user != null) {
         final doc =
-            await FirebaseFirestore.instance
-                .collection('Users')
-                .doc(user.uid)
-                .get();
+        await FirebaseFirestore.instance
+            .collection('Users')
+            .doc(user.uid)
+            .get();
 
         if (doc.exists && doc.data()!.containsKey('photos')) {
           final photos = List<String>.from(doc.data()!['photos']);
@@ -134,60 +134,65 @@ class _FaceValidationPhotoPageState extends State<FaceValidationPhotoPage> {
                 textAlign: TextAlign.center,
                 style: TextStyle(fontSize: 16, color: Colors.black54),
               ),
-              const SizedBox(height: 32),
+              const SizedBox(height: 24),
               if (_isLoading)
-                const Center(child: CircularProgressIndicator())
+                const Expanded(
+                  child: Center(child: CircularProgressIndicator()),
+                )
               else if (userPhotos.isEmpty)
-                const Center(
-                  child: Text(
-                    'No photos available.\nPlease upload photos in your profile first.',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 16, color: Colors.grey),
+                const Expanded(
+                  child: Center(
+                    child: Text(
+                      'No photos available.\nPlease upload photos in your profile first.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(fontSize: 16, color: Colors.grey),
+                    ),
                   ),
                 )
               else
                 Expanded(
                   child: GridView.builder(
                     gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 2,
-                          crossAxisSpacing: 10,
-                          mainAxisSpacing: 10,
-                        ),
+                    const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 2,
+                      crossAxisSpacing: 10,
+                      mainAxisSpacing: 10,
+                    ),
                     itemCount: userPhotos.length,
+                    padding: const EdgeInsets.only(bottom: 16),
                     itemBuilder: (context, index) {
                       final photo = userPhotos[index];
                       final hasFace = photoHasFace[photo] ?? false;
 
                       return GestureDetector(
                         onTap:
-                            hasFace
-                                ? () {
-                                  setState(() {
-                                    _selectedPhotoUrl = photo;
-                                  });
-                                }
-                                : () {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                      content: Text(
-                                        'This photo does not contain a clear face. Please choose another photo.',
-                                      ),
-                                    ),
-                                  );
-                                },
+                        hasFace
+                            ? () {
+                          setState(() {
+                            _selectedPhotoUrl = photo;
+                          });
+                        }
+                            : () {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text(
+                                'This photo does not contain a clear face. Please choose another photo.',
+                              ),
+                            ),
+                          );
+                        },
                         child: Stack(
                           children: [
                             Container(
                               decoration: BoxDecoration(
                                 borderRadius: BorderRadius.circular(12),
                                 border:
-                                    _selectedPhotoUrl == photo
-                                        ? Border.all(
-                                          color: Colors.pink,
-                                          width: 3,
-                                        )
-                                        : null,
+                                _selectedPhotoUrl == photo
+                                    ? Border.all(
+                                  color: Colors.pink,
+                                  width: 3,
+                                )
+                                    : null,
                               ),
                               child: ClipRRect(
                                 borderRadius: BorderRadius.circular(12),
@@ -220,21 +225,21 @@ class _FaceValidationPhotoPageState extends State<FaceValidationPhotoPage> {
                     },
                   ),
                 ),
-              const Spacer(),
+              const SizedBox(height: 16),
               ElevatedButton(
                 onPressed:
-                    _selectedPhotoUrl == null
-                        ? null
-                        : () {
-                          Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder:
-                                  (context) => FaceValidationScanPage(
-                                    profilePhotoUrl: _selectedPhotoUrl!,
-                                  ),
-                            ),
-                          );
-                        },
+                _selectedPhotoUrl == null
+                    ? null
+                    : () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder:
+                          (context) => FaceValidationScanPage(
+                        profilePhotoUrl: _selectedPhotoUrl!,
+                      ),
+                    ),
+                  );
+                },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFFFF4D6D),
                   minimumSize: const Size(double.infinity, 56),
