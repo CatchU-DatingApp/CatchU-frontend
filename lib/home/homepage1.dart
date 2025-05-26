@@ -1,7 +1,10 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'dart:ui';
 import 'dart:math' as math;
+import 'package:http/http.dart' as http;
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../utils/image_helper.dart';
 import 'package:geolocator/geolocator.dart';
@@ -30,6 +33,19 @@ class ProfileData {
     required this.matchingInterestsCount,
     required this.userId,
   });
+  factory ProfileData.fromJson(Map<String, dynamic> json) {
+    return ProfileData(
+      userId: json['userId'],
+      name: json['name'],
+      images: List<String>.from(json['images'] ?? []),
+      distance: json['distance'],
+      bio: json['bio'],
+      faculty: json['faculty'],
+      interests: List<String>.from(json['interests'] ?? []),
+      location: List<double>.from(json['location']?.map((e) => e.toDouble()) ?? [0.0, 0.0]),
+      matchingInterestsCount: json['matchingInterestsCount'],
+    );
+  }
 }
 
 class DiscoverPage extends StatefulWidget {
@@ -100,190 +116,50 @@ class _DiscoverPageState extends State<DiscoverPage>
       }
     });
 
-    _fetchProfilesFromFirebase();
+    _fetchProfilesFromApi();
   }
 
-  Future<void> _fetchProfilesFromFirebase() async {
+  Future<void> _fetchProfilesFromApi() async {
     setState(() {
       _isLoadingProfiles = true;
       _profilesError = null;
     });
-    try {
-      print('Fetching profiles from Firestore...');
-      if (FirebaseFirestore.instance == null) {
-        throw Exception(
-          'Firebase belum diinisialisasi. Pastikan Firebase.initializeApp() sudah dipanggil di main.dart',
-        );
-      }
 
-      // Get current user's data
+    try {
+
       final currentUser = FirebaseAuth.instance.currentUser;
+
       if (currentUser == null) {
         throw Exception('User tidak ditemukan');
       }
 
-      final currentUserDoc =
-          await FirebaseFirestore.instance
-              .collection('Users')
-              .doc(currentUser.uid)
-              .get();
+      final String uid = currentUser.uid;
+      final uri = Uri.parse('http://192.168.0.102:8080/profiles');// Ganti dengan URL API-mu
 
-      if (!currentUserDoc.exists) {
-        throw Exception('Data user tidak ditemukan');
-      }
+      final response = await http.get(
+        uri,
+        headers: {
+          'Content-Type': 'application/json',
+          'Firebase-UID': uid,
+        },
+      ).timeout(const Duration(seconds: 10));
 
-      final currentUserData = currentUserDoc.data()!;
-      if (!currentUserData.containsKey('location')) {
-        throw Exception('Data lokasi user tidak ditemukan');
-      }
+      if (response.statusCode == 200) {
+        final List<dynamic> data = json.decode(response.body);
 
-      final currentUserLocation = List<double>.from(
-        currentUserData['location'],
-      );
-      final currentUserGender = currentUserData['gender'] as String?;
-      final currentUserInterests = List<String>.from(
-        currentUserData['interest'] ?? [],
-      );
+        final profiles = data.map((jsonItem) => ProfileData.fromJson(jsonItem)).toList();
 
-      if (currentUserGender == null || currentUserGender.isEmpty) {
-        throw Exception('Data gender user tidak ditemukan');
-      }
-
-      // Tentukan gender yang ingin ditampilkan (lawan jenis)
-      final targetGender =
-          currentUserGender.toLowerCase() == 'male' ? 'female' : 'male';
-
-      // Fetch other users
-      final snapshot = await FirebaseFirestore.instance
-          .collection('Users')
-          .get()
-          .timeout(
-            Duration(seconds: 10),
-            onTimeout: () {
-              throw Exception(
-                'Timeout: Gagal mengambil data user dari server.',
-              );
-            },
-          );
-
-      if (snapshot.docs == null) {
-        throw Exception('Gagal mengambil data user: snapshot.docs null');
-      }
-      print('Fetched ${snapshot.docs.length} user(s)');
-
-      final List<ProfileData> profiles = [];
-      int skippedUsers = 0;
-      for (var doc in snapshot.docs) {
-        try {
-          // Skip current user
-          if (doc.id == currentUser.uid) {
-            skippedUsers++;
-            print('Skipped current user: ${doc.id}');
-            continue;
-          }
-
-          final userData = doc.data();
-
-          // Skip if gender doesn't match target gender
-          final userGender = (userData['gender'] as String?)?.toLowerCase();
-          if (userGender == null || userGender != targetGender) {
-            skippedUsers++;
-            print('Skipped user ${doc.id}: Gender mismatch or not specified');
-            continue;
-          }
-
-          // Get matching interests (tidak di-skip jika tidak cocok)
-          final userInterests = List<String>.from(userData['interest'] ?? []);
-          final matchingInterests =
-              userInterests
-                  .where((interest) => currentUserInterests.contains(interest))
-                  .toList();
-
-          // Get user location
-          if (!userData.containsKey('location')) {
-            skippedUsers++;
-            print('Skipped user ${doc.id}: No location data');
-            continue;
-          }
-
-          final userLocation = List<double>.from(
-            userData['location'] ?? [0.0, 0.0],
-          );
-
-          // Skip if location is default [0.0, 0.0]
-          if (userLocation[0] == 0.0 && userLocation[1] == 0.0) {
-            skippedUsers++;
-            print('Skipped user ${doc.id}: Default location [0.0, 0.0]');
-            continue;
-          }
-
-          // Calculate distance
-          final distanceInKm = await _calculateDistance(
-            currentUserLocation[0],
-            currentUserLocation[1],
-            userLocation[0],
-            userLocation[1],
-          );
-
-          // Format distance string - one decimal place
-          final distanceStr = '${distanceInKm.toStringAsFixed(1)} km';
-
-          // Hanya tambahkan user yang memiliki nama
-          if (userData['nama'] == null ||
-              userData['nama'].toString().trim().isEmpty) {
-            skippedUsers++;
-            print('Skipped user ${doc.id}: No name');
-            continue;
-          }
-
-          profiles.add(
-            ProfileData(
-              name: userData['nama'],
-              images: List<String>.from(userData['photos'] ?? []),
-              distance: distanceStr,
-              bio: userData['bio'] ?? '',
-              faculty: userData['faculty'] ?? '',
-              interests: userInterests,
-              location: userLocation,
-              matchingInterestsCount: matchingInterests.length,
-              userId: doc.id,
-            ),
-          );
-
-          print(
-            'Added user ${doc.id} with ${matchingInterests.length} matching interests: ${matchingInterests.join(", ")}',
-          );
-        } catch (e) {
-          skippedUsers++;
-          print('Error parsing user doc id=${doc.id}: $e');
+        if (mounted) {
+          setState(() {
+            _profiles = profiles;
+            _isLoadingProfiles = false;
+          });
         }
-      }
-      print('Total users fetched: ${snapshot.docs.length}');
-      print('Users skipped: $skippedUsers');
-      print('Users shown: ${profiles.length}');
-
-      // Sort profiles by matching interests count first, then by distance
-      profiles.sort((a, b) {
-        // Sort by matching interests count first (descending)
-        final interestCompare = b.matchingInterestsCount.compareTo(
-          a.matchingInterestsCount,
-        );
-        if (interestCompare != 0) return interestCompare;
-
-        // If matching interests count is same, sort by distance (ascending)
-        final distA = double.parse(a.distance.replaceAll(' km', ''));
-        final distB = double.parse(b.distance.replaceAll(' km', ''));
-        return distA.compareTo(distB);
-      });
-
-      if (mounted) {
-        setState(() {
-          _profiles = profiles;
-          _isLoadingProfiles = false;
-        });
+      } else {
+        throw Exception('Failed to load profiles: ${response.statusCode}');
       }
     } catch (e) {
-      print('Error fetching profiles: $e');
+      print('Error fetching profiles from API: $e');
       if (mounted) {
         setState(() {
           _isLoadingProfiles = false;
@@ -739,7 +615,7 @@ class _DiscoverPageState extends State<DiscoverPage>
               Text('Error: \n' + (_profilesError ?? 'Unknown error')),
               SizedBox(height: 16),
               ElevatedButton(
-                onPressed: _fetchProfilesFromFirebase,
+                onPressed: _fetchProfilesFromApi,
                 child: Text('Retry'),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.pink,
@@ -761,7 +637,7 @@ class _DiscoverPageState extends State<DiscoverPage>
               Text('No users found.'),
               SizedBox(height: 16),
               ElevatedButton(
-                onPressed: _fetchProfilesFromFirebase,
+                onPressed: _fetchProfilesFromApi,
                 child: Text('Refresh'),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.pink,
