@@ -7,6 +7,8 @@ import 'faculty_selector.dart';
 import 'photo_selection.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 import 'face_validation.dart';
 import '../services/session_manager.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -94,6 +96,8 @@ class _ProfilePageState extends State<ProfilePage> {
     });
   }
 
+
+
   Future<void> _loadUserProfile() async {
     setState(() {
       _isLoading = true;
@@ -102,13 +106,11 @@ class _ProfilePageState extends State<ProfilePage> {
     try {
       final user = FirebaseAuth.instance.currentUser;
       if (user != null) {
-        final doc = await FirebaseFirestore.instance
-            .collection('Users')
-            .doc(user.uid)
-            .get(GetOptions(source: Source.serverAndCache));
+        final uid = user.uid;
+        final response = await http.get(Uri.parse('http://192.168.18.40:8080/users/$uid'));
 
-        if (doc.exists) {
-          final data = doc.data()!;
+        if (response.statusCode == 200) {
+          final data = jsonDecode(response.body);
 
           if (mounted) {
             setState(() {
@@ -122,24 +124,22 @@ class _ProfilePageState extends State<ProfilePage> {
               isVerified = data['verified'] == true;
 
               uploadedImages = [];
-              _preloadImages(data['photos'] as List<dynamic>? ?? []);
+              _preloadImages(List<String>.from(data['photos'] ?? []));
 
-              profileItems['Photos']!['completed'] =
-                  (data['photos'] as List<dynamic>? ?? []).length;
+              profileItems['Photos']!['completed'] = (data['photos'] as List?)?.length ?? 0;
               profileItems['Interest']!['completed'] = selectedInterests.length;
-              profileItems['Bio']!['completed'] =
-                  bioController.text.isNotEmpty ? 1 : 0;
-              profileItems['Faculty']!['completed'] =
-                  selectedFaculty != null ? 1 : 0;
+              profileItems['Bio']!['completed'] = bioController.text.isNotEmpty ? 1 : 0;
+              profileItems['Faculty']!['completed'] = selectedFaculty != null ? 1 : 0;
+
               profileCompletion =
                   (profileItems['Photos']!['completed'] +
                       profileItems['Interest']!['completed'] +
                       profileItems['Bio']!['completed'] +
-                      profileItems['Faculty']!['completed']) /
-                  11.0;
+                      profileItems['Faculty']!['completed']) / 11.0;
+
               profileCompletionNotifier.value = profileCompletion;
-              profileItemsNotifier
-                  .value = Map<String, Map<String, dynamic>>.from(profileItems);
+              profileItemsNotifier.value =
+              Map<String, Map<String, dynamic>>.from(profileItems);
 
               _isLoading = false;
             });
@@ -148,6 +148,7 @@ class _ProfilePageState extends State<ProfilePage> {
           setState(() {
             _isLoading = false;
           });
+          print("Failed to load user: ${response.statusCode}");
         }
       } else {
         setState(() {
@@ -156,13 +157,12 @@ class _ProfilePageState extends State<ProfilePage> {
       }
     } catch (e) {
       print('Error loading profile: $e');
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-      }
+      setState(() {
+        _isLoading = false;
+      });
     }
   }
+
 
   Future<void> _preloadImages(List<dynamic> imageUrls) async {
     List<ImageProvider> images = [];
