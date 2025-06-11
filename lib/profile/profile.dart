@@ -12,7 +12,6 @@ import 'package:http/http.dart' as http;
 import 'face_validation.dart';
 import '../services/session_manager.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_keyboard_visibility/flutter_keyboard_visibility.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'dart:async';
@@ -323,12 +322,15 @@ class _ProfilePageState extends State<ProfilePage> {
           File(pickedFile.path),
           'user_photos/${user.uid}/${DateTime.now().millisecondsSinceEpoch}_${pickedFile.name}',
         );
-        await FirebaseFirestore.instance
-            .collection('Users')
-            .doc(user.uid)
-            .update({
-              'photos': FieldValue.arrayUnion([url]),
-            });
+        final response = await http.post(
+          Uri.parse('http://192.168.18.40:8080/users/${user.uid}/photos'),
+          headers: {'Content-Type': 'application/json'},
+          body: jsonEncode({'photoUrl': url}),
+        );
+
+        if (response.statusCode != 200) {
+          throw Exception('Backend rejected the update: ${response.body}');
+        }
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -341,104 +343,108 @@ class _ProfilePageState extends State<ProfilePage> {
 
   Future<void> _pickImageFromCamera() async {
     if (uploadedImages.length >= 6) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Maximum 6 photos allowed.')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Maximum 6 photos allowed.')),
+      );
       return;
     }
+
     final pickedFile = await _picker.pickImage(source: ImageSource.camera);
     final user = FirebaseAuth.instance.currentUser;
+
     if (pickedFile != null && user != null) {
+      final imageFile = File(pickedFile.path);
+      final image = FileImage(imageFile);
+
       setState(() {
-        uploadedImages.add(FileImage(File(pickedFile.path)));
+        uploadedImages.add(image);
         profileItems['Photos']!['completed'] = uploadedImages.length;
-        profileCompletion =
-            (profileItems['Photos']!['completed'] +
-                profileItems['Interest']!['completed'] +
-                profileItems['Bio']!['completed'] +
-                profileItems['Faculty']!['completed']) /
+        profileCompletion = (profileItems['Photos']!['completed'] +
+            profileItems['Interest']!['completed'] +
+            profileItems['Bio']!['completed'] +
+            profileItems['Faculty']!['completed']) /
             11.0;
         profileCompletionNotifier.value = profileCompletion;
-        profileItemsNotifier.value = Map<String, Map<String, dynamic>>.from(
-          profileItems,
-        );
+        profileItemsNotifier.value =
+        Map<String, Map<String, dynamic>>.from(profileItems);
       });
-      // Upload ke Firebase Storage, dapatkan URL download, lalu simpan ke Firestore
+
       try {
+        // Upload ke Firebase Storage
         final firebaseService = FirebaseService();
-        final url = await firebaseService.uploadPhotoToStorage(
-          File(pickedFile.path),
+        final photoUrl = await firebaseService.uploadPhotoToStorage(
+          imageFile,
           'user_photos/${user.uid}/${DateTime.now().millisecondsSinceEpoch}_${pickedFile.name}',
         );
-        await FirebaseFirestore.instance
-            .collection('Users')
-            .doc(user.uid)
-            .update({
-              'photos': FieldValue.arrayUnion([url]),
-            });
+
+        // Kirim URL ke backend API
+        final response = await http.post(
+          Uri.parse('http://192.168.18.40:8080/users/${user.uid}/photos'),
+          headers: {'Content-Type': 'application/json'},
+          body: jsonEncode({'photoUrl': photoUrl}),
+        );
+
+        if (response.statusCode != 200) {
+          throw Exception('Failed to update photo to API: ${response.body}');
+        }
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Failed to update photos: $e')),
+            SnackBar(content: Text('Failed to upload photo: $e')),
           );
         }
       }
     }
   }
 
+
   Widget _buildPhotoSlot({ImageProvider<Object>? image, required int index}) {
     final isLastPhoto = uploadedImages.length == 1;
+
     return Stack(
       children: [
         GestureDetector(
-          onTap:
-              image == null
-                  ? () {
-                    _showPhotoSelectionModal();
-                  }
-                  : null,
+          onTap: image == null
+              ? () {
+            _showPhotoSelectionModal();
+          }
+              : null,
           child: Container(
             width: 100,
             height: 100,
-            decoration:
-                image != null
-                    ? ShapeDecoration(
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                    )
-                    : ShapeDecoration(
-                      color: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        side: BorderSide(
-                          width: 0,
-                          color: const Color.fromARGB(255, 255, 255, 255),
-                        ),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                    ),
-            child:
-                image == null
-                    ? Center(
-                      child: Icon(
-                        Icons.add,
-                        color: const Color(0xFFFF375F),
-                        size: 32,
-                      ),
-                    )
-                    : ClipRRect(
-                      borderRadius: BorderRadius.circular(10),
-                      child:
-                          image is FileImage
-                              ? Image(image: image, fit: BoxFit.cover)
-                              : ImageHelper.loadCachedImage(
-                                imageUrl: (image as NetworkImage).url,
-                                width: 100,
-                                height: 100,
-                                fit: BoxFit.cover,
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                    ),
+            decoration: image != null
+                ? ShapeDecoration(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+            )
+                : ShapeDecoration(
+              color: Colors.white,
+              shape: RoundedRectangleBorder(
+                side: BorderSide(width: 0, color: Colors.white),
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
+            child: image == null
+                ? Center(
+              child: Icon(
+                Icons.add,
+                color: const Color(0xFFFF375F),
+                size: 32,
+              ),
+            )
+                : ClipRRect(
+              borderRadius: BorderRadius.circular(10),
+              child: image is FileImage
+                  ? Image(image: image, fit: BoxFit.cover)
+                  : ImageHelper.loadCachedImage(
+                imageUrl: (image as NetworkImage).url,
+                width: 100,
+                height: 100,
+                fit: BoxFit.cover,
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
           ),
         ),
         if (image != null && !isLastPhoto)
@@ -451,44 +457,48 @@ class _ProfilePageState extends State<ProfilePage> {
                 if (user == null) return;
 
                 try {
-                  // Ambil data user terbaru dari Firestore
-                  final doc =
-                      await FirebaseFirestore.instance
-                          .collection('Users')
-                          .doc(user.uid)
-                          .get();
-                  List<dynamic> photos = List.from(doc['photos'] ?? []);
+                  // 1. Fetch list photo dari backend
+                  final response = await http.get(
+                    Uri.parse('http://192.168.18.40:8080/users/${user.uid}/photos'),
+                  );
 
-                  // Hapus foto dari Storage terlebih dahulu
-                  if (index < photos.length) {
-                    final photoUrl = photos[index];
-                    final firebaseService = FirebaseService();
-                    await firebaseService.deletePhotoFromStorage(photoUrl);
-
-                    // Hapus URL dari array
-                    photos.removeAt(index);
-
-                    // Update Firestore dengan array baru
-                    await FirebaseFirestore.instance
-                        .collection('Users')
-                        .doc(user.uid)
-                        .update({'photos': photos});
-
-                    setState(() {
-                      uploadedImages.removeAt(index);
-                      profileItems['Photos']!['completed'] =
-                          uploadedImages.length;
-                      profileCompletion =
-                          (profileItems['Photos']!['completed'] +
-                              profileItems['Interest']!['completed'] +
-                              profileItems['Bio']!['completed'] +
-                              profileItems['Faculty']!['completed']) /
-                          11.0;
-                      profileCompletionNotifier.value = profileCompletion;
-                      profileItemsNotifier.value =
-                          Map<String, Map<String, dynamic>>.from(profileItems);
-                    });
+                  if (response.statusCode != 200) {
+                    throw Exception('Failed to fetch photos');
                   }
+
+                  List<dynamic> photos = jsonDecode(response.body);
+                  if (index >= photos.length) return;
+
+                  final photoUrl = photos[index];
+
+                  // 2. Hapus dari Firebase Storage DULU
+                  final firebaseService = FirebaseService();
+                  await firebaseService.deletePhotoFromStorage(photoUrl);
+
+                  // 3. Hapus dari backend database
+                  final deleteResponse = await http.post(
+                    Uri.parse('http://192.168.18.40:8080/users/${user.uid}/photos/delete'),
+                    headers: {'Content-Type': 'application/json'},
+                    body: jsonEncode({'photoUrl': photoUrl}),
+                  );
+
+                  if (deleteResponse.statusCode != 200) {
+                    throw Exception('Failed to delete photo in backend: ${deleteResponse.body}');
+                  }
+
+                  // 4. Update UI
+                  setState(() {
+                    uploadedImages.removeAt(index);
+                    profileItems['Photos']!['completed'] = uploadedImages.length;
+                    profileCompletion = (profileItems['Photos']!['completed'] +
+                        profileItems['Interest']!['completed'] +
+                        profileItems['Bio']!['completed'] +
+                        profileItems['Faculty']!['completed']) /
+                        11.0;
+                    profileCompletionNotifier.value = profileCompletion;
+                    profileItemsNotifier.value =
+                    Map<String, Map<String, dynamic>>.from(profileItems);
+                  });
                 } catch (e) {
                   if (mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
@@ -506,7 +516,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 child: Icon(
                   Icons.close,
                   size: 18,
-                  color: const Color.fromARGB(255, 255, 255, 255),
+                  color: Colors.white,
                 ),
               ),
             ),
@@ -514,6 +524,7 @@ class _ProfilePageState extends State<ProfilePage> {
       ],
     );
   }
+
 
   Widget _buildSocialMediaInput({
     required String platform,
@@ -637,21 +648,29 @@ class _ProfilePageState extends State<ProfilePage> {
   Future<void> _updateUserProfile(Map<String, dynamic> data) async {
     final user = FirebaseAuth.instance.currentUser;
     if (user != null) {
+      final uid = user.uid;
+      final url = Uri.parse('http://192.168.18.40:8080/users/update-fields/$uid');
+
       try {
-        await FirebaseFirestore.instance
-            .collection('Users')
-            .doc(user.uid)
-            .update(data);
+        final response = await http.put(
+          url,
+          headers: {'Content-Type': 'application/json'},
+          body: jsonEncode(data),
+        );
+
+        if (response.statusCode != 200) {
+          throw Exception('Failed to update profile: ${response.body}');
+        }
       } catch (e) {
-        if (mounted) {
+        if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Failed to update profile: $e')),
+            SnackBar(content: Text('Update failed: $e')),
           );
         }
-        rethrow;
       }
     }
   }
+
 
   @override
   Widget build(BuildContext context) {
