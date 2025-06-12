@@ -1,7 +1,6 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:http/http.dart' as http;
 import 'package:url_launcher/url_launcher.dart';
@@ -707,6 +706,7 @@ class _ChatPageState extends State<ChatPage> {
             child: _isLoadingMessages
                 ? Center(child: CircularProgressIndicator())
                 : ListView.builder(
+              reverse: true,
               controller: _scrollController,
               padding: EdgeInsets.all(16),
               itemCount: _messages.length,
