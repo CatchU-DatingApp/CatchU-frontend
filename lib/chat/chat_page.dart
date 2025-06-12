@@ -1,6 +1,9 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:http/http.dart' as http;
 import 'package:url_launcher/url_launcher.dart';
 
 class ChatPage extends StatefulWidget {
@@ -24,56 +27,114 @@ class _ChatPageState extends State<ChatPage> {
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   final currentUser = FirebaseAuth.instance.currentUser;
+
+  List<Map<String, dynamic>> _messages = [];
   Map<String, dynamic>? _otherUserProfile;
+  bool _isLoadingMessages = true;
   bool _isLoadingProfile = true;
+
+
+
 
   @override
   void initState() {
     super.initState();
+    _fetchMessages();
     _loadOtherUserProfile();
     _markMessagesAsRead();
+  }
+  String _getMessageText(dynamic messageData) {
+    if (messageData == null) return '[No message]';
+
+    if (messageData is String) {
+      return messageData;
+    } else if (messageData is Map<String, dynamic>) {
+      return messageData['text'] ?? messageData['message'] ?? '[No message]';
+    }
+
+    return messageData.toString();
+  }
+
+  DateTime? _parseTimestamp(dynamic timestampData) {
+    if (timestampData == null) return null;
+
+    if (timestampData is String) {
+      // ISO format string
+      return DateTime.tryParse(timestampData);
+    } else if (timestampData is Map<String, dynamic>) {
+      // Firestore Timestamp object
+      final seconds = timestampData['seconds'];
+      final nanoseconds = timestampData['nanoseconds'] ?? 0;
+      if (seconds != null) {
+        return DateTime.fromMillisecondsSinceEpoch(
+            (seconds * 1000) + (nanoseconds ~/ 1000000)
+        );
+      }
+    } else if (timestampData is int) {
+      // Milliseconds since epoch
+      return DateTime.fromMillisecondsSinceEpoch(timestampData);
+    }
+
+    return null;
   }
 
   Future<void> _loadOtherUserProfile() async {
     try {
-      final doc =
-          await FirebaseFirestore.instance
-              .collection('Users')
-              .doc(widget.otherUserId)
-              .get();
+      final response = await http.get(
+        Uri.parse('http://192.168.0.102:8080/chat/user/${widget.otherUserId}'),
+      );
 
-      if (mounted) {
-        setState(() {
-          _otherUserProfile = doc.data();
-          _isLoadingProfile = false;
-        });
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        if (data['success']) {
+          setState(() {
+            _otherUserProfile = data['data'];
+            _isLoadingProfile = false;
+          });
+        }
+      } else {
+        throw Exception('Failed to load profile');
       }
     } catch (e) {
       print('Error loading profile: $e');
-      if (mounted) {
-        setState(() {
-          _isLoadingProfile = false;
-        });
+      setState(() => _isLoadingProfile = false);
+    }
+  }
+  Future<void> _fetchMessages() async {
+    setState(() => _isLoadingMessages = true);
+    try {
+      final response = await http.get(Uri.parse(
+          'http://192.168.0.102:8080/chat/match/${widget.matchId}/messages'));
+
+      if (response.statusCode == 200) {
+        final body = jsonDecode(response.body);
+        if (body['success']) {
+          setState(() {
+            _messages = List<Map<String, dynamic>>.from(body['data']);
+            _isLoadingMessages = false;
+          });
+          _scrollToBottom();
+        }
+      } else {
+        throw Exception('Failed to load messages');
       }
+    } catch (e) {
+      print('Error loading messages: $e');
+      setState(() => _isLoadingMessages = false);
     }
   }
 
   Future<void> _markMessagesAsRead() async {
     try {
-      final messagesRef = FirebaseFirestore.instance
-          .collection('Matches')
-          .doc(widget.matchId)
-          .collection('messages');
-
-      final unreadMessages =
-          await messagesRef
-              .where('senderId', isEqualTo: widget.otherUserId)
-              .where('isRead', isEqualTo: false)
-              .get();
-
-      for (var doc in unreadMessages.docs) {
-        await doc.reference.update({'isRead': true});
-      }
+      await http.put(
+        Uri.parse(
+            'http://192.168.0.102:8080/chat/match/${widget.matchId}/messages/read'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'currentUserId': currentUser?.uid,
+          'otherUserId': widget.otherUserId,
+        }),
+      );
     } catch (e) {
       print('Error marking messages as read: $e');
     }
@@ -522,35 +583,34 @@ class _ChatPageState extends State<ChatPage> {
     );
   }
 
-  void _sendMessage() async {
-    if (_messageController.text.trim().isEmpty) return;
-
+  Future<void> _sendMessage() async {
     final message = _messageController.text.trim();
+    if (message.isEmpty || currentUser == null) return;
+
     _messageController.clear();
 
     try {
-      final matchRef = FirebaseFirestore.instance
-          .collection('Matches')
-          .doc(widget.matchId);
+      final response = await http.post(
+        Uri.parse('http://192.168.0.102:8080/chat/match/${widget.matchId}/messages'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'senderId': currentUser!.uid,
+          'receiverId': widget.otherUserId,
+          'message': message,
+          'type': 'text',
+        }),
+      );
 
-      await matchRef.collection('messages').add({
-        'senderId': currentUser?.uid,
-        'message': message,
-        'timestamp': FieldValue.serverTimestamp(),
-        'isRead': false,
-      });
-
-      await matchRef.update({
-        'lastMessage': message,
-        'lastMessageTimestamp': FieldValue.serverTimestamp(),
-      });
-
-      _scrollToBottom();
+      if (response.statusCode == 200) {
+        _fetchMessages();
+      } else {
+        throw Exception('Failed to send message');
+      }
     } catch (e) {
       print('Error sending message: $e');
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Failed to send message')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to send message')),
+      );
     }
   }
 
@@ -644,112 +704,103 @@ class _ChatPageState extends State<ChatPage> {
             ),
           ),
           Expanded(
-            child: StreamBuilder<QuerySnapshot>(
-              stream:
-                  FirebaseFirestore.instance
-                      .collection('Matches')
-                      .doc(widget.matchId)
-                      .collection('messages')
-                      .orderBy('timestamp', descending: false)
-                      .snapshots(),
-              builder: (context, snapshot) {
-                if (snapshot.hasError) {
-                  return Center(child: Text('Error loading messages'));
+            child: _isLoadingMessages
+                ? Center(child: CircularProgressIndicator())
+                : ListView.builder(
+              controller: _scrollController,
+              padding: EdgeInsets.all(16),
+              itemCount: _messages.length,
+              itemBuilder: (context, index) {
+                final message = _messages[index];
+                final isMe = message['senderId'] == currentUser?.uid;
+
+                // Fixed timestamp parsing
+                DateTime? timestamp;
+                final timestampData = message['timestamp'];
+
+                if (timestampData != null) {
+                  if (timestampData is String) {
+                    // If it's a string (ISO format)
+                    timestamp = DateTime.tryParse(timestampData);
+                  } else if (timestampData is Map<String, dynamic>) {
+                    // If it's Firestore Timestamp object
+                    final seconds = timestampData['seconds'];
+                    final nanoseconds = timestampData['nanoseconds'] ?? 0;
+                    if (seconds != null) {
+                      timestamp = DateTime.fromMillisecondsSinceEpoch(
+                          (seconds * 1000) + (nanoseconds ~/ 1000000)
+                      );
+                    }
+                  } else if (timestampData is int) {
+                    // If it's milliseconds since epoch
+                    timestamp = DateTime.fromMillisecondsSinceEpoch(timestampData);
+                  }
                 }
 
-                if (!snapshot.hasData) {
-                  return Center(child: CircularProgressIndicator());
-                }
+                final isRead = message['isRead'] ?? false;
 
-                final messages = snapshot.data!.docs;
-
-                return ListView.builder(
-                  controller: _scrollController,
-                  padding: EdgeInsets.all(16),
-                  itemCount: messages.length,
-                  itemBuilder: (context, index) {
-                    final message =
-                        messages[index].data() as Map<String, dynamic>;
-                    final isMe = message['senderId'] == currentUser?.uid;
-                    final timestamp =
-                        (message['timestamp'] as Timestamp?)?.toDate();
-                    final isRead = message['isRead'] ?? false;
-
-                    return Align(
-                      alignment:
-                          isMe ? Alignment.centerRight : Alignment.centerLeft,
-                      child: Container(
-                        margin: EdgeInsets.only(
-                          bottom: 8,
-                          left: isMe ? 64 : 0,
-                          right: isMe ? 0 : 64,
-                        ),
-                        child: Column(
-                          crossAxisAlignment:
-                              isMe
-                                  ? CrossAxisAlignment.end
-                                  : CrossAxisAlignment.start,
-                          children: [
-                            Container(
-                              padding: EdgeInsets.symmetric(
-                                horizontal: 16,
-                                vertical: 10,
-                              ),
-                              decoration: BoxDecoration(
-                                color:
-                                    isMe ? Color(0xFFFF426D) : Colors.grey[300],
-                                borderRadius: BorderRadius.only(
-                                  topLeft: Radius.circular(20),
-                                  topRight: Radius.circular(20),
-                                  bottomLeft:
-                                      isMe
-                                          ? Radius.circular(20)
-                                          : Radius.circular(5),
-                                  bottomRight:
-                                      isMe
-                                          ? Radius.circular(5)
-                                          : Radius.circular(20),
-                                ),
-                              ),
-                              child: Text(
-                                message['message'] ?? '',
-                                style: TextStyle(
-                                  color: isMe ? Colors.white : Colors.black87,
-                                ),
-                              ),
+                return Align(
+                  alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
+                  child: Container(
+                    margin: EdgeInsets.only(
+                      bottom: 8,
+                      left: isMe ? 64 : 0,
+                      right: isMe ? 0 : 64,
+                    ),
+                    child: Column(
+                      crossAxisAlignment:
+                      isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+                      children: [
+                        Container(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 10,
+                          ),
+                          decoration: BoxDecoration(
+                            color: isMe ? Color(0xFFFF426D) : Colors.grey[300],
+                            borderRadius: BorderRadius.only(
+                              topLeft: Radius.circular(20),
+                              topRight: Radius.circular(20),
+                              bottomLeft: isMe
+                                  ? Radius.circular(20)
+                                  : Radius.circular(5),
+                              bottomRight: isMe
+                                  ? Radius.circular(5)
+                                  : Radius.circular(20),
                             ),
-                            if (isMe)
-                              Padding(
-                                padding: EdgeInsets.only(top: 4, right: 8),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Text(
-                                      timestamp != null
-                                          ? _formatTime(timestamp)
-                                          : '',
-                                      style: TextStyle(
-                                        fontSize: 10,
-                                        color: Colors.grey[600],
-                                      ),
-                                    ),
-                                    SizedBox(width: 4),
-                                    Icon(
-                                      isRead ? Icons.done_all : Icons.done,
-                                      size: 14,
-                                      color:
-                                          isRead
-                                              ? Colors.blue
-                                              : Colors.grey[600],
-                                    ),
-                                  ],
-                                ),
-                              ),
-                          ],
+                          ),
+                          child: Text(
+                            _getMessageText(message['message']),
+                            style: TextStyle(
+                              color: isMe ? Colors.white : Colors.black87,
+                            ),
+                          ),
                         ),
-                      ),
-                    );
-                  },
+                        if (isMe)
+                          Padding(
+                            padding: EdgeInsets.only(top: 4, right: 8),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  timestamp != null ? _formatTime(timestamp) : '',
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    color: Colors.grey[600],
+                                  ),
+                                ),
+                                SizedBox(width: 4),
+                                Icon(
+                                  isRead ? Icons.done_all : Icons.done,
+                                  size: 14,
+                                  color: isRead ? Colors.blue : Colors.grey[600],
+                                ),
+                              ],
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
                 );
               },
             ),

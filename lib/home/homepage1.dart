@@ -134,7 +134,7 @@ class _DiscoverPageState extends State<DiscoverPage>
       }
 
       final String uid = currentUser.uid;
-      final uri = Uri.parse('http://192.168.18.40:8080/profiles');// Ganti dengan URL API-mu
+      final uri = Uri.parse('http://192.168.0.102:8080/profiles');// Ganti dengan URL API-mu
 
       final response = await http.get(
         uri,
