@@ -106,7 +106,7 @@ class _ProfilePageState extends State<ProfilePage> {
       final user = FirebaseAuth.instance.currentUser;
       if (user != null) {
         final uid = user.uid;
-        final response = await http.get(Uri.parse('http://192.168.18.40:8080/users/$uid'));
+        final response = await http.get(Uri.parse('http://192.168.0.102:8080/users/$uid'));
 
         if (response.statusCode == 200) {
           final data = jsonDecode(response.body);
@@ -323,7 +323,7 @@ class _ProfilePageState extends State<ProfilePage> {
           'user_photos/${user.uid}/${DateTime.now().millisecondsSinceEpoch}_${pickedFile.name}',
         );
         final response = await http.post(
-          Uri.parse('http://192.168.18.40:8080/users/${user.uid}/photos'),
+          Uri.parse('http://192.168.0.102:8080/users/${user.uid}/photos'),
           headers: {'Content-Type': 'application/json'},
           body: jsonEncode({'photoUrl': url}),
         );
@@ -379,7 +379,7 @@ class _ProfilePageState extends State<ProfilePage> {
 
         // Kirim URL ke backend API
         final response = await http.post(
-          Uri.parse('http://192.168.18.40:8080/users/${user.uid}/photos'),
+          Uri.parse('http://192.168.0.102:8080/users/${user.uid}/photos'),
           headers: {'Content-Type': 'application/json'},
           body: jsonEncode({'photoUrl': photoUrl}),
         );
@@ -459,7 +459,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 try {
                   // 1. Fetch list photo dari backend
                   final response = await http.get(
-                    Uri.parse('http://192.168.18.40:8080/users/${user.uid}/photos'),
+                    Uri.parse('http://192.168.0.102:8080/users/${user.uid}/photos'),
                   );
 
                   if (response.statusCode != 200) {
@@ -477,7 +477,7 @@ class _ProfilePageState extends State<ProfilePage> {
 
                   // 3. Hapus dari backend database
                   final deleteResponse = await http.post(
-                    Uri.parse('http://192.168.18.40:8080/users/${user.uid}/photos/delete'),
+                    Uri.parse('http://192.168.0.102:8080/users/${user.uid}/photos/delete'),
                     headers: {'Content-Type': 'application/json'},
                     body: jsonEncode({'photoUrl': photoUrl}),
                   );
@@ -649,7 +649,7 @@ class _ProfilePageState extends State<ProfilePage> {
     final user = FirebaseAuth.instance.currentUser;
     if (user != null) {
       final uid = user.uid;
-      final url = Uri.parse('http://192.168.18.40:8080/users/update-fields/$uid');
+      final url = Uri.parse('http://192.168.0.102:8080/users/update-fields/$uid');
 
       try {
         final response = await http.put(
