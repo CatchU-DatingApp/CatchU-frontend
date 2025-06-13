@@ -52,7 +52,7 @@ class _SignUpPhonePageState extends State<SignUpPhonePage> {
 
 
         final response = await http.get(
-          Uri.parse('http://192.168.0.102:8080/users/check-phone?phoneNumber=$phoneNumberWithoutPlus'),
+          Uri.parse('http://172.20.10.3:8080/users/check-phone?phoneNumber=$phoneNumberWithoutPlus'),
 
         );
 

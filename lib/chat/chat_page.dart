@@ -80,7 +80,7 @@ class _ChatPageState extends State<ChatPage> {
   Future<void> _loadOtherUserProfile() async {
     try {
       final response = await http.get(
-        Uri.parse('http://192.168.0.102:8080/chat/user/${widget.otherUserId}'),
+        Uri.parse('http://172.20.10.3:8080/chat/user/${widget.otherUserId}'),
       );
 
       if (response.statusCode == 200) {
@@ -103,7 +103,7 @@ class _ChatPageState extends State<ChatPage> {
     setState(() => _isLoadingMessages = true);
     try {
       final response = await http.get(Uri.parse(
-          'http://192.168.0.102:8080/chat/match/${widget.matchId}/messages'));
+          'http://172.20.10.3:8080/chat/match/${widget.matchId}/messages'));
 
       if (response.statusCode == 200) {
         final body = jsonDecode(response.body);
@@ -127,7 +127,7 @@ class _ChatPageState extends State<ChatPage> {
     try {
       await http.put(
         Uri.parse(
-            'http://192.168.0.102:8080/chat/match/${widget.matchId}/messages/read'),
+            'http://172.20.10.3:8080/chat/match/${widget.matchId}/messages/read'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           'currentUserId': currentUser?.uid,
@@ -590,7 +590,7 @@ class _ChatPageState extends State<ChatPage> {
 
     try {
       final response = await http.post(
-        Uri.parse('http://192.168.0.102:8080/chat/match/${widget.matchId}/messages'),
+        Uri.parse('http://172.20.10.3:8080/chat/match/${widget.matchId}/messages'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           'senderId': currentUser!.uid,

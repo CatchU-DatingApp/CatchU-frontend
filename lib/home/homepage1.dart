@@ -133,7 +133,7 @@ class _DiscoverPageState extends State<DiscoverPage>
       }
 
       final String uid = currentUser.uid;
-      final uri = Uri.parse('http://192.168.0.102:8080/profiles');// Ganti dengan URL API-mu
+      final uri = Uri.parse('http://172.20.10.3:8080/profiles');// Ganti dengan URL API-mu
 
       final response = await http.get(
         uri,
@@ -362,7 +362,7 @@ class _DiscoverPageState extends State<DiscoverPage>
     final currentUser = FirebaseAuth.instance.currentUser;
     if (currentUser == null) return;
 
-    final url = Uri.parse('http://192.168.0.102:8080/likes');
+    final url = Uri.parse('http://172.20.10.3:8080/likes');
     final response = await http.post(
       url,
       headers: {'Content-Type': 'application/json'},

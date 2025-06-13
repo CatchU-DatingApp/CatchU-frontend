@@ -130,7 +130,7 @@ class _SignUpPage4State extends State<SignUpPage4> {
                           setState(() => _isLoading = true);
 
                           try {
-                            final apiUrl = Uri.parse('http://192.168.0.102:8080/users/check-email?email=${_emailController.text}');
+                            final apiUrl = Uri.parse('http://172.20.10.3:8080/users/check-email?email=${_emailController.text}');
                             final response = await http.get(apiUrl);
 
                             if (response.statusCode == 200) {

@@ -16,7 +16,7 @@ class _MatchPageState extends State<MatchPage> {
   List<Map<String, dynamic>> matches = [];
   bool _isLoading = true;
 
-  final String baseUrl = 'http://192.168.0.102:8080/api/matches'; // Ganti dengan IP backend-mu
+  final String baseUrl = 'http://172.20.10.3:8080/api/matches'; // Ganti dengan IP backend-mu
 
   @override
   void initState() {
