@@ -3,9 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'package:catchu/sign_up_data_holder.dart';
-import 'package:catchu/firebase/firebase_service.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 
 class SignUpPage8 extends StatefulWidget {
   final SignUpDataHolder dataHolder;
@@ -17,8 +14,7 @@ class SignUpPage8 extends StatefulWidget {
 }
 
 class _SignUpPage8State extends State<SignUpPage8> {
-  List<ImageProvider> uploadedImages = [];
-
+  List<File> uploadedImages = [];
   final ImagePicker _picker = ImagePicker();
 
   @override
@@ -74,8 +70,8 @@ class _SignUpPage8State extends State<SignUpPage8> {
                     children: [
                       ClipRRect(
                         borderRadius: BorderRadius.circular(12),
-                        child: Image(
-                          image: uploadedImages[index],
+                        child: Image.file(
+                          uploadedImages[index],
                           width: 100,
                           height: 100,
                           fit: BoxFit.cover,
@@ -105,9 +101,7 @@ class _SignUpPage8State extends State<SignUpPage8> {
                   );
                 } else {
                   return GestureDetector(
-                    onTap: () {
-                      _showPhotoSelectionModal();
-                    },
+                    onTap: _showPhotoSelectionModal,
                     child: Container(
                       width: 100,
                       height: 100,
@@ -124,23 +118,21 @@ class _SignUpPage8State extends State<SignUpPage8> {
                 }
               }),
             ),
-
             Spacer(),
             ElevatedButton(
-              onPressed:
-                  uploadedImages.isEmpty
-                      ? null
-                      : () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder:
-                                (_) => SignUpPage9Location(
-                                  dataHolder: widget.dataHolder,
-                                ),
-                          ),
-                        );
-                      },
+              onPressed: uploadedImages.isEmpty
+                  ? null
+                  : () {
+                widget.dataHolder.photos = uploadedImages;
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => SignUpPage9Location(
+                      dataHolder: widget.dataHolder,
+                    ),
+                  ),
+                );
+              },
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.pink[400],
                 foregroundColor: Colors.white,
@@ -282,100 +274,40 @@ class _SignUpPage8State extends State<SignUpPage8> {
   }
 
   Future<void> _pickImageFromGallery() async {
-    final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
-    final user = FirebaseAuth.instance.currentUser;
-    if (pickedFile != null && user != null) {
-      setState(() {
-        uploadedImages.add(FileImage(File(pickedFile.path)));
-      });
-      // Upload ke Firebase Storage dengan path mengandung UID
-      final firebaseService = FirebaseService();
-      final url = await firebaseService.uploadPhotoToStorage(
-        File(pickedFile.path),
-        'user_photos/${user.uid}/${DateTime.now().millisecondsSinceEpoch}_${pickedFile.name}',
-      );
-      setState(() {
-        if (widget.dataHolder.photos == null) {
-          widget.dataHolder.photos = [];
-        }
-        widget.dataHolder.photos!.add(url);
-      });
-      // Update Firestore agar array photos bertambah, bukan overwrite
-      await FirebaseFirestore.instance.collection('Users').doc(user.uid).update(
-        {
-          'photos': FieldValue.arrayUnion([url]),
-        },
+    try {
+      final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
+      if (pickedFile != null) {
+        setState(() {
+          uploadedImages.add(File(pickedFile.path));
+        });
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to pick image: $e')),
       );
     }
   }
 
   Future<void> _pickImageFromCamera() async {
-    final pickedFile = await _picker.pickImage(source: ImageSource.camera);
-    final user = FirebaseAuth.instance.currentUser;
-    if (pickedFile != null && user != null) {
-      setState(() {
-        uploadedImages.add(FileImage(File(pickedFile.path)));
-      });
-      // Upload ke Firebase Storage dengan path mengandung UID
-      final firebaseService = FirebaseService();
-      final url = await firebaseService.uploadPhotoToStorage(
-        File(pickedFile.path),
-        'user_photos/${user.uid}/${DateTime.now().millisecondsSinceEpoch}_${pickedFile.name}',
-      );
-      setState(() {
-        if (widget.dataHolder.photos == null) {
-          widget.dataHolder.photos = [];
-        }
-        widget.dataHolder.photos!.add(url);
-      });
-      // Update Firestore agar array photos bertambah, bukan overwrite
-      await FirebaseFirestore.instance.collection('Users').doc(user.uid).update(
-        {
-          'photos': FieldValue.arrayUnion([url]),
-        },
+    try {
+      final pickedFile = await _picker.pickImage(source: ImageSource.camera);
+      if (pickedFile != null) {
+        setState(() {
+          uploadedImages.add(File(pickedFile.path));
+        });
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to capture image: $e')),
       );
     }
   }
 
-  void _removePhoto(int index) async {
+  void _removePhoto(int index) {
     if (uploadedImages.length > 1) {
-      final user = FirebaseAuth.instance.currentUser;
-      if (user == null) return;
-
-      try {
-        // Ambil data user terbaru dari Firestore
-        final doc =
-            await FirebaseFirestore.instance
-                .collection('Users')
-                .doc(user.uid)
-                .get();
-        List<dynamic> photos = List.from(doc['photos'] ?? []);
-
-        // Hapus foto dari Storage terlebih dahulu
-        if (index < photos.length) {
-          final photoUrl = photos[index];
-          final firebaseService = FirebaseService();
-          await firebaseService.deletePhotoFromStorage(photoUrl);
-
-          // Hapus URL dari array
-          photos.removeAt(index);
-
-          // Update Firestore dengan array baru
-          await FirebaseFirestore.instance
-              .collection('Users')
-              .doc(user.uid)
-              .update({'photos': photos});
-
-          setState(() {
-            uploadedImages.removeAt(index);
-            widget.dataHolder.photos!.removeAt(index);
-          });
-        }
-      } catch (e) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Failed to delete photo: $e')));
-      }
+      setState(() {
+        uploadedImages.removeAt(index);
+      });
     }
   }
 }

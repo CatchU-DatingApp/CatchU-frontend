@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../firebase/firebase_service.dart';
 import '../../home/mainpage.dart';
 import 'package:catchu/sign_up_data_holder.dart';
 import 'package:catchu/user_model.dart' as app;
@@ -27,6 +28,48 @@ class _SignUpRulesPageState extends State<SignUpRulesPage> {
     });
 
     try {
+      // First create user/auth
+      final FirebaseAuth auth = FirebaseAuth.instance;
+      UserCredential? userCredential;
+      String uid;
+
+      if (auth.currentUser != null) {
+        uid = auth.currentUser!.uid;
+      } else {
+        String password =
+            "${widget.dataHolder.nama?.replaceAll(' ', '_').toLowerCase() ?? 'user'}"
+            "${widget.dataHolder.phoneNumber?.substring(widget.dataHolder.phoneNumber!.length - 4) ?? '1234'}";
+
+        userCredential = await auth.createUserWithEmailAndPassword(
+          email: widget.dataHolder.email!,
+          password: password,
+        );
+        uid = userCredential.user!.uid;
+        await userCredential.user!.updateDisplayName(widget.dataHolder.nama);
+      }
+
+      // Upload photos to user's folder in storage
+      List<String> photoUrls = [];
+      if (widget.dataHolder.photos != null && widget.dataHolder.photos!.isNotEmpty) {
+        for (var photo in widget.dataHolder.photos!) {
+          try {
+            final url = await FirebaseService().uploadPhotoToStorage(
+              photo,
+              'user_photos/$uid/${DateTime.now().millisecondsSinceEpoch}.jpg',
+            );
+            photoUrls.add(url);
+          } catch (e) {
+            print('Error uploading photo: $e');
+            // Continue with other photos even if one fails
+          }
+        }
+
+        if (photoUrls.isEmpty) {
+          throw Exception('Failed to upload any photos');
+        }
+      }
+
+      // Create user with photo URLs
       final appUser = app.User(
         id: null,
         nomorTelepon: widget.dataHolder.phoneNumber ?? '',
@@ -37,103 +80,36 @@ class _SignUpRulesPageState extends State<SignUpRulesPage> {
         interest: widget.dataHolder.interest ?? [],
         verified: false,
         location: widget.dataHolder.location ?? [0.0, 0.0],
-        photos: widget.dataHolder.photos ?? [],
+        photos: photoUrls,
       );
 
-      // Pastikan email terisi
-      if (widget.dataHolder.email == null || widget.dataHolder.email!.isEmpty) {
-        setState(() {
-          _isLoading = false;
-          _errorMessage = 'Email harus diisi untuk menyelesaikan pendaftaran';
-        });
-        return;
+      // Save user data to Firestore
+      await UserRepository().addUser(appUser, uid);
+
+      // Save session
+      await SessionManager.saveSession(
+        userId: uid,
+        email: widget.dataHolder.email!,
+        name: widget.dataHolder.nama ?? '',
+      );
+
+      // Navigate to home
+      Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
+
+    } on FirebaseAuthException catch (e) {
+      String errorMessage;
+      if (e.code == 'email-already-in-use') {
+        errorMessage = 'Email sudah digunakan. Silakan gunakan email lain.';
+      } else {
+        errorMessage = 'Error autentikasi: ${e.message}';
       }
-
-      final FirebaseAuth auth = FirebaseAuth.instance;
-      UserCredential userCredential;
-      String uid;
-
-      try {
-        // Jika sudah login, gunakan UID yang ada
-        if (auth.currentUser != null) {
-          uid = auth.currentUser!.uid;
-        } else {
-          // Generate password otomatis
-          String password =
-              "${widget.dataHolder.nama?.replaceAll(' ', '_').toLowerCase() ?? 'user'}${widget.dataHolder.phoneNumber?.substring(widget.dataHolder.phoneNumber!.length - 4) ?? '1234'}";
-
-          // Buat user baru dengan email dan password
-          userCredential = await auth.createUserWithEmailAndPassword(
-            email: widget.dataHolder.email!,
-            password: password,
-          );
-          uid = userCredential.user!.uid;
-
-          // Update profile name
-          await userCredential.user!.updateDisplayName(widget.dataHolder.nama);
-        }
-
-        // Simpan data user ke Firestore dengan UID dari Firebase Auth
-        await UserRepository().addUser(appUser, uid);
-
-        // Save session
-        await SessionManager.saveSession(
-          userId: uid,
-          email: widget.dataHolder.email!,
-          name: widget.dataHolder.nama ?? '',
-        );
-
-        // Navigate to home
-        Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
-      } on FirebaseAuthException catch (e) {
-        if (e.code == 'email-already-in-use') {
-          // Jika email sudah digunakan, coba login
-          try {
-            String password =
-                "${widget.dataHolder.nama?.replaceAll(' ', '_').toLowerCase() ?? 'user'}${widget.dataHolder.phoneNumber?.substring(widget.dataHolder.phoneNumber!.length - 4) ?? '1234'}";
-            userCredential = await auth.signInWithEmailAndPassword(
-              email: widget.dataHolder.email!,
-              password: password,
-            );
-            uid = userCredential.user!.uid;
-
-            // Update data user yang sudah ada
-            await UserRepository().addUser(appUser, uid);
-
-            // Save session
-            await SessionManager.saveSession(
-              userId: uid,
-              email: widget.dataHolder.email!,
-              name: widget.dataHolder.nama ?? '',
-            );
-
-            Navigator.pushNamedAndRemoveUntil(
-              context,
-              '/home',
-                  (route) => false,
-            );
-          } catch (loginError) {
-            setState(() {
-              _isLoading = false;
-              _errorMessage =
-              'Email sudah terdaftar tapi tidak dapat login. Silakan gunakan email lain.';
-            });
-          }
-        } else {
-          setState(() {
-            _isLoading = false;
-            _errorMessage = 'Error saat membuat akun: ${e.message}';
-          });
-        }
-      } catch (e) {
-        setState(() {
-          _errorMessage = 'Gagal menyimpan data: $e';
-          _isLoading = false;
-        });
-      }
+      setState(() {
+        _errorMessage = errorMessage;
+        _isLoading = false;
+      });
     } catch (e) {
       setState(() {
-        _errorMessage = 'Gagal menyimpan data: $e';
+        _errorMessage = 'Gagal menyelesaikan pendaftaran: $e';
         _isLoading = false;
       });
     }
@@ -167,7 +143,6 @@ class _SignUpRulesPageState extends State<SignUpRulesPage> {
               ),
               const SizedBox(height: 30),
 
-              // Rules
               _buildRuleCard(
                 title: 'Be yourself.',
                 description:
