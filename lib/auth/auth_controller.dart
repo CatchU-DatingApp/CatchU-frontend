@@ -1,6 +1,9 @@
 // lib/auth/auth_controller.dart
+import 'dart:convert';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:http/http.dart' as http;
 import '../firebase/firebase_service.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:flutter/services.dart';
@@ -12,15 +15,21 @@ class AuthController {
 
   Future<bool> checkPhoneNumberRegistered(String phoneNumber) async {
     try {
-      final querySnapshot =
-          await _firestore
-              .collection('Users')
-              .where('nomorTelepon', isEqualTo: phoneNumber)
-              .get();
+      final phoneNumberWithoutPlus = phoneNumber.replaceFirst('+', '');
 
-      return querySnapshot.docs.isNotEmpty;
+      final response = await http.get(
+        Uri.parse('http://192.168.0.102:8080/users/check-phone?phoneNumber=$phoneNumberWithoutPlus'),
+      );
+
+      if (response.statusCode == 200) {
+        final exists = jsonDecode(response.body) as bool;
+        return exists;
+      } else {
+        print('API error: ${response.statusCode}');
+        return false;
+      }
     } catch (e) {
-      print('Error checking phone number: $e');
+      print('Error checking phone via API: $e');
       return false;
     }
   }
