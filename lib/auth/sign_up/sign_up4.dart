@@ -1,10 +1,12 @@
+import 'dart:convert';
+
 import 'package:catchu/auth/auth_controller.dart';
 import 'package:catchu/auth/sign_up/sign_up5_Umur.dart';
 import 'package:flutter/material.dart';
 import 'package:catchu/sign_up_data_holder.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:http/http.dart' as http;
 
 class SignUpPage4 extends StatefulWidget {
   final SignUpDataHolder dataHolder;
@@ -128,21 +130,22 @@ class _SignUpPage4State extends State<SignUpPage4> {
                           setState(() => _isLoading = true);
 
                           try {
-                            // Cek apakah email sudah terdaftar
-                            final emailCheckSnapshot =
-                                await FirebaseFirestore.instance
-                                    .collection('Users')
-                                    .where(
-                                      'email',
-                                      isEqualTo: _emailController.text,
-                                    )
-                                    .get();
+                            final apiUrl = Uri.parse('http://192.168.0.102:8080/users/check-email?email=${_emailController.text}');
+                            final response = await http.get(apiUrl);
 
-                            if (emailCheckSnapshot.docs.isNotEmpty) {
+                            if (response.statusCode == 200) {
+                              final emailExists = json.decode(response.body) as bool;
+                              if (emailExists) {
+                                setState(() {
+                                  _isLoading = false;
+                                  _emailError = 'Email sudah terdaftar. Silakan login atau gunakan email lain.';
+                                });
+                                return;
+                              }
+                            } else {
                               setState(() {
                                 _isLoading = false;
-                                _emailError =
-                                    'Email sudah terdaftar. Silakan login atau gunakan email lain.';
+                                _emailError = 'Gagal memeriksa email. Silakan coba lagi.';
                               });
                               return;
                             }
