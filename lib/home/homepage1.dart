@@ -5,7 +5,6 @@ import 'package:flutter/rendering.dart';
 import 'dart:ui';
 import 'dart:math' as math;
 import 'package:http/http.dart' as http;
-import 'package:cloud_firestore/cloud_firestore.dart';
 import '../utils/image_helper.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -360,103 +359,29 @@ class _DiscoverPageState extends State<DiscoverPage>
   }
 
   Future<void> _handleLike(ProfileData likedProfile) async {
-    try {
-      final currentUser = FirebaseAuth.instance.currentUser;
-      if (currentUser == null) return;
+    final currentUser = FirebaseAuth.instance.currentUser;
+    if (currentUser == null) return;
 
-      final likesRef = FirebaseFirestore.instance.collection('Likes');
-      final matchesRef = FirebaseFirestore.instance.collection('Matches');
+    final url = Uri.parse('http://192.168.0.102:8080/likes');
+    final response = await http.post(
+      url,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'likedBy': currentUser.uid,
+        'likedUser': likedProfile.userId,
+      }),
+    );
 
-      // Check if already liked
-      final existingLikeQuery =
-          await likesRef
-              .where('likedBy', isEqualTo: currentUser.uid)
-              .where('likedUser', isEqualTo: likedProfile.userId)
-              .get();
-
-      // If already liked, don't add another like
-      if (existingLikeQuery.docs.isNotEmpty) {
-        print('Already liked this profile');
-        return;
+    if (response.statusCode == 200) {
+      print('Response: ${response.body}');
+      if (response.body.contains('Match created')) {
+        _showMatchDialog(likedProfile);
       }
-
-      // Add like to Likes collection
-      await likesRef
-          .add({
-            'likedBy': currentUser.uid,
-            'likedUser': likedProfile.userId,
-            'timestamp': FieldValue.serverTimestamp(),
-          })
-          .then((value) => print('Like added with ID: ${value.id}'))
-          .catchError((error) => print('Error adding like: $error'));
-
-      // Check if the other user has already liked current user
-      final querySnapshot =
-          await likesRef
-              .where('likedBy', isEqualTo: likedProfile.userId)
-              .where('likedUser', isEqualTo: currentUser.uid)
-              .get();
-
-      // If there's a mutual like, create a match
-      if (querySnapshot.docs.isNotEmpty) {
-        print('Found mutual like, creating match');
-
-        // Get current user's name
-        final currentUserDoc =
-            await FirebaseFirestore.instance
-                .collection('Users')
-                .doc(currentUser.uid)
-                .get();
-
-        final currentUserName = currentUserDoc.data()?['nama'] ?? '';
-
-        // Create match document
-        await matchesRef
-            .add({
-              'users': [currentUser.uid, likedProfile.userId],
-              'userNames': [currentUserName, likedProfile.name],
-              'userPhotos': [
-                (await _getCurrentUserPhoto()) ?? '',
-                likedProfile.images.isNotEmpty ? likedProfile.images[0] : '',
-              ],
-              'timestamp': FieldValue.serverTimestamp(),
-              'lastMessage': null,
-              'lastMessageTimestamp': null,
-            })
-            .then((value) => print('Match created with ID: ${value.id}'))
-            .catchError((error) => print('Error creating match: $error'));
-
-        // Show match dialog
-        if (mounted) {
-          _showMatchDialog(likedProfile);
-        }
-      }
-    } catch (e) {
-      print('Error handling like: $e');
+    } else {
+      print('Failed to like: ${response.body}');
     }
   }
 
-  Future<String?> _getCurrentUserPhoto() async {
-    try {
-      final currentUser = FirebaseAuth.instance.currentUser;
-      if (currentUser == null) return null;
-
-      final userDoc =
-          await FirebaseFirestore.instance
-              .collection('Users')
-              .doc(currentUser.uid)
-              .get();
-
-      if (userDoc.exists) {
-        final photos = List<String>.from(userDoc.data()?['photos'] ?? []);
-        return photos.isNotEmpty ? photos[0] : null;
-      }
-      return null;
-    } catch (e) {
-      print('Error getting current user photo: $e');
-      return null;
-    }
-  }
 
   void _showMatchDialog(ProfileData matchedProfile) {
     showDialog(
