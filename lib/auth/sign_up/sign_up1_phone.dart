@@ -1,4 +1,7 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import 'sign_up2_otp.dart';
 import 'package:catchu/sign_up_data_holder.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -42,35 +45,46 @@ class _SignUpPhonePageState extends State<SignUpPhonePage> {
       });
 
       final formattedPhoneNumber = '$_countryCode$_phoneNumber';
+      String phoneNumberWithoutPlus = formattedPhoneNumber.replaceFirst('+', '');
 
       try {
-        // Cek apakah nomor telepon sudah terdaftar
-        final phoneCheckSnapshot =
-            await FirebaseFirestore.instance
-                .collection('Users')
-                .where('nomorTelepon', isEqualTo: formattedPhoneNumber)
-                .get();
+        // Panggil API backend Spring Boot
+        print('formattedPhoneNumber: $formattedPhoneNumber');
+        print('PhoneNumber: $phoneNumberWithoutPlus');
 
-        if (phoneCheckSnapshot.docs.isNotEmpty) {
+
+        final response = await http.get(
+          Uri.parse('http://192.168.0.102:8080/users/check-phone?phoneNumber=$phoneNumberWithoutPlus'),
+
+        );
+
+        if (response.statusCode == 200) {
+          final exists = jsonDecode(response.body) as bool;
+          if (exists) {
+            setState(() {
+              _isLoading = false;
+              _errorMessage = 'Nomor telepon sudah terdaftar. Silakan login atau gunakan nomor lain.';
+            });
+            return;
+          }
+
+          // Simpan nomor dan lanjut ke OTP
+          widget.dataHolder.phoneNumber = formattedPhoneNumber;
           setState(() {
             _isLoading = false;
-            _errorMessage =
-                'Nomor telepon sudah terdaftar. Silakan login atau gunakan nomor lain.';
           });
-          return;
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => SignUpOtpPage(dataHolder: widget.dataHolder),
+            ),
+          );
+        } else {
+          setState(() {
+            _isLoading = false;
+            _errorMessage = 'Server error (${response.statusCode})';
+          });
         }
-
-        // Simpan nomor ke dataHolder dan langsung pindah ke halaman OTP
-        widget.dataHolder.phoneNumber = formattedPhoneNumber;
-        setState(() {
-          _isLoading = false;
-        });
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => SignUpOtpPage(dataHolder: widget.dataHolder),
-          ),
-        );
       } catch (e) {
         setState(() {
           _isLoading = false;
@@ -79,6 +93,7 @@ class _SignUpPhonePageState extends State<SignUpPhonePage> {
       }
     }
   }
+
 
   @override
   Widget build(BuildContext context) {
